@@ -10,11 +10,13 @@ class CloserAgent {
         this.authToken = process.env.TWILIO_AUTH_TOKEN;
         this.fromNumber = process.env.TWILIO_WHATSAPP_NUMBER; // Usually "whatsapp:+14155238886" for sandbox
 
-        if (!this.accountSid || !this.authToken || !this.fromNumber) {
-            throw new Error('TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, or TWILIO_WHATSAPP_NUMBER missing in env variables.');
-        }
+        this.isConfigured = !!(this.accountSid && this.authToken && this.fromNumber);
 
-        this.client = twilio(this.accountSid, this.authToken);
+        if (this.isConfigured) {
+            this.client = twilio(this.accountSid, this.authToken);
+        } else {
+            console.warn('[Closer] Twilio environment variables missing. WhatsApp pitching is disabled.');
+        }
     }
 
     /**
@@ -50,6 +52,11 @@ class CloserAgent {
      * @param {Object} db - Database Service instance
      */
     async pitchLead(businessName, phone, vercelUrl, db) {
+        if (!this.isConfigured) {
+            console.log(`[Closer] Skipped pitching ${businessName} - Twilio is purely optional and currently disabled.`);
+            return null;
+        }
+
         const formattedPhone = this.formatPhoneNumber(phone);
         console.log(`[Closer] Texting ${businessName} at ${formattedPhone}...`);
 
