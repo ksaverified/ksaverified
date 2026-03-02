@@ -1,19 +1,11 @@
-const axios = require('axios');
-
 /**
  * Publisher Agent
- * Modifies HTML to inject a checkout modal and publishes it to Vercel via their REST API.
+ * Generates dynamic URL for leads.
+ * Injects checkout modals when rendering via the API.
  */
 class PublisherAgent {
   constructor() {
-    this.vercelToken = process.env.VERCEL_API_TOKEN;
-    this.vercelProjectId = process.env.VERCEL_PROJECT_ID;
-
-    this.isConfigured = !!(this.vercelToken && this.vercelProjectId);
-
-    if (!this.isConfigured) {
-      console.warn('[Publisher] VERCEL_API_TOKEN or VERCEL_PROJECT_ID missing. Site deployment is disabled.');
-    }
+    this.baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || 'https://drop-servicing-pipeline.vercel.app';
   }
 
   /**
@@ -113,64 +105,16 @@ class PublisherAgent {
   }
 
   /**
-   * Deploys the HTML to Vercel
-   * @param {string} businessName - The formatted name of the business
-   * @param {string} compiledHtml - The final HTML string
-   * @returns {Promise<string>} The generated Vercel URL
+   * Generates the dynamic URL for the site instead of deploying it
+   * @param {string} placeId - The unique lead / place ID
+   * @returns {string} The dynamic Vercel URL
    */
-  async deploySite(businessName, compiledHtml) {
-    if (!this.isConfigured) {
-      console.log(`[Publisher] Skipped publishing ${businessName} - Vercel API credentials are not configured.`);
-      return null;
-    }
+  async handlePublish(placeId) {
+    if (!placeId) return null;
 
-    console.log(`[Publisher] Pushing ${businessName} to Vercel...`);
-
-    // Generate an internal id/slug for the deployment name
-    const sanitizedName = businessName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    const deployName = `drop-service-${sanitizedName}-${Date.now()}`;
-
-    try {
-      const deployResponse = await axios.post(
-        `https://api.vercel.com/v13/deployments?projectId=${this.vercelProjectId}`,
-        {
-          name: deployName,
-          files: [
-            {
-              file: 'index.html',
-              data: compiledHtml
-            }
-          ],
-          projectSettings: {
-            framework: null,
-            rootDirectory: null
-          },
-          target: 'production'
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${this.vercelToken}`
-          }
-        }
-      );
-
-      // Deploy response gives back a URL e.g. "my-project-url.vercel.app"
-      const url = `https://${deployResponse.data.url}`;
-      console.log(`[Publisher] Deployed successfully to: ${url}`);
-
-      return url;
-    } catch (error) {
-      console.error(`[Publisher] Vercel deploy error: ${error.response ? JSON.stringify(error.response.data) : error.message}`);
-      throw error;
-    }
-  }
-
-  /**
-   * Executes the injection and deployment pipeline
-   */
-  async handlePublish(businessName, rawHtml) {
-    const injectedHtml = this.injectModal(rawHtml);
-    const liveUrl = await this.deploySite(businessName, injectedHtml);
+    // Construct the live URL pointing to the new dynamic site route
+    const liveUrl = `${this.baseUrl}/site/${placeId}`;
+    console.log(`[Publisher] Generated dynamic site link: ${liveUrl}`);
     return liveUrl;
   }
 }

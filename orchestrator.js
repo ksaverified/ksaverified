@@ -85,9 +85,9 @@ class Orchestrator {
       await this.db.addLog('creator', 'website_generated', activeLead.placeId, { length: rawHtml.length }, 'success');
       await this.db.updateLeadStatus(activeLead.placeId, 'created', { website_html: rawHtml });
 
-      // Step 3: Publish to Vercel
+      // Step 3: Publish to Vercel (Dynamic Generation)
       await this.db.addLog('publisher', 'deployment_started', activeLead.placeId, {}, 'info');
-      const liveUrl = await this.publisher.handlePublish(activeLead.name, rawHtml);
+      const liveUrl = await this.publisher.handlePublish(activeLead.placeId);
       await this.db.addLog('publisher', 'deployment_success', activeLead.placeId, { url: liveUrl }, 'success');
       await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: liveUrl });
 
