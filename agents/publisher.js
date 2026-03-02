@@ -132,16 +132,19 @@ class PublisherAgent {
 
     try {
       const deployResponse = await axios.post(
-        'https://api.vercel.com/v13/deployments',
+        `https://api.vercel.com/v13/deployments?projectId=${this.vercelProjectId}`,
         {
           name: deployName,
-          projectId: this.vercelProjectId,
           files: [
             {
               file: 'index.html',
               data: compiledHtml
             }
           ],
+          projectSettings: {
+            framework: null,
+            rootDirectory: null
+          },
           target: 'production'
         },
         {
