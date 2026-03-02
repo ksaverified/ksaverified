@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
+    "@vis.gl/react-google-maps": "^1.7.1",
     "framer-motion": "^12.34.4",
     "lucide-react": "^0.576.0",
     "react": "^19.2.0",

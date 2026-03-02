@@ -5,6 +5,7 @@ import Pipeline from './pages/Pipeline';
 import Websites from './pages/Websites';
 import Settings from './pages/Settings';
 import Logs from './pages/Logs';
+import MapView from './pages/Map';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="pipeline" element={<Pipeline />} />
           <Route path="websites" element={<Websites />} />
+          <Route path="map" element={<MapView />} />
           <Route path="settings" element={<Settings />} />
           <Route path="logs" element={<Logs />} />
         </Route>
