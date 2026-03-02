@@ -5,6 +5,8 @@ const PublisherAgent = require('./agents/publisher');
 const CloserAgent = require('./agents/closer');
 const DatabaseService = require('./services/db');
 
+const ScoutAgent = require('./agents/scout');
+
 class Orchestrator {
   constructor() {
     this.scout = new ScoutAgent();
@@ -12,36 +14,38 @@ class Orchestrator {
     this.publisher = new PublisherAgent();
     this.closer = new CloserAgent();
     this.db = new DatabaseService();
-
-    // Default queries to cycle through across intervals
-    this.queries = [
-      'restaurant in Riyadh',
-      'auto repair in Riyadh',
-      'clinic in Riyadh',
-      'barbershop in Riyadh'
-    ];
   }
 
   /**
    * Executes a single pipeline run
    */
   async runPipeline() {
-    // Since Vercel runs stateless, we randomly select a query instead of sequential counting
-    // which would reset on every lambda invocation.
-    const randomIndex = Math.floor(Math.random() * this.queries.length);
-    const query = this.queries[randomIndex];
+    // Fetch active search queries from the Supabase settings table, 
+    // with a fallback to defaults if database row is missing.
+    let queries;
+    try {
+      queries = await this.db.getSetting('search_queries');
+    } catch (e) {
+      queries = ['restaurant in Riyadh', 'barbershop in Riyadh'];
+    }
+
+    // randomly select a query instead of sequential counting
+    const randomIndex = Math.floor(Math.random() * queries.length);
+    const query = queries[randomIndex];
 
     console.log('\n======================================================');
     console.log(`[Orchestrator] Starting cycle using query: "${query}"`);
     console.log('======================================================');
+    await this.db.addLog('orchestrator', 'cycle_start', null, { query }, 'info');
 
     try {
       // Step 1: Scout
+      await this.db.addLog('orchestrator', 'scouting', null, { query }, 'info');
       const leads = await this.scout.findLeads(query);
 
       if (leads.length === 0) {
         console.log('[Orchestrator] No viable leads found this cycle. Will wait until next interval.');
-        this.advanceQueryIndex();
+        await this.db.addLog('orchestrator', 'no_leads_found', null, { query }, 'warning');
         return;
       }
 
@@ -65,37 +69,35 @@ class Orchestrator {
 
       if (!activeLead) {
         console.log('[Orchestrator] All leads in this batch have already been processed. Moving to next query.');
-        this.advanceQueryIndex();
+        await this.db.addLog('orchestrator', 'all_leads_processed', null, { batchSize: leads.length }, 'info');
         return;
       }
 
       console.log(`[Orchestrator] Selected lead: ${activeLead.name} (${activeLead.phone})`);
+      await this.db.addLog('orchestrator', 'lead_selected', activeLead.placeId, { name: activeLead.name }, 'info');
 
       // Step 2: Create HTML
-      const rawHtml = await this.creator.createWebsite(activeLead);
+      await this.db.addLog('orchestrator', 'creating', activeLead.placeId, {}, 'info');
+      const rawHtml = await this.creator.createWebsite(activeLead, this.db);
       await this.db.updateLeadStatus(activeLead.placeId, 'created', { website_html: rawHtml });
 
       // Step 3: Publish to Vercel
+      await this.db.addLog('orchestrator', 'publishing', activeLead.placeId, {}, 'info');
       const liveUrl = await this.publisher.handlePublish(activeLead.name, rawHtml);
       await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: liveUrl });
 
       // Step 4: Close (Send WhatsApp text)
-      await this.closer.pitchLead(activeLead.name, activeLead.phone, liveUrl);
+      await this.db.addLog('orchestrator', 'pitching', activeLead.placeId, { liveUrl }, 'info');
+      await this.closer.pitchLead(activeLead.name, activeLead.phone, liveUrl, this.db);
       await this.db.updateLeadStatus(activeLead.placeId, 'pitched');
 
       console.log(`[Orchestrator] Successfully completed pipeline for ${activeLead.name}`);
+      await this.db.addLog('orchestrator', 'cycle_success', activeLead.placeId, { name: activeLead.name }, 'success');
 
     } catch (error) {
       console.error(`[Orchestrator] Pipeline encountered an error and aborted this cycle.`, error.message);
-      // We catch the error so the overall node process doesn't crash,
-      // allowing the setInterval to try again naturally.
+      await this.db.addLog('orchestrator', 'cycle_error', null, { message: error.message, stack: error.stack }, 'error');
     }
-
-    this.advanceQueryIndex();
-  }
-
-  advanceQueryIndex() {
-    this.currentQueryIndex = (this.currentQueryIndex + 1) % this.queries.length;
   }
 
   /**

@@ -80,6 +80,52 @@ class DatabaseService {
 
         return data[0];
     }
+
+    /**
+     * Fetch a setting from the settings table
+     * @param {string} key
+     * @returns {Promise<any>} The parsed JSON value of the setting
+     */
+    async getSetting(key) {
+        const { data, error } = await this.supabase
+            .from('settings')
+            .select('value')
+            .eq('key', key)
+            .single();
+
+        if (error) {
+            console.error(`[DB] Error fetching setting ${key}:`, error.message);
+            throw error;
+        }
+        return data.value;
+    }
+
+    /**
+     * Insert a log entry into the logs table
+     * @param {string} agent - The name of the agent (e.g., 'scout', 'creator')
+     * @param {string} action - Action performed
+     * @param {string|null} placeId - Optional place_id being worked on
+     * @param {Object} details - Optional JSON object with details
+     * @param {string} status - 'info', 'success', 'warning', 'error'
+     */
+    async addLog(agent, action, placeId = null, details = {}, status = 'info') {
+        const payload = {
+            agent,
+            action,
+            place_id: placeId,
+            details,
+            status
+        };
+
+        const { error } = await this.supabase
+            .from('logs')
+            .insert(payload);
+
+        if (error) {
+            console.error(`[DB] Failed to insert log for ${agent}:`, error.message);
+            // Optionally throw or just fail silently to not block the pipeline
+        }
+    }
 }
 
 module.exports = DatabaseService;

@@ -47,24 +47,32 @@ class CloserAgent {
      * @param {string} businessName - The formatted name of the business
      * @param {string} phone - The unformatted phone number
      * @param {string} vercelUrl - The deployed Vercel URL
+     * @param {Object} db - Database Service instance
      */
-    async pitchLead(businessName, phone, vercelUrl) {
+    async pitchLead(businessName, phone, vercelUrl, db) {
         const formattedPhone = this.formatPhoneNumber(phone);
         console.log(`[Closer] Texting ${businessName} at ${formattedPhone}...`);
 
-        const messageBody = `Hello ${businessName}!
+        let templates;
+        try {
+            templates = await db.getSetting('whatsapp_template');
+        } catch (e) {
+            templates = {
+                en: "Hello {businessName}! We built a website for you: {previewUrl}",
+                ar: "مرحباً {businessName}! لقد قمنا بإنشاء موقع إلكتروني لك: {previewUrl}"
+            };
+        }
 
-We noticed you don't have a website, so we built one for you. Check out the live preview here: ${vercelUrl}
+        const buildMessage = (template, name, url) => {
+            if (!template) return '';
+            return template.replace(/{businessName}/g, name).replace(/{previewUrl}/g, url);
+        };
 
-If you love it, you can keep it today for just 99 SAR/month.
+        const msgEn = buildMessage(templates.en, businessName, vercelUrl);
+        const msgAr = buildMessage(templates.ar, businessName, vercelUrl);
 
----
-
-مرحباً ${businessName}!
-
-لاحظنا أنه ليس لديك موقع إلكتروني، لذلك قمنا بإنشاء واحد لك. يمكنك مشاهدة المعاينة المباشرة هنا: ${vercelUrl}
-
-إذا أعجبك، يمكنك الاحتفاظ به اليوم مقابل 99 ريال سعودي / شهر فقط.`;
+        // Combine bilingual message
+        const messageBody = `${msgEn}\n\n---\n\n${msgAr}`;
 
         try {
             const message = await this.client.messages.create({

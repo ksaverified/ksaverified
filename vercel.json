@@ -1,7 +1,9 @@
 {
     "version": 2,
+    "buildCommand": "cd dashboard && npm install && npm run build",
+    "outputDirectory": "dashboard/dist",
     "functions": {
-        "api/cron.js": {
+        "api/**/*.js": {
             "maxDuration": 60
         }
     },
@@ -9,6 +11,16 @@
         {
             "path": "/api/cron",
             "schedule": "0 * * * *"
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/api/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
         }
     ]
 }
