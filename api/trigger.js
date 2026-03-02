@@ -1,6 +1,6 @@
 const Orchestrator = require('../orchestrator');
 
-export default async function handler(request, response) {
+module.exports = async function handler(request, response) {
     // This endpoint allows manual triggering from the dashboard UI.
     // In a fully production-ready app, you'd add Auth/JWT checks here.
 
