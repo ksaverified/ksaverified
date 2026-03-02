@@ -4,13 +4,17 @@ const Orchestrator = require('../orchestrator');
 // NOTE: Google Places API + Gemini API + Vercel deployment usually takes 10-20 seconds.
 
 module.exports = async function handler(request, response) {
-    // Optional: Security check. 
-    // You can set a CRON_SECRET environment variable in Vercel to prevent random people from triggering your cron.
-    // if (request.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
-    //   return response.status(401).json({ error: 'Unauthorized' });
-    // }
+    // Security check for cron-job.org
+    // Set CRON_SECRET in your Vercel Environment Variables
+    const cronSecret = process.env.CRON_SECRET || 'dev-secret-key';
+    const providedKey = request.query?.key || request.headers.authorization?.replace('Bearer ', '');
 
-    console.log('[Cron] Triggered via Vercel scheduled execution.');
+    if (providedKey !== cronSecret) {
+        console.warn(`[Cron] Unauthorized execution attempt with key: ${providedKey}`);
+        return response.status(401).json({ error: 'Unauthorized. Invalid API Key.' });
+    }
+
+    console.log('[Cron] Triggered execution. Authorized.');
 
     try {
         const main = new Orchestrator();
