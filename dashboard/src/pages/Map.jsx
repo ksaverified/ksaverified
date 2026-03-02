@@ -1,10 +1,33 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow } from '@vis.gl/react-google-maps';
+import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 import { ExternalLink, Users } from 'lucide-react';
 
 // Using the same Google Places API key from the backend environment
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
+
+// Component to auto-fit map bounds
+const MapUpdater = ({ leads }) => {
+    const map = useMap();
+
+    useEffect(() => {
+        if (!map || leads.length === 0) return;
+
+        // Calculate bounds to fit all markers
+        const bounds = new window.google.maps.LatLngBounds();
+        leads.forEach(lead => {
+            const lat = parseFloat(lead.lat);
+            const lng = parseFloat(lead.lng);
+            if (!isNaN(lat) && !isNaN(lng)) {
+                bounds.extend({ lat, lng });
+            }
+        });
+
+        map.fitBounds(bounds);
+    }, [map, leads]);
+
+    return null;
+};
 
 export default function MapView() {
     const [leads, setLeads] = useState([]);
@@ -130,21 +153,29 @@ export default function MapView() {
                             ]
                         }}
                     >
-                        {leads.map(lead => (
-                            <AdvancedMarker
-                                key={lead.place_id}
-                                position={{ lat: lead.lat, lng: lead.lng }}
-                                onClick={() => setSelectedLead(lead)}
-                            >
-                                <div
-                                    className="w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform"
-                                    style={{
-                                        backgroundColor: getMarkerColor(lead.status),
-                                        boxShadow: `0 0 10px ${getMarkerColor(lead.status)}80`
-                                    }}
-                                />
-                            </AdvancedMarker>
-                        ))}
+                        <MapUpdater leads={leads} />
+
+                        {leads.map(lead => {
+                            const lat = parseFloat(lead.lat);
+                            const lng = parseFloat(lead.lng);
+                            if (isNaN(lat) || isNaN(lng)) return null;
+
+                            return (
+                                <AdvancedMarker
+                                    key={lead.place_id}
+                                    position={{ lat, lng }}
+                                    onClick={() => setSelectedLead(lead)}
+                                >
+                                    <div
+                                        className="w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform"
+                                        style={{
+                                            backgroundColor: getMarkerColor(lead.status),
+                                            boxShadow: `0 0 10px ${getMarkerColor(lead.status)}80`
+                                        }}
+                                    />
+                                </AdvancedMarker>
+                            );
+                        })}
 
                         {selectedLead && (
                             <InfoWindow
