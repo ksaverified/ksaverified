@@ -9,8 +9,10 @@ class PublisherAgent {
     this.vercelToken = process.env.VERCEL_API_TOKEN;
     this.vercelProjectId = process.env.VERCEL_PROJECT_ID;
 
-    if (!this.vercelToken || !this.vercelProjectId) {
-      throw new Error('VERCEL_API_TOKEN or VERCEL_PROJECT_ID is not defined in environment variables.');
+    this.isConfigured = !!(this.vercelToken && this.vercelProjectId);
+
+    if (!this.isConfigured) {
+      console.warn('[Publisher] VERCEL_API_TOKEN or VERCEL_PROJECT_ID missing. Site deployment is disabled.');
     }
   }
 
@@ -117,6 +119,11 @@ class PublisherAgent {
    * @returns {Promise<string>} The generated Vercel URL
    */
   async deploySite(businessName, compiledHtml) {
+    if (!this.isConfigured) {
+      console.log(`[Publisher] Skipped publishing ${businessName} - Vercel API credentials are not configured.`);
+      return null;
+    }
+
     console.log(`[Publisher] Pushing ${businessName} to Vercel...`);
 
     // Generate an internal id/slug for the deployment name
