@@ -1,4 +1,5 @@
-import { Outlet, NavLink, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Outlet, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Activity, Settings, Zap } from 'lucide-react';
 
 const Layout = () => {
@@ -9,12 +10,21 @@ const Layout = () => {
         { to: '/settings', icon: Settings, label: 'Settings' },
     ];
 
+    const [triggering, setTriggering] = useState(false);
+
     const handleTrigger = async () => {
+        if (triggering) return;
+        setTriggering(true);
         try {
-            // In production, this would call our /api/trigger endpoint or a Supabase Edge Function
-            alert('Manually triggered agent cycle. Check Live Logs tab to monitor progress!');
+            // Call the Vercel serverless function directly
+            const res = await fetch('/api/trigger', { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to trigger');
+            alert('🚀 Manual agent cycle launched! Switch to the Live Logs tab to watch the magic happen.');
         } catch (e) {
             console.error(e);
+            alert('❌ Failed to trigger pipeline manually. Ensure your backend is running.');
+        } finally {
+            setTriggering(false);
         }
     };
 
@@ -51,10 +61,11 @@ const Layout = () => {
                 <div className="p-4 border-t border-zinc-800">
                     <button
                         onClick={handleTrigger}
-                        className="w-full py-3 px-4 bg-primary hover:bg-blue-600 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                        disabled={triggering}
+                        className={`w-full py-3 px-4 ${triggering ? 'bg-primary/50 cursor-not-allowed' : 'bg-primary hover:bg-blue-600'} text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/20`}
                     >
-                        <Zap className="h-4 w-4 fill-current" />
-                        Trigger Pipeline
+                        <Zap className={`h-4 w-4 fill-current ${triggering ? 'animate-pulse' : ''}`} />
+                        {triggering ? 'Launching...' : 'Trigger Pipeline'}
                     </button>
                 </div>
             </aside>
