@@ -1,47 +1,47 @@
-const twilio = require('twilio');
+const axios = require('axios');
 
 /**
  * Closer Agent
- * Uses Twilio WhatsApp to send the deployed website to the business owner.
+ * Uses Ultramsg WhatsApp API to send the deployed website to the business owner.
  */
 class CloserAgent {
     constructor() {
-        this.accountSid = process.env.TWILIO_ACCOUNT_SID;
-        this.authToken = process.env.TWILIO_AUTH_TOKEN;
-        this.fromNumber = process.env.TWILIO_WHATSAPP_NUMBER; // Usually "whatsapp:+14155238886" for sandbox
+        this.instanceId = process.env.ULTRAMSG_INSTANCE_ID || '';
+        this.token = process.env.ULTRAMSG_TOKEN || '';
 
-        this.isConfigured = !!(this.accountSid && this.authToken && this.fromNumber);
+        // Ultramsg requires both instance ID and token to work
+        this.isConfigured = !!(this.instanceId && this.token);
 
-        if (this.isConfigured) {
-            this.client = twilio(this.accountSid, this.authToken);
+        if (!this.isConfigured) {
+            console.warn('[Closer] Ultramsg environment variables missing. WhatsApp pitching is disabled.');
         } else {
-            console.warn('[Closer] Twilio environment variables missing. WhatsApp pitching is disabled.');
+            // Set up common axios instance for cleaner code
+            this.api = axios.create({
+                baseURL: `https://api.ultramsg.com/${this.instanceId}/messages`,
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+            });
         }
     }
 
     /**
-     * Cleans and formats phone numbers to E.164 required by Twilio
+     * Cleans and formats phone numbers to E.164 without the '+' for Ultramsg
+     * Ultramsg expects mostly international format digits (e.g. 966568471238) optionally with @c.us
      * @param {string} rawPhone - The phone number scraped from Google Places
-     * @returns {string} E.164 formatted phone number
+     * @returns {string} Formatted phone number
      */
     formatPhoneNumber(rawPhone) {
-        // Remove all non-numeric characters except '+'
-        let cleaned = rawPhone.replace(/[^\\d+]/g, '');
+        // Remove all non-numeric characters
+        let cleaned = rawPhone.replace(/\D/g, '');
 
-        // If it doesn't start with '+', this needs country code logic.
-        // Given the query context (e.g. Riyadh), you might default to +966 for KSA.
-        if (!cleaned.startsWith('+')) {
-            if (cleaned.startsWith('05')) {
-                // KSA mobile number starting with 05
-                cleaned = '+966' + cleaned.substring(1);
-            } else if (cleaned.startsWith('966')) {
-                cleaned = '+' + cleaned;
-            } else {
-                console.warn(`[Closer] Phone number ${rawPhone} doesn't look like international format. Proceeding anyway.`);
-            }
+        // If KSA local format (e.g., 056...), prepend country code
+        if (cleaned.startsWith('05') && cleaned.length === 10) {
+            cleaned = '966' + cleaned.substring(1);
+        } else if (!cleaned.startsWith('966') && cleaned.length > 5 && cleaned.length < 10) {
+            // Very roughly assuming it's a local KSA fixed line (e.g 9200...) or missing country code
+            console.warn(`[Closer] Phone number ${rawPhone} doesn't look like international format. Passing to Ultramsg as is.`);
         }
 
-        return `whatsapp:${cleaned}`;
+        return cleaned;
     }
 
     /**
@@ -53,12 +53,12 @@ class CloserAgent {
      */
     async pitchLead(businessName, phone, vercelUrl, db) {
         if (!this.isConfigured) {
-            console.log(`[Closer] Skipped pitching ${businessName} - Twilio is purely optional and currently disabled.`);
+            console.log(`[Closer] Skipped pitching ${businessName} - Ultramsg is purely optional and currently disabled.`);
             return null;
         }
 
         const formattedPhone = this.formatPhoneNumber(phone);
-        console.log(`[Closer] Texting ${businessName} at ${formattedPhone}...`);
+        console.log(`[Closer] Texting ${businessName} at ${formattedPhone} via Ultramsg...`);
 
         let templates;
         try {
@@ -82,16 +82,27 @@ class CloserAgent {
         const messageBody = `${msgEn}\n\n---\n\n${msgAr}`;
 
         try {
-            const message = await this.client.messages.create({
-                body: messageBody,
-                from: this.fromNumber,
-                to: formattedPhone
-            });
+            // Ultramsg expects URL encoded form data
+            const params = new URLSearchParams();
+            params.append('token', this.token);
+            params.append('to', formattedPhone);
+            params.append('body', messageBody);
 
-            console.log(`[Closer] Successfully sent WhatsApp message to ${formattedPhone} (SID: ${message.sid})`);
-            return message.sid;
+            const response = await this.api.post('/chat', params);
+
+            if (response.data && response.data.sent === 'true') {
+                console.log(`[Closer] Successfully queued WhatsApp message via Ultramsg to ${formattedPhone} (MsgId: ${response.data.message.id})`);
+                return response.data.message.id;
+            } else {
+                console.warn(`[Closer] Ultramsg accepted request but didn't confirm 'sent':`, response.data);
+                return response.data?.message?.id || 'unknown_id'; // Fallback
+            }
+
         } catch (error) {
-            console.error(`[Closer] Error sending WhatsApp message: ${error.message} `);
+            console.error(`[Closer] Error sending WhatsApp message via Ultramsg: ${error.message}`);
+            if (error.response) {
+                console.error('[Closer] Ultramsg Response:', error.response.data);
+            }
             throw error;
         }
     }
