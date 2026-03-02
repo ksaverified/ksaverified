@@ -1,3 +1,4 @@
+const { waitUntil } = require('@vercel/functions');
 const Orchestrator = require('../orchestrator');
 
 // Set max duration to 60 seconds (requires Vercel Pro, otherwise limit is 10s or 15s on Free Tier)
@@ -14,15 +15,16 @@ module.exports = async function handler(request, response) {
         return response.status(401).json({ error: 'Unauthorized. Invalid API Key.' });
     }
 
-    console.log('[Cron] Triggered execution. Authorized.');
+    console.log('[Cron] Triggered execution. Authorized. Spawning background task.');
 
     try {
         const main = new Orchestrator();
 
-        // Vercel serverless functions are ephemeral. We await one full pipeline cycle per execution.
-        await main.runPipeline();
+        // Use waitUntil to process the AI Orchestrator in the background without Vercel freezing the function.
+        // This instantly returns a 200 OK to the client so cron-job.org doesn't log a 30s connection timeout.
+        waitUntil(main.runPipeline().catch(console.error));
 
-        return response.status(200).json({ success: true, message: 'Pipeline cycle completed successfully.' });
+        return response.status(200).json({ success: true, message: 'Pipeline cycle spawned securely in background.' });
     } catch (error) {
         console.error('[Cron Error]', error.message);
         return response.status(500).json({ success: false, error: error.message });
