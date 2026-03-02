@@ -20,14 +20,17 @@ class Orchestrator {
       'clinic in Riyadh',
       'barbershop in Riyadh'
     ];
-    this.currentQueryIndex = 0;
   }
 
   /**
    * Executes a single pipeline run
    */
   async runPipeline() {
-    const query = this.queries[this.currentQueryIndex];
+    // Since Vercel runs stateless, we randomly select a query instead of sequential counting
+    // which would reset on every lambda invocation.
+    const randomIndex = Math.floor(Math.random() * this.queries.length);
+    const query = this.queries[randomIndex];
+
     console.log('\n======================================================');
     console.log(`[Orchestrator] Starting cycle using query: "${query}"`);
     console.log('======================================================');
@@ -115,6 +118,10 @@ class Orchestrator {
   }
 }
 
-// Instantiate and start
-const main = new Orchestrator();
-main.startLoop();
+module.exports = Orchestrator;
+
+// Only instantiate and start the loop if this script is executed directly via CLI
+if (require.main === module) {
+  const main = new Orchestrator();
+  main.startLoop();
+}
