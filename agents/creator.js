@@ -56,8 +56,9 @@ class CreatorAgent {
       
       *CRITICAL INSTRUCTION FOR VISUALS*:
       1. The website MUST be visually stunning. The Hero section MUST include a large, beautiful background image or a looping background video.
-      2. Strongly use relevant placeholder images for the Hero and Service sections. You can use services like \`https://loremflickr.com/1920/1080/\${keyword}\` (e.g., if it's a restaurant, use \`https://loremflickr.com/1920/1080/restaurant,food\`).
-      3. Do not just leave blank colored boxes. Use rich imagery throughout the design to make it feel premium.
+      2. Strongly use relevant placeholder images for the Hero and Service sections. You can use services like \`https://loremflickr.com/1920/1080/\${keyword}\`.
+      3. CRITICAL: DO NOT REPEAT PHOTOS. Every single image or background MUST be different. To achieve this, you MUST append a unique random number parameter to every single image URL (e.g., \`https://loremflickr.com/1920/1080/food?random=1\`, \`...food?random=2\`) or use completely distinct keywords.
+      4. Do not just leave blank colored boxes. Use rich imagery throughout the design to make it feel premium.
       
       Output ONLY the raw HTML string. No markdown formatting like \`\`\`html at the top or bottom. Just the pure HTML source code starting with <!DOCTYPE html>.
     `;
