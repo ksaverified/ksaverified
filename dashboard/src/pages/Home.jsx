@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
 import { Users, Globe2, CheckCircle, Clock, Map as MapIcon, MessageCircle, MessageSquare, Activity, ChevronRight, Languages } from 'lucide-react';
-import { motion as M } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { APIProvider, Map as GoogleMap, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
 const StatCard = ({ title, value, icon: Icon, color, delay }) => (
-    <M.div
+    <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, duration: 0.4 }}
@@ -21,7 +21,7 @@ const StatCard = ({ title, value, icon: Icon, color, delay }) => (
             <p className="text-sm text-zinc-400 font-medium">{title}</p>
             <h3 className="text-2xl font-bold text-zinc-100 mt-1">{value}</h3>
         </div>
-    </M.div>
+    </motion.div>
 );
 
 export default function Home() {
@@ -183,7 +183,7 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                 {/* Main Col: Pipeline Activity */}
-                <M.div
+                <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
                     className="lg:col-span-2 bg-surface p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col"
                 >
@@ -233,10 +233,10 @@ export default function Home() {
                         </table>
                         {recentLeads.length === 0 && <div className="text-center text-zinc-500 py-6">No leads found in pipeline.</div>}
                     </div>
-                </M.div>
+                </motion.div>
 
                 {/* Right Col Top: Mini Map */}
-                <M.div
+                <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
                     className="bg-surface rounded-2xl border border-zinc-800 shadow-xl flex flex-col overflow-hidden relative min-h-[300px]"
                 >
@@ -272,10 +272,10 @@ export default function Home() {
                             Google Maps API Key required for preview.
                         </div>
                     )}
-                </M.div>
+                </motion.div>
 
                 {/* Bottom Row Col 1: WhatsApp Snippets */}
-                <M.div
+                <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
                     className="bg-surface p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col"
                 >
@@ -312,10 +312,10 @@ export default function Home() {
                             ))
                         )}
                     </div>
-                </M.div>
+                </motion.div>
 
                 {/* Bottom Row Col 2: AI Training Alert */}
-                <M.div
+                <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
                     className="bg-surface p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col justify-between relative overflow-hidden group"
                 >
@@ -343,10 +343,10 @@ export default function Home() {
                             Approve or correct the AI's autonomous responses so it learns your style.
                         </p>
                     </div>
-                </M.div>
+                </motion.div>
 
                 {/* Bottom Row Col 3: System Health / Logs */}
-                <M.div
+                <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}
                     className="bg-surface p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col"
                 >
@@ -375,7 +375,7 @@ export default function Home() {
                             ))
                         )}
                     </div>
-                </M.div>
+                </motion.div>
 
             </div>
         </div>

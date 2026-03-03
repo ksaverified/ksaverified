@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { ExternalLink, Code, Search, X } from 'lucide-react';
-import { motion as M, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Websites() {
     const [leads, setLeads] = useState([]);
@@ -92,7 +92,7 @@ export default function Websites() {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {filteredLeads.map((lead, i) => (
-                        <M.div
+                        <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.05 }}
@@ -154,7 +154,7 @@ export default function Websites() {
                                     <ExternalLink className="h-3.5 w-3.5" /> Vercel
                                 </a>
                             </div>
-                        </M.div>
+                        </motion.div>
                     ))}
                 </div>
             )}
@@ -168,7 +168,7 @@ export default function Websites() {
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
                     >
-                        <M.div
+                        <motion.div
                             initial={{ scale: 0.95, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.95, opacity: 0 }}
@@ -194,7 +194,7 @@ export default function Websites() {
                                     sandbox="allow-scripts allow-same-origin"
                                 />
                             </div>
-                        </M.div>
+                        </motion.div>
                     </M.div>
                 )}
             </AnimatePresence>
