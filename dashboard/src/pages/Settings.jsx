@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Save, Loader2, Info } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
 export default function Settings() {
@@ -47,8 +48,8 @@ export default function Settings() {
                 .eq('key', key);
 
             if (error) throw error;
-        } catch (e) {
-            alert(`Error saving \${key}: \${e.message}\\n\\nMake sure your input is valid JSON.`);
+        } catch (err) {
+            alert(`Error saving \${key}: \${err.message}\\n\\nMake sure your input is valid JSON.`);
         } finally {
             setSavingKeys({ ...savingKeys, [key]: false });
         }

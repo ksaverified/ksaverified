@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Activity, CheckCircle, XCircle, RefreshCcw, BarChart3 } from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
+// eslint-disable-next-line no-unused-vars
 const MetricCard = ({ title, value, icon: Icon, color, delay, subtitle }) => (
     <motion.div
         initial={{ opacity: 0, y: 20 }}
