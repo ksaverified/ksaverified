@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { Terminal, Copy, Check } from 'lucide-react';
+import { Terminal, Copy, Check, Clock, Activity } from 'lucide-react';
 
 export default function Logs() {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [selectedAgent, setSelectedAgent] = useState('all');
+    const [now, setNow] = useState(Date.now());
 
     useEffect(() => {
         fetchLogs();
@@ -18,7 +20,12 @@ export default function Logs() {
             })
             .subscribe();
 
-        return () => supabase.removeChannel(channel);
+        const interval = setInterval(() => setNow(Date.now()), 10000); // 10s counter refresh
+
+        return () => {
+            supabase.removeChannel(channel);
+            clearInterval(interval);
+        };
     }, []);
 
     async function fetchLogs() {
@@ -59,6 +66,29 @@ export default function Logs() {
         });
     };
 
+    const getTimeSince = (dateString) => {
+        const seconds = Math.floor((now - new Date(dateString).getTime()) / 1000);
+        if (seconds < 2) return 'Just now';
+        if (seconds < 60) return `${seconds}s ago`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes}m ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours}h ago`;
+        return `${Math.floor(hours / 24)}d ago`;
+    };
+
+    const agentLastActions = logs.reduce((acc, log) => {
+        if (!acc[log.agent] || new Date(log.created_at) > new Date(acc[log.agent].created_at)) {
+            acc[log.agent] = log;
+        }
+        return acc;
+    }, {});
+
+    const defaultAgents = ['orchestrator', 'scout', 'creator', 'publisher', 'closer'];
+    const uniqueAgents = [...new Set([...defaultAgents, ...Object.keys(agentLastActions)])];
+
+    const filteredLogs = selectedAgent === 'all' ? logs : logs.filter(l => l.agent === selectedAgent);
+
     return (
         <div className="h-full flex flex-col max-h-[calc(100vh-4rem)]">
             <header className="mb-6 flex-shrink-0 flex justify-between items-end">
@@ -78,6 +108,47 @@ export default function Logs() {
                 </button>
             </header>
 
+            {/* Agent Status Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6 flex-shrink-0">
+                <div
+                    onClick={() => setSelectedAgent('all')}
+                    className={`p-3 rounded-xl border cursor-pointer transition-colors flex flex-col justify-center ${selectedAgent === 'all' ? 'bg-primary/20 border-primary shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'bg-surface border-zinc-800 hover:bg-zinc-800/80'}`}
+                >
+                    <div className="text-sm font-bold text-zinc-100 flex items-center gap-2 mb-1">
+                        <Activity className="w-4 h-4 text-primary" /> All Agents
+                    </div>
+                    <div className="text-xs text-zinc-400">View combined log stream</div>
+                </div>
+
+                {uniqueAgents.map(agent => {
+                    const lastAction = agentLastActions[agent];
+                    const AgentIcon = Clock;
+                    return (
+                        <div
+                            key={agent}
+                            onClick={() => setSelectedAgent(agent)}
+                            className={`p-3 rounded-xl border cursor-pointer transition-colors relative ${selectedAgent === agent ? 'bg-primary/20 border-primary shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'bg-surface border-zinc-800 hover:bg-zinc-800/80'}`}
+                        >
+                            <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm font-bold capitalize text-zinc-200">{agent}</span>
+                                {lastAction && (
+                                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${selectedAgent === agent ? 'bg-primary/30 text-blue-200' : 'bg-zinc-800 text-zinc-400'}`}>
+                                        {getTimeSince(lastAction.created_at)}
+                                    </span>
+                                )}
+                            </div>
+                            {lastAction ? (
+                                <div className="text-xs text-zinc-400 truncate w-full flex items-center gap-1" title={lastAction.action}>
+                                    {lastAction.action}
+                                </div>
+                            ) : (
+                                <div className="text-xs text-zinc-600">No actions yet</div>
+                            )}
+                        </div>
+                    )
+                })}
+            </div>
+
             <div className="flex-1 bg-[#1e1e1e] border border-zinc-800 rounded-2xl overflow-hidden flex flex-col relative font-mono text-sm leading-relaxed shadow-2xl">
                 {/* Terminal Header Bar */}
                 <div className="bg-zinc-900 border-b border-zinc-800 p-3 flex gap-2 w-full flex-shrink-0">
@@ -90,10 +161,10 @@ export default function Logs() {
                 <div className="p-4 overflow-y-auto flex-1 flex flex-col-reverse space-y-reverse space-y-1">
                     {loading ? (
                         <div className="text-zinc-500 animate-pulse">Connecting to log stream...</div>
-                    ) : logs.length === 0 ? (
-                        <div className="text-zinc-500">No logs generated yet.</div>
+                    ) : filteredLogs.length === 0 ? (
+                        <div className="text-zinc-500">No logs generated yet for this agent.</div>
                     ) : (
-                        logs.map(log => (
+                        filteredLogs.map(log => (
                             <div key={log.id} className="flex gap-4 hover:bg-white/5 px-2 rounded -mx-2 transition-colors">
                                 <span className="text-zinc-600 flex-shrink-0 w-24">
                                     {new Date(log.created_at).toLocaleTimeString()}
