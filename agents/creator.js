@@ -47,10 +47,21 @@ class CreatorAgent {
     `;
 
         try {
-            const response = await this.ai.models.generateContent({
-                model: 'gemini-2.5-pro',
-                contents: prompt,
+            // Implement a 2-minute timeout to prevent the orchestrator from hanging indefinitely
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('Gemini API request timed out after 2 minutes')), 120000);
             });
+
+            const response = await Promise.race([
+                this.ai.models.generateContent({
+                    model: 'gemini-2.5-pro',
+                    contents: prompt,
+                }),
+                timeoutPromise
+            ]);
+
+            clearTimeout(timeoutId);
 
             let htmlContent = response.text;
 

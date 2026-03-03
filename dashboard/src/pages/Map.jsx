@@ -23,7 +23,16 @@ const MapUpdater = ({ leads }) => {
             }
         });
 
-        map.fitBounds(bounds);
+        map.fitBounds(bounds, { padding: 80 });
+
+        // Add semantic listener to enforce a sensible max zoom
+        // If there's only 1 dot, fitBounds will zoom in extremely close.
+        window.google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+            if (map.getZoom() > 14) {
+                map.setZoom(14);
+            }
+        });
+
     }, [map, leads]);
 
     return null;
@@ -132,21 +141,28 @@ export default function MapView() {
                             streetViewControl: false,
                             fullscreenControl: true,
                             styles: [
+                                // Standard dark theme colors
                                 { "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] },
                                 { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] },
                                 { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] },
-                                { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
-                                { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
-                                { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#263c3f" }] },
-                                { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#6b9a76" }] },
+
+                                // Hide ALL Points of Interest (Clutter)
+                                { "featureType": "poi", "stylers": [{ "visibility": "off" }] },
+
+                                // Hide ALL transit lines/stations (Clutter)
+                                { "featureType": "transit", "stylers": [{ "visibility": "off" }] },
+
+                                // Clean up Administrative boundaries / localities
+                                { "featureType": "administrative", "elementType": "geometry.stroke", "stylers": [{ "color": "#d59563" }, { "weight": 0.5 }] },
+
+                                // Keep roads visible but very subtle
                                 { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] },
                                 { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] },
                                 { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#9ca5b3" }] },
                                 { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#746855" }] },
                                 { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#1f2835" }] },
                                 { "featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{ "color": "#f3d19c" }] },
-                                { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#2f3948" }] },
-                                { "featureType": "transit.station", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] },
+
                                 { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] },
                                 { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#515c6d" }] },
                                 { "featureType": "water", "elementType": "labels.text.stroke", "stylers": [{ "color": "#17263c" }] }
@@ -208,6 +224,6 @@ export default function MapView() {
                     </GoogleMap>
                 </APIProvider>
             </div>
-        </div>
+        </div >
     );
 }

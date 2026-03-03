@@ -24,6 +24,8 @@ class DatabaseService {
                 name: lead.name,
                 phone: lead.phone,
                 address: lead.address,
+                lat: lead.location?.lat || null,
+                lng: lead.location?.lng || null,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'place_id' })
             .select();
