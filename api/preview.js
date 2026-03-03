@@ -20,7 +20,7 @@ module.exports = async function handler(request, response) {
         let finalHtml = lead.website_html;
         if (lead.status !== 'completed') {
             const publisher = new PublisherAgent();
-            finalHtml = publisher.injectModal(lead.website_html);
+            finalHtml = publisher.injectModal(lead.website_html, lead.place_id);
         }
 
         // Serve raw HTML

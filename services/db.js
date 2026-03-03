@@ -200,6 +200,38 @@ class DatabaseService {
         }
         return data;
     }
+
+    /**
+     * Increment a numeric counter column on a lead
+     */
+    async incrementLeadMetric(placeId, column) {
+        // Fetch current value first
+        const { data: lead, error: fetchError } = await this.supabase
+            .from('leads')
+            .select(column)
+            .eq('place_id', placeId)
+            .single();
+
+        if (fetchError && fetchError.code !== 'PGRST116') {
+            console.error(`[DB] Error fetching metric for increment:`, fetchError.message);
+            return;
+        }
+
+        const currentValue = lead ? lead[column] : 0;
+        const baseValue = typeof currentValue === 'number' ? currentValue : 0;
+
+        const updatePayload = {};
+        updatePayload[column] = baseValue + 1;
+
+        const { error: updateError } = await this.supabase
+            .from('leads')
+            .update(updatePayload)
+            .eq('place_id', placeId);
+
+        if (updateError) {
+            console.error(`[DB] Error incrementing metric:`, updateError.message);
+        }
+    }
 }
 
 module.exports = DatabaseService;

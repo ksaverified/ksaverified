@@ -11,9 +11,10 @@ class PublisherAgent {
   /**
    * Injects the payment modal snippet before </body>
    * @param {string} htmlString - Original website HTML
+   * @param {string} placeId - The ID of the lead for tracking
    * @returns {string} Modified HTML
    */
-  injectModal(htmlString) {
+  injectModal(htmlString, placeId) {
     // Generate a unique identifier for the script/styles so it doesn't clash
     const modalSnippet = `
       <style>
@@ -99,10 +100,49 @@ class PublisherAgent {
       </div>
 
       <script>
-        setTimeout(() => {
-          document.body.classList.add('modal-open');
-          document.getElementById('publisher-modal-overlay').classList.add('show');
-        }, 60000);
+        (function() {
+          const placeId = '${placeId}';
+          
+          // Helper to log metrics
+          function trackMetric(action) {
+             if (!placeId || placeId === 'undefined') return;
+             fetch(\`/api/track?id=\${placeId}&action=\${action}\`).catch(e => console.error(e));
+          }
+
+          // 1. Initial Page View Tracking
+          trackMetric('view');
+
+          // Modal Timing Logic
+          const ONE_HOUR = 60 * 60 * 1000; // 1 hour in MS
+          const ONE_MINUTE = 60 * 1000; // 1 min in MS
+          const STORAGE_KEY = \`modal_last_shown_\${placeId}\`;
+          
+          let delay = ONE_MINUTE; // Default 1 min
+          
+          const lastShownStr = localStorage.getItem(STORAGE_KEY);
+          if (lastShownStr) {
+             const lastShown = parseInt(lastShownStr, 10);
+             const timeSinceLastShown = Date.now() - lastShown;
+             
+             if (timeSinceLastShown < ONE_HOUR) {
+                // If they saw it within the last hour and refreshed, show it immediately
+                delay = 0;
+             }
+          }
+
+          setTimeout(() => {
+            document.body.classList.add('modal-open');
+            document.getElementById('publisher-modal-overlay').classList.add('show');
+            
+            // Re-record the timestamp they matched the modal constraint again
+            localStorage.setItem(STORAGE_KEY, Date.now().toString());
+
+            // 2. Track that they stayed long enough to see the modal for the first time in an hour
+            if (delay === ONE_MINUTE) {
+                 trackMetric('full_minute');
+            }
+          }, delay);
+        })();
       </script>
     `;
 
