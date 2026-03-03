@@ -49,7 +49,7 @@ export default function Settings() {
 
             if (error) throw error;
         } catch (err) {
-            alert(`Error saving \${key}: \${err.message}\\n\\nMake sure your input is valid JSON.`);
+            alert(`Error saving ${key}: ${err.message}\n\nMake sure your input is valid JSON.`);
         } finally {
             setSavingKeys({ ...savingKeys, [key]: false });
         }
