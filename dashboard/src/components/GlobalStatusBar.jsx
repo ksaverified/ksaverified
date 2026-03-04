@@ -56,7 +56,7 @@ export default function GlobalStatusBar() {
     const uniqueAgents = [...new Set([...defaultAgents, ...Object.keys(agentLastActions)])];
 
     return (
-        <div className="flex items-center gap-6 mb-6 px-4 py-2.5 bg-zinc-900/50 border border-zinc-800 rounded-lg overflow-x-auto flex-shrink-0 shadow-sm backdrop-blur-sm">
+        <div className="flex items-center gap-6 px-6 py-2 bg-[#0a0a0b]/80 border-b border-zinc-800 overflow-x-auto flex-shrink-0 backdrop-blur-md sticky top-0 z-50 w-full shadow-sm">
             <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mr-2 flex items-center gap-1.5 flex-shrink-0">
                 <Activity className="w-3 h-3" /> System Status
             </span>
