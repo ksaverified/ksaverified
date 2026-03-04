@@ -84,7 +84,7 @@ export default function Logs() {
         return acc;
     }, {});
 
-    const defaultAgents = ['orchestrator', 'scout', 'creator', 'publisher', 'closer'];
+    const defaultAgents = ['orchestrator', 'scout', 'creator', 'retoucher', 'publisher', 'closer'];
     const uniqueAgents = [...new Set([...defaultAgents, ...Object.keys(agentLastActions)])];
 
     const filteredLogs = selectedAgent === 'all' ? logs : logs.filter(l => l.agent === selectedAgent);
@@ -152,8 +152,14 @@ export default function Logs() {
                             className={`p-4 rounded-xl border cursor-pointer transition-all relative min-h-[100px] flex flex-col justify-between ${selectedAgent === agent ? 'bg-primary/10 border-primary shadow-[0_0_20px_rgba(59,130,246,0.15)] ring-1 ring-primary/50' : 'bg-surface border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700'}`}
                         >
                             <div className="flex justify-between items-start mb-2">
-                                <span className={`text-sm font-bold capitalize ${selectedAgent === agent ? 'text-primary-foreground' : 'text-zinc-200'}`}>
+                                <span className={`flex items-center gap-2 text-sm font-bold capitalize ${selectedAgent === agent ? 'text-primary-foreground' : 'text-zinc-200'}`}>
                                     {agent}
+                                    {lastAction && (Date.now() - new Date(lastAction.created_at).getTime()) < 15000 && (
+                                        <span className="relative flex h-2.5 w-2.5">
+                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                        </span>
+                                    )}
                                 </span>
                                 {lastAction && (
                                     <div className="flex flex-col items-end leading-none">
