@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
 import { LayoutDashboard, Users, Activity, Settings, Zap, Globe, Map as MapIcon, MessageSquare, BarChart3, MessageCircle } from 'lucide-react';
+import GlobalStatusBar from './GlobalStatusBar';
 
 const Layout = () => {
     const navItems = [
@@ -79,8 +80,11 @@ const Layout = () => {
 
             {/* Main Content */}
             <main className="flex-1 overflow-auto bg-[#0a0a0b] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(59,130,246,0.1),rgba(255,255,255,0))]">
-                <div className="p-8 max-w-7xl mx-auto">
-                    <Outlet />
+                <div className="p-8 max-w-7xl mx-auto flex flex-col h-full">
+                    <GlobalStatusBar />
+                    <div className="flex-1 overflow-auto">
+                        <Outlet />
+                    </div>
                 </div>
             </main>
         </div>
