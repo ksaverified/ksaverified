@@ -162,12 +162,12 @@ export default function Logs() {
                                     )}
                                 </span>
                                 {lastAction && (
-                                    <div className="flex flex-col items-end leading-none">
-                                        <span className={`text-2xl font-black ${selectedAgent === agent ? 'text-primary' : 'text-zinc-300'}`}>
+                                    <div className="flex flex-col items-end leading-none mt-2">
+                                        <span className={`text-4xl md:text-5xl font-black tracking-tighter ${selectedAgent === agent ? 'text-primary drop-shadow-[0_2px_10px_rgba(59,130,246,0.4)]' : 'text-zinc-300 drop-shadow-md'}`}>
                                             {timeVal}
                                         </span>
                                         {timeUnit && (
-                                            <span className={`text-[10px] font-bold uppercase tracking-wider mt-0.5 ${selectedAgent === agent ? 'text-primary/70' : 'text-zinc-500'}`}>
+                                            <span className={`text-xs md:text-sm font-bold uppercase tracking-widest mt-1 ${selectedAgent === agent ? 'text-primary/80' : 'text-zinc-500'}`}>
                                                 {timeUnit}
                                             </span>
                                         )}
