@@ -163,7 +163,7 @@ export default function Logs() {
                                 </span>
                                 {lastAction && (
                                     <div className="flex flex-col items-end leading-none mt-2">
-                                        <span className={`text-4xl md:text-5xl font-black tracking-tighter ${selectedAgent === agent ? 'text-primary drop-shadow-[0_2px_10px_rgba(59,130,246,0.4)]' : 'text-zinc-300 drop-shadow-md'}`}>
+                                        <span className={`text-2xl md:text-3xl font-black tracking-tighter ${selectedAgent === agent ? 'text-primary drop-shadow-[0_2px_10px_rgba(59,130,246,0.4)]' : 'text-zinc-300 drop-shadow-md'}`}>
                                             {timeVal}
                                         </span>
                                         {timeUnit && (
