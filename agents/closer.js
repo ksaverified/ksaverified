@@ -42,10 +42,16 @@ class CloserAgent {
         const formattedPhone = this.formatPhoneNumber(phone);
 
         // 1. Ensure lead exists in database (Required for dashboard login)
+        // AND Create/Update Supabase Auth User
+        let registrationData = { pin: '000000' };
         try {
+            const authService = require('../services/auth');
+            registrationData = await authService.registerLead({ name: businessName, phone: formattedPhone });
+            console.log(`[Closer] Lead ${formattedPhone} registered with PIN: ${registrationData.pin}`);
+
             const existingLead = await db.getLeadByPhone(formattedPhone);
             if (!existingLead) {
-                console.log(`[Closer] Lead ${phone} not found. Creating manual entry...`);
+                console.log(`[Closer] Database entry missing. Creating manual entry...`);
                 await db.upsertLead({
                     placeId: `manual-${formattedPhone}`,
                     name: businessName,
@@ -54,7 +60,7 @@ class CloserAgent {
                 });
             }
         } catch (dbErr) {
-            console.warn(`[Closer] Database check failed: ${dbErr.message}. Proceeding with pitch anyway.`);
+            console.warn(`[Closer] Registration or DB check failed: ${dbErr.message}. Proceeding with pitch anyway.`);
         }
 
         console.log(`[Closer] Routing pitch for ${businessName} to cloud service...`);
@@ -67,18 +73,21 @@ class CloserAgent {
             templates = await db.getSetting('whatsapp_template');
         } catch (e) {
             templates = {
-                en: "Hello {businessName}! 💎 We built a premium preview for your new website: {previewUrl}\n\nYou can manage your site and track progress at your ALATLAS Client Dashboard: https://drop-servicing-pipeline.vercel.app/client-dashboard\n(Sign in instantly with your WhatsApp number!)",
-                ar: "مرحباً {businessName}! 💎 لقد قمنا بإنشاء معاينة متميزة لموقعك الإلكتروني الجديد: {previewUrl}\n\nيمكنك إدارة موقعك ومتابعة التقدم من خلال لوحة تحكم عملاء ALATLAS: https://drop-servicing-pipeline.vercel.app/client-dashboard\n(سجل الدخول فوراً باستخدام رقم الواتساب الخاص بك!)"
+                en: "Hello {businessName}! 💎 We built a premium preview for your new website: {previewUrl}\n\nManage your site at your ALATLAS Portal: https://drop-servicing-pipeline.vercel.app/client-dashboard\n\nYour temporary password: *{password}*\n(Log in with your phone number)",
+                ar: "مرحباً {businessName}! 💎 لقد قمنا بإنشاء معاينة متميزة لموقعك الإلكتروني الجديد: {previewUrl}\n\nأدر موقعك من خلال بوابة ALATLAS: https://drop-servicing-pipeline.vercel.app/client-dashboard\n\nكلمة المرور المؤقتة الخاصة بك: *{password}*\n(سجل الدخول برقم جوالك)"
             };
         }
 
-        const buildMessage = (template, name, url) => {
+        const buildMessage = (template, name, url, pass) => {
             if (!template) return '';
-            return template.replace(/{businessName}/g, name).replace(/{previewUrl}/g, url);
+            return template
+                .replace(/{businessName}/g, name)
+                .replace(/{previewUrl}/g, url)
+                .replace(/{password}/g, pass);
         };
 
-        const msgEn = buildMessage(templates.en, businessName, vercelUrl);
-        const msgAr = buildMessage(templates.ar, businessName, vercelUrl);
+        const msgEn = buildMessage(templates.en, businessName, vercelUrl, registrationData.pin);
+        const msgAr = buildMessage(templates.ar, businessName, vercelUrl, registrationData.pin);
         const messageBody = `${msgEn}\n\n---\n\n${msgAr}`;
 
         // Send marketing image first (using Ultramsg for cloud reliability)
