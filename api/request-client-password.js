@@ -68,18 +68,21 @@ module.exports = async function handler(request, response) {
             console.log(`[Client-Auth] Created new client user: ${phone}`);
         }
 
-        // 5. Send the password via WhatsApp
-        const whatsappUrl = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:8080';
-        const message = `Hello ${lead.name}!\n\nYour temporary password for the Client Dashboard is: *${generatedPassword}*\n\nPlease log in using your phone number to manage your website.`;
+        // 5. Send the password via Ultramsg (Reliable Cloud-to-WhatsApp)
+        const instanceId = process.env.ULTRAMSG_INSTANCE_ID;
+        const token = process.env.ULTRAMSG_TOKEN;
+        const message = `Hello ${lead.name}!\n\nYour temporary password for the ALATLAS Client Dashboard is: *${generatedPassword}*\n\nPlease log in using your phone number to manage your website.`;
 
         try {
-            await axios.post(`${whatsappUrl}/send`, {
+            await axios.post(`https://api.ultramsg.com/${instanceId}/messages/chat`, {
+                token: token,
                 to: phone,
-                message: message
+                body: message,
+                priority: 10
             });
-            console.log(`[Client-Auth] Sent password via WhatsApp to ${phone}`);
+            console.log(`[Client-Auth] Sent password via Ultramsg to ${phone}`);
         } catch (waError) {
-            console.error(`[Client-Auth] Failed to send WhatsApp message:`, waError.message);
+            console.error(`[Client-Auth] Failed to send via Ultramsg:`, waError.response?.data || waError.message);
             return response.status(500).json({ error: 'Password updated, but failed to send via WhatsApp.' });
         }
 
