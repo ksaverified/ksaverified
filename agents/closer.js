@@ -66,15 +66,16 @@ class CloserAgent {
 
         // Send marketing image first (using Ultramsg for cloud reliability)
         try {
-            const { sendImage } = require('../services/ultramsg');
+            const { sendMessage: sendUltramsg, sendImage } = require('../services/ultramsg');
             console.log(`[Closer] Sending marketing image to ${formattedPhone}...`);
             await sendImage(formattedPhone, marketingImageUrl, "ALATLAS Intelligence 💎");
-        } catch (err) {
-            console.warn(`[Closer] Failed to send marketing image: ${err.message}`);
-            // Continue with text message even if image fails
-        }
 
-        return this.sendMessage(formattedPhone, messageBody);
+            console.log(`[Closer] Sending text pitch via Ultramsg to ${formattedPhone}...`);
+            return await sendUltramsg(formattedPhone, messageBody);
+        } catch (err) {
+            console.warn(`[Closer] Failed to send via Ultramsg: ${err.message}. Falling back to local...`);
+            return this.sendMessage(formattedPhone, messageBody);
+        }
     }
 
     /**
