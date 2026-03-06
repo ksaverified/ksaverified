@@ -15,15 +15,11 @@
             "destination": "/api/preview?id=$1"
         },
         {
-            "source": "/client-dashboard/assets/(.*)",
-            "destination": "/client-dashboard/assets/$1"
-        },
-        {
-            "source": "/client-dashboard(/.*)?",
+            "source": "/client-dashboard/:path((?!.*\\.).*)",
             "destination": "/client-dashboard/index.html"
         },
         {
-            "source": "/(.*)",
+            "source": "/:path((?!.*\\.).*)",
             "destination": "/index.html"
         }
     ]
