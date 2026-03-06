@@ -12,17 +12,19 @@ export default function MyWebsite() {
     useEffect(() => {
         async function fetchLeadData() {
             try {
-                // Find the lead associated with this phone (metadata stored during auth)
                 const phone = user?.user_metadata?.phone;
                 if (!phone) {
                     setLoading(false);
                     return;
                 }
 
+                // Clean phone number - keep only last 9 digits for reliable match (avoids + prefix issues)
+                const searchPhone = phone.replace(/\D/g, '').slice(-9);
+
                 const { data, error } = await supabase
                     .from('leads')
                     .select('*')
-                    .eq('phone', phone)
+                    .ilike('phone', `%${searchPhone}`)
                     .single();
 
                 if (error) throw error;
