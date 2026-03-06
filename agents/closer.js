@@ -42,6 +42,9 @@ class CloserAgent {
         const formattedPhone = this.formatPhoneNumber(phone);
         console.log(`[Closer] Routing pitch for ${businessName} to local service...`);
 
+        // Image URL hosted on Vercel
+        const marketingImageUrl = 'https://drop-servicing-pipeline.vercel.app/marketing/offer.png';
+
         let templates;
         try {
             templates = await db.getSetting('whatsapp_template');
@@ -60,6 +63,16 @@ class CloserAgent {
         const msgEn = buildMessage(templates.en, businessName, vercelUrl);
         const msgAr = buildMessage(templates.ar, businessName, vercelUrl);
         const messageBody = `${msgEn}\n\n---\n\n${msgAr}`;
+
+        // Send marketing image first (using Ultramsg for cloud reliability)
+        try {
+            const { sendImage } = require('../services/ultramsg');
+            console.log(`[Closer] Sending marketing image to ${formattedPhone}...`);
+            await sendImage(formattedPhone, marketingImageUrl, "ALATLAS Intelligence 💎");
+        } catch (err) {
+            console.warn(`[Closer] Failed to send marketing image: ${err.message}`);
+            // Continue with text message even if image fails
+        }
 
         return this.sendMessage(formattedPhone, messageBody);
     }
