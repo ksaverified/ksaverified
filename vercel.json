@@ -15,7 +15,11 @@
             "destination": "/api/preview?id=$1"
         },
         {
-            "source": "/client-dashboard/(.*)",
+            "source": "/client-dashboard/assets/(.*)",
+            "destination": "/client-dashboard/assets/$1"
+        },
+        {
+            "source": "/client-dashboard(/.*)?",
             "destination": "/client-dashboard/index.html"
         },
         {
