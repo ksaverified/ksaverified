@@ -15,6 +15,10 @@
             "destination": "/api/preview?id=$1"
         },
         {
+            "source": "/client-dashboard/(.*)",
+            "destination": "/client-dashboard/index.html"
+        },
+        {
             "source": "/(.*)",
             "destination": "/index.html"
         }

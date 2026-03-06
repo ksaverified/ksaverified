@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 @layer base {
   body {
@@ -12,6 +10,7 @@
   .bg-surface {
     @apply bg-[#11141b]/90 backdrop-blur-md;
   }
+
   .text-primary {
     @apply text-blue-500;
   }

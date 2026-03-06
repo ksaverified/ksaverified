@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from './AuthContext';
+import { useAuth } from '../components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Lock, Phone, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
