@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { Lock, Phone, MessageCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 
 export default function Login() {
     const { user } = useAuth();
@@ -121,6 +121,7 @@ export default function Login() {
                                     value={phone}
                                     onChange={(e) => setPhone(e.target.value)}
                                     placeholder="+96650..."
+                                    autocomplete="username"
                                     className="w-full bg-black/40 border border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono"
                                     required
                                 />
@@ -140,6 +141,7 @@ export default function Login() {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     placeholder="Enter your password"
+                                    autocomplete="current-password"
                                     className="w-full bg-black/40 border border-zinc-800 rounded-xl py-3 pl-11 pr-4 text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
                                 />
                             </div>
