@@ -17,8 +17,11 @@ module.exports = async function handler(request, response) {
         }
 
         // Only inject the PayTabs/STC Pay modal if the site has not been paid for and unlocked
+        // Skip injection if viewed from the Client Dashboard (dashboard=true query param)
         let finalHtml = lead.website_html;
-        if (lead.status !== 'completed') {
+        const isDashboardView = request.query.dashboard === 'true';
+
+        if (lead.status !== 'completed' && !isDashboardView) {
             const publisher = new PublisherAgent();
             finalHtml = publisher.injectModal(lead.website_html, lead.place_id);
         }

@@ -58,13 +58,14 @@ class DatabaseService {
     }
 
     /**
-     * Fetches the next available lead that needs processing
+     * Fetches the next available lead that needs processing.
+     * Includes leads that are 'scouted' (new) or interrupted in intermediate states.
      */
     async getPendingLead() {
         const { data, error } = await this.supabase
             .from('leads')
             .select('*')
-            .eq('status', 'scouted')
+            .in('status', ['scouted', 'created', 'retouched', 'published'])
             .or('retry_count.lt.3,retry_count.is.null')
             .order('updated_at', { ascending: true })
             .limit(1)

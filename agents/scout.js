@@ -21,57 +21,68 @@ class ScoutAgent {
     console.log(`[Scout] Searching for leads with query: "${query}"...`);
 
     try {
-      // Step 1: Text Search to get a list of places
-      const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${this.apiKey}`;
-      const searchResponse = await axios.get(searchUrl);
+      let validLeads = [];
+      let nextPageToken = null;
+      let pagesFetched = 0;
+      const maxPages = 3;
 
-      if (searchResponse.data.status !== 'OK' && searchResponse.data.status !== 'ZERO_RESULTS') {
-        throw new Error(`Google Places API Error: ${searchResponse.data.status} - ${searchResponse.data.error_message || ''}`);
-      }
+      do {
+        // Step 1: Text Search to get a list of places
+        let searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${encodeURIComponent(query)}&key=${this.apiKey}`;
+        if (nextPageToken) {
+          searchUrl += `&pagetoken=${nextPageToken}`;
+          // Google requires a short delay before the next_page_token becomes valid
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
 
-      const places = searchResponse.data.results || [];
-      console.log(`[Scout] Found ${places.length} initial places. Filtering...`);
+        const searchResponse = await axios.get(searchUrl);
 
-      const validLeads = [];
+        if (searchResponse.data.status !== 'OK' && searchResponse.data.status !== 'ZERO_RESULTS') {
+          throw new Error(`Google Places API Error: ${searchResponse.data.status} - ${searchResponse.data.error_message || ''}`);
+        }
 
-      // Step 2: Get details for each place to check phone number and website
-      for (const place of places) {
-        // Request detailed fields including reviews, business types, and photos to enhance AI generation
-        const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number,website,reviews,types,photos&key=${this.apiKey}`;
-        const detailsResponse = await axios.get(detailsUrl);
+        const places = searchResponse.data.results || [];
+        console.log(`[Scout] Page ${pagesFetched + 1}: Found ${places.length} results.`);
 
-        if (detailsResponse.data.status === 'OK') {
-          const details = detailsResponse.data.result;
+        // Step 2: Get details for each place
+        for (const place of places) {
+          const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number,website,reviews,types,photos&key=${this.apiKey}`;
+          const detailsResponse = await axios.get(detailsUrl);
 
-          // Filter logic: Only return results where formatted_phone_number exists AND website is undefined or null.
-          if (details.formatted_phone_number && !details.website) {
-            console.log(`[Scout] Found match: ${details.name} (Phone: ${details.formatted_phone_number})`);
+          if (detailsResponse.data.status === 'OK') {
+            const details = detailsResponse.data.result;
 
-            // Extract top 3 positive reviews to feed to the AI
-            const topReviews = details.reviews
-              ? details.reviews.filter(r => r.rating >= 4).slice(0, 3).map(r => r.text)
-              : [];
+            if (details.formatted_phone_number && !details.website) {
+              console.log(`[Scout] Found match: ${details.name} (Phone: ${details.formatted_phone_number})`);
 
-            // Extract up to 5 photos from Google Maps to use instead of placeholder images
-            const photos = details.photos
-              ? details.photos.slice(0, 5).map(p => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${p.photo_reference}&key=${this.apiKey}`)
-              : [];
+              const topReviews = details.reviews
+                ? details.reviews.filter(r => r.rating >= 4).slice(0, 3).map(r => r.text)
+                : [];
 
-            validLeads.push({
-              placeId: place.place_id,
-              name: details.name,
-              phone: details.formatted_phone_number,
-              address: place.formatted_address,
-              location: place.geometry?.location,
-              types: details.types || [],
-              reviews: topReviews,
-              photos: photos
-            });
+              const photos = details.photos
+                ? details.photos.slice(0, 5).map(p => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${p.photo_reference}&key=${this.apiKey}`)
+                : [];
+
+              validLeads.push({
+                placeId: place.place_id,
+                name: details.name,
+                phone: details.formatted_phone_number,
+                address: place.formatted_address,
+                location: place.geometry?.location,
+                types: details.types || [],
+                reviews: topReviews,
+                photos: photos
+              });
+            }
           }
         }
-      }
 
-      console.log(`[Scout] Finished scouting. Found ${validLeads.length} valid leads without websites.`);
+        nextPageToken = searchResponse.data.next_page_token;
+        pagesFetched++;
+
+      } while (nextPageToken && pagesFetched < maxPages);
+
+      console.log(`[Scout] Finished scouting. Found ${validLeads.length} valid leads across ${pagesFetched} pages.`);
       return validLeads;
     } catch (error) {
       console.error(`[Scout] Error during lead generation: ${error.message}`);

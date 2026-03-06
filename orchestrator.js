@@ -101,28 +101,37 @@ class Orchestrator {
 
         // Step 2: Create HTML
         try {
-          await this.db.addLog('creator', 'generation_started', activeLead.placeId, { name: activeLead.name }, 'info');
-          const rawHtml = await this.creator.createWebsite(activeLead, this.db);
-          await this.db.addLog('creator', 'website_generated', activeLead.placeId, { length: rawHtml.length }, 'success');
-          await this.db.updateLeadStatus(activeLead.placeId, 'created', { website_html: rawHtml });
+          let currentHtml = activeDbLead.website_html || '';
+          let vercelUrl = activeDbLead.vercel_url || '';
 
-          // Step 2.5: Retouch HTML
-          await this.db.addLog('retoucher', 'audit_started', activeLead.placeId, { name: activeLead.name }, 'info');
-          const finalHtml = await this.retoucher.retouchWebsite(rawHtml, activeLead);
-          await this.db.addLog('retoucher', 'audit_completed', activeLead.placeId, { length: finalHtml.length }, 'success');
-          await this.db.updateLeadStatus(activeLead.placeId, 'retouched', { website_html: finalHtml });
+          // Resume based on current status
+          if (activeDbLead.status === 'scouted') {
+            await this.db.addLog('creator', 'generation_started', activeLead.placeId, { name: activeLead.name }, 'info');
+            currentHtml = await this.creator.createWebsite(activeLead, this.db);
+            await this.db.addLog('creator', 'website_generated', activeLead.placeId, { length: currentHtml.length }, 'success');
+            await this.db.updateLeadStatus(activeLead.placeId, 'created', { website_html: currentHtml });
+          }
 
-          // Step 3: Publish to Vercel (Dynamic Generation)
-          await this.db.addLog('publisher', 'deployment_started', activeLead.placeId, {}, 'info');
-          const liveUrl = await this.publisher.handlePublish(activeLead.placeId);
-          await this.db.addLog('publisher', 'deployment_success', activeLead.placeId, { url: liveUrl }, 'success');
-          await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: liveUrl });
+          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'created') {
+            await this.db.addLog('retoucher', 'audit_started', activeLead.placeId, { name: activeLead.name }, 'info');
+            currentHtml = await this.retoucher.retouchWebsite(currentHtml, activeLead);
+            await this.db.addLog('retoucher', 'audit_completed', activeLead.placeId, { length: currentHtml.length }, 'success');
+            await this.db.updateLeadStatus(activeLead.placeId, 'retouched', { website_html: currentHtml });
+          }
 
-          // Step 4: Close (Send WhatsApp text)
-          await this.db.addLog('closer', 'pitch_started', activeLead.placeId, { phone: activeLead.phone }, 'info');
-          await this.closer.pitchLead(activeLead.name, activeLead.phone, liveUrl, this.db);
-          await this.db.addLog('closer', 'pitch_sent', activeLead.placeId, { url: liveUrl }, 'success');
-          await this.db.updateLeadStatus(activeLead.placeId, 'pitched');
+          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
+            await this.db.addLog('publisher', 'deployment_started', activeLead.placeId, {}, 'info');
+            vercelUrl = await this.publisher.handlePublish(activeLead.placeId);
+            await this.db.addLog('publisher', 'deployment_success', activeLead.placeId, { url: vercelUrl }, 'success');
+            await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: vercelUrl });
+          }
+
+          if (activeDbLead.status !== 'pitched') {
+            await this.db.addLog('closer', 'pitch_started', activeLead.placeId, { phone: activeLead.phone }, 'info');
+            await this.closer.pitchLead(activeLead.name, activeLead.phone, vercelUrl, this.db);
+            await this.db.addLog('closer', 'pitch_sent', activeLead.placeId, { url: vercelUrl }, 'success');
+            await this.db.updateLeadStatus(activeLead.placeId, 'pitched');
+          }
 
           console.log(`[Orchestrator] Successfully completed pipeline for ${activeLead.name}`);
           await this.db.addLog('orchestrator', 'cycle_success', activeLead.placeId, { name: activeLead.name }, 'success');
@@ -130,7 +139,6 @@ class Orchestrator {
         } catch (innerError) {
           console.error(`[Orchestrator] Failed to process lead ${activeLead.name}:`, innerError.message);
           await this.db.addLog('orchestrator', 'lead_error', activeLead.placeId, { message: innerError.message }, 'error');
-          // Increment retry count so this lead doesn't block the queue forever
           await this.db.incrementRetryCount(activeLead.placeId, innerError.message);
         }
 

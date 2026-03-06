@@ -118,7 +118,7 @@ export default function MyWebsite() {
             >
                 <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 <iframe
-                    src={lead.vercel_url}
+                    src={`${lead.vercel_url}${lead.vercel_url.includes('?') ? '&' : '?'}dashboard=true`}
                     className="w-full h-full border-none"
                     title="Website Preview"
                 />

@@ -27,8 +27,8 @@ class CreatorAgent {
             promptConfig = await db.getSetting('website_prompt');
         } catch (e) {
             promptConfig = {
-                system: "You are an expert web developer and copywriter.",
-                instructions: "Generate a modern, beautiful, complete, single-file HTML landing page... Use Tailwind CSS via CDN. Make it bilingual (English and Arabic) with RTL."
+                system: "You are an expert web developer and copywriter specializing in high-conversion landing pages.",
+                instructions: "Generate a modern, beautiful, fully responsive, single-file HTML landing page. Use Tailwind CSS via CDN. The website MUST be bilingual (English and Arabic) with full RTL support. Implement a functional hamburger menu for mobile devices. Use smooth transitions and ensure all sections stack correctly on small screens using Tailwind's responsive prefixes (sm:, md:, lg:, etc.)."
             };
         }
 
@@ -49,6 +49,12 @@ class CreatorAgent {
       
       Requirements:
       ${promptConfig.instructions}
+      
+      *CRITICAL INSTRUCTION FOR RESPONSIVENESS*:
+      1. Use Tailwind's grid and flex utilities with responsive prefixes (e.g., \`grid-cols-1 md:grid-cols-2\`) to ensure the layout looks perfect on phones, tablets, and desktops.
+      2. Implement a functional "Hamburger Menu" for mobile view. The desktop navigation links should be hidden on small screens, and a menu icon should appear. When clicked, the menu should slide or fade in.
+      3. Since this is a single file, you can use a small \`<script>\` block or a hidden checkbox technique to handle the menu toggle.
+      4. Ensure padding, font sizes, and image heights are adjusted for mobile using Tailwind classes like \`px-4 md:px-8\` and \`text-2xl md:text-5xl\`.
       
       *CRITICAL INSTRUCTION FOR SERVICES/SUBPAGES & NAVIGATION*: 
       1. DO NOT use placeholders like "Service 1", "Lorem Ipsum", or empty sections.
