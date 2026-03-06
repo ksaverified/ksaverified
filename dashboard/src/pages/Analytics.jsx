@@ -4,25 +4,6 @@ import { Activity, CheckCircle, XCircle, RefreshCcw, BarChart3 } from 'lucide-re
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
-// eslint-disable-next-line no-unused-vars
-const MetricCard = ({ title, value, icon: Icon, color, delay, subtitle }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay, duration: 0.4 }}
-        className="bg-surface p-6 rounded-2xl border border-zinc-800 flex items-start gap-4 hover:border-zinc-700 transition-colors"
-    >
-        <div className={`p-4 rounded-xl ${color} bg-opacity-10 mt-1`}>
-            <Icon className={`h-6 w-6 ${color.replace('bg-', 'text-')}`} />
-        </div>
-        <div>
-            <p className="text-sm text-zinc-400 font-medium">{title}</p>
-            <h3 className="text-3xl font-bold text-zinc-100 mt-1">{value}</h3>
-            {subtitle && <p className="text-xs text-zinc-500 mt-2">{subtitle}</p>}
-        </div>
-    </motion.div>
-);
-
 export default function Analytics() {
     const [metrics, setMetrics] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -93,62 +74,77 @@ export default function Analytics() {
                 </button>
             </header>
 
-            {metrics.map((agent, index) => (
-                <motion.div
-                    key={agent.agent}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="bg-black/20 border border-zinc-800/60 rounded-3xl p-6 lg:p-8"
-                >
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-zinc-800/50">
-                        <div>
-                            <h2 className="text-2xl font-bold text-zinc-100 capitalize flex items-center gap-2">
-                                {agent.agent} Agent
-                            </h2>
-                            <p className="text-zinc-500 text-sm mt-1">
-                                Lifetime performance statistics
-                            </p>
-                        </div>
-
-                        <div className="bg-surface border border-zinc-800 rounded-xl px-6 py-4 flex items-center gap-4">
-                            <div className="text-right">
-                                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Success Rate</p>
-                                <p className={`text-2xl font-bold ${agent.successRate >= 90 ? 'text-emerald-400' : agent.successRate >= 75 ? 'text-amber-400' : 'text-red-400'}`}>
-                                    {agent.successRate}%
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <MetricCard
-                            title="Total Completions"
-                            value={agent.completions}
-                            icon={CheckCircle}
-                            color="bg-emerald-500"
-                            delay={0.1 + (index * 0.1)}
-                            subtitle="Successful actions logged by this agent"
-                        />
-                        <MetricCard
-                            title="Unrectified Failures"
-                            value={agent.failures}
-                            icon={XCircle}
-                            color="bg-red-500"
-                            delay={0.2 + (index * 0.1)}
-                            subtitle="Errors that were never followed by a success for the same lead"
-                        />
-                        <MetricCard
-                            title="Rectified Failures"
-                            value={agent.rectified_failures}
-                            icon={Activity}
-                            color="bg-amber-500"
-                            delay={0.3 + (index * 0.1)}
-                            subtitle="Errors that the pipeline subsequently recovered from"
-                        />
-                    </div>
-                </motion.div>
-            ))}
+            <div className="bg-surface/50 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-sm">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-zinc-900/50 border-b border-zinc-800">
+                                <th className="px-8 py-6 text-sm font-bold text-zinc-100 uppercase tracking-tight">Agent Name</th>
+                                <th className="px-8 py-6 text-sm font-bold text-zinc-100 uppercase tracking-tight text-center">Success Rate</th>
+                                <th className="px-8 py-6 text-sm font-bold text-zinc-100 uppercase tracking-tight text-center">Completions</th>
+                                <th className="px-8 py-6 text-sm font-bold text-zinc-100 uppercase tracking-tight text-center">Failures</th>
+                                <th className="px-8 py-6 text-sm font-bold text-zinc-100 uppercase tracking-tight text-center">Rectified</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {metrics.map((agent, index) => (
+                                <motion.tr
+                                    key={agent.agent}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.05 }}
+                                    className="group hover:bg-white/[0.02] transition-colors border-b border-zinc-800/50 last:border-0"
+                                >
+                                    <td className="px-8 py-6">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                                                <Activity className="h-5 w-5 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="text-base font-bold text-zinc-100 capitalize">{agent.agent} Agent</p>
+                                                <p className="text-xs text-zinc-500 font-medium tracking-wide uppercase">Core System</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-6 text-center">
+                                        <div className="flex flex-col items-center gap-2">
+                                            <span className={`text-xl font-black ${agent.successRate >= 90 ? 'text-emerald-400' : agent.successRate >= 75 ? 'text-amber-400' : 'text-red-400'}`}>
+                                                {agent.successRate}%
+                                            </span>
+                                            <div className="w-24 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                                <motion.div
+                                                    initial={{ width: 0 }}
+                                                    animate={{ width: `${agent.successRate}%` }}
+                                                    transition={{ duration: 1, delay: 0.5 + (index * 0.1) }}
+                                                    className={`h-full rounded-full ${agent.successRate >= 90 ? 'bg-emerald-500' : agent.successRate >= 75 ? 'bg-amber-500' : 'bg-red-500'}`}
+                                                />
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-6 text-center">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                            <span className="text-lg font-bold text-emerald-100">{agent.completions}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-6 text-center">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
+                                            <XCircle className="h-4 w-4 text-red-500" />
+                                            <span className="text-lg font-bold text-red-100">{agent.failures}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-8 py-6 text-center text-zinc-400">
+                                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                                            <RefreshCcw className="h-4 w-4 text-amber-500" />
+                                            <span className="text-lg font-bold text-amber-100">{agent.rectified_failures}</span>
+                                        </div>
+                                    </td>
+                                </motion.tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
             {metrics.length === 0 && !loading && (
                 <div className="text-center py-20 bg-surface rounded-3xl border border-zinc-800">
