@@ -139,8 +139,11 @@ class PublisherAgent {
         .billing-yearly-active #toggle-bg {
           transform: translateX(100%);
         }
+        html[lang="ar"] #toggle-bg {
+          transform: translateX(100%); /* Start on right (Monthly) in RTL */
+        }
         html[lang="ar"] .billing-yearly-active #toggle-bg {
-          transform: translateX(-100%); /* RTL switch direction */
+          transform: translateX(0); /* Stay on left (Yearly) in RTL */
         }
         .badge-rec {
           position: absolute;
