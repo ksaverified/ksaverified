@@ -9,6 +9,7 @@ import MapView from './pages/Map';
 import Answers from './pages/Answers';
 import Analytics from './pages/Analytics';
 import WhatsApp from './pages/WhatsApp';
+import InterestConfirmed from './pages/InterestConfirmed';
 import Login from './pages/Login';
 import { AuthProvider } from './components/AuthContext';
 import AuthGuard from './components/AuthGuard';
@@ -35,6 +36,7 @@ function App() {
             <Route path="analytics" element={<Analytics />} />
             <Route path="settings" element={<Settings />} />
             <Route path="whatsapp" element={<WhatsApp />} />
+            <Route path="interest-confirmed" element={<InterestConfirmed />} />
             <Route path="logs" element={<Logs />} />
           </Route>
         </Routes>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, Activity, Settings, Zap, Globe, Map as MapIcon, MessageSquare, BarChart3, MessageCircle, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Activity, Settings, Zap, Globe, Map as MapIcon, MessageSquare, BarChart3, MessageCircle, LogOut, UserCheck } from 'lucide-react';
 import GlobalStatusBar from './GlobalStatusBar';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
@@ -10,6 +10,7 @@ const Layout = () => {
     const navItems = [
         { to: '/', icon: LayoutDashboard, label: 'Overview' },
         { to: '/pipeline', icon: Users, label: 'Pipeline' },
+        { to: '/interest-confirmed', icon: UserCheck, label: 'Interest Confirmed' },
         { to: '/map', icon: MapIcon, label: 'Map' },
         { to: '/answers', icon: MessageSquare, label: 'Answers' },
         { to: '/whatsapp', icon: MessageCircle, label: 'WhatsApp Inbox' },

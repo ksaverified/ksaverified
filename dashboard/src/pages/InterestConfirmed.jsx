@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { MessageCircle, Search, User, ChevronRight, Hash, Globe2, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, Search, User, ChevronRight, Hash, Globe2, Send, Loader2, UserCheck } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 const TranslationTooltip = ({ text }) => {
@@ -36,7 +36,7 @@ const TranslationTooltip = ({ text }) => {
     );
 };
 
-export default function WhatsApp() {
+export default function InterestConfirmed() {
     const [threads, setThreads] = useState([]);
     const [activeThread, setActiveThread] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -71,7 +71,23 @@ export default function WhatsApp() {
 
     async function fetchThreads() {
         try {
-            // Get all chat logs sorted by newest first
+            // 1. Get the list of place_ids that have been warmed
+            const { data: warmingLogs, error: logError } = await supabase
+                .from('logs')
+                .select('place_id')
+                .eq('action', 'warming_sent');
+
+            if (logError) throw logError;
+            // Get unique place_ids
+            const warmedPlaceIds = [...new Set((warmingLogs || []).map(l => l.place_id).filter(id => !!id))];
+
+            if (warmedPlaceIds.length === 0) {
+                setThreads([]);
+                setLoading(false);
+                return;
+            }
+
+            // 2. Get chat logs filtered by these place_ids
             const { data, error } = await supabase
                 .from('chat_logs')
                 .select(`
@@ -81,8 +97,10 @@ export default function WhatsApp() {
                     message_out, 
                     translated_message,
                     created_at,
+                    place_id,
                     leads ( name )
                 `)
+                .in('place_id', warmedPlaceIds)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -106,7 +124,7 @@ export default function WhatsApp() {
 
             setThreads(uniqueThreads);
         } catch (e) {
-            console.error('Error fetching WhatsApp threads:', e);
+            console.error('Error fetching Interest Confirmed threads:', e);
         } finally {
             setLoading(false);
         }
@@ -253,9 +271,9 @@ export default function WhatsApp() {
             {/* Header */}
             <header className="px-8 pt-6 pb-4 flex-shrink-0 border-b border-zinc-800 bg-surface z-10">
                 <h1 className="text-3xl font-bold text-zinc-100 flex items-center gap-2">
-                    <MessageCircle className="h-7 w-7 text-emerald-500" /> WhatsApp Inbox
+                    <UserCheck className="h-7 w-7 text-primary" /> Interest Confirmed
                 </h1>
-                <p className="text-zinc-400 mt-1">View comprehensive chat histories between your AI and potential leads.</p>
+                <p className="text-zinc-400 mt-1">Manage and respond to leads who have successfully completed the warming cycle.</p>
             </header>
 
             {/* Main 2-Pane Container */}
@@ -417,11 +435,11 @@ export default function WhatsApp() {
                     ) : (
                         // Empty State
                         <div className="h-full flex flex-col items-center justify-center text-center p-8 z-10">
-                            <div className="w-20 h-20 bg-zinc-900 rounded-full flex items-center justify-center mb-6 shadow-xl border border-zinc-800">
-                                <MessageCircle className="w-10 h-10 text-emerald-500/50" />
+                            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 shadow-xl border border-primary/20">
+                                <UserCheck className="w-10 h-10 text-primary" />
                             </div>
-                            <h2 className="text-2xl font-bold text-zinc-200 mb-2">WhatsApp Inbox</h2>
-                            <p className="text-zinc-500 max-w-sm">Select a thread from the left sidebar to view the full conversation history between the lead and the AI.</p>
+                            <h2 className="text-2xl font-bold text-zinc-200 mb-2">Interest Confirmed</h2>
+                            <p className="text-zinc-500 max-w-sm">Select a warmed lead to view the conversation and send a response.</p>
                         </div>
                     )}
                 </div>

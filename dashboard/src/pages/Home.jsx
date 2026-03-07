@@ -165,13 +165,14 @@ export default function Home() {
             const { count: scoutedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'scouted');
             const { count: warmingLogs } = await supabase.from('logs').select('*', { count: 'exact', head: true }).eq('action', 'warming_sent');
 
-            // Promotion Queue: Lead status 'pitched' minus those with 'promo_sent' logs
+            // Promotion Queue: Leads with status 'pitched' OR 'published' minus those with 'promo_sent' logs
             const { count: pitchedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pitched');
+            const { count: publishedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'published');
             const { count: promoLogs } = await supabase.from('logs').select('*', { count: 'exact', head: true }).eq('action', 'promo_sent');
 
             setQueueSizes({
                 warming: Math.max(0, (scoutedCount || 0) - (warmingLogs || 0)),
-                promotion: Math.max(0, (pitchedCount || 0) - (promoLogs || 0))
+                promotion: Math.max(0, (pitchedCount || 0) + (publishedCount || 0) - (promoLogs || 0))
             });
         } catch (e) {
             console.error('Error fetching queue sizes:', e);
