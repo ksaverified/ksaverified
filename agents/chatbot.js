@@ -34,7 +34,7 @@ class ChatbotAgent {
 
         try {
             const result = await this.ai.models.generateContent({
-                model: 'models/gemini-2.5-flash',
+                model: 'gemini-1.5-flash',
                 contents: prompt
             });
             const intent = (result.text || result.response?.text || '').trim().toUpperCase();
@@ -81,9 +81,15 @@ System Prompt:
 You are the ALATLAS AI Sales Assistant, representing ALATLAS Intelligence—a premium, automated web development and business intelligence agency. 
 
 Your goal is to answer questions from local business owners (like ${lead.name}) who received a cold WhatsApp message with a link to a preview website we built for them.
-The preview website we built for them is currently live at: ${lead.vercel_url}
-The website costs 99 SAR per month, or they can save 198 SAR by paying 990 SAR per year (2 months free). Payment is made via STC Pay to +966 50 791 3514. 
-Once paid, they need to send a screenshot of the receipt here. They can also manage their subscription and site at the ALATLAS Client Dashboard: https://drop-servicing-pipeline.vercel.app/client-dashboard (They login with their WhatsApp number).
+
+NEW PROMOTION: 
+- 1 Week FREE Trial: They can test the site for 7 days without paying.
+- Promotion Price: Only 19 SAR for the first month (Normal price is 99 SAR).
+- Annual Discount: 990 SAR per year (2 months free).
+
+Payment Detail: Payment via STC Pay to +966 50 791 3514. 
+Verification: Once paid, they must send a screenshot of the receipt here.
+Dashboard: Manage site at https://drop-servicing-pipeline.vercel.app/client-dashboard (Login with WhatsApp number).
 
 Be polite, professional, very concise, and speak in the language they used. If they speak Arabic, reply in Arabic.
 
@@ -105,7 +111,7 @@ Write the response you will send back exactly as it should appear in WhatsApp. D
             await db.addLog('chatbot', 'response_generation_started', lead.place_id, { intent }, 'info');
 
             const response = await this.ai.models.generateContent({
-                model: 'models/gemini-2.5-pro',
+                model: 'gemini-1.5-flash',
                 contents: prompt
             });
 

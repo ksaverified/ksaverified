@@ -108,9 +108,35 @@ export default function Answers() {
             if (error) throw error;
             setEditingId(null);
             setEditValue('');
+            setEnglishInput('');
             setLogs(logs.filter(log => log.id !== id));
         } catch (e) {
             console.error('Error saving correction:', e);
+        }
+    }
+
+    const [englishInput, setEnglishInput] = useState('');
+    const [isTranslating, setIsTranslating] = useState(false);
+
+    async function handleEnglishTranslate(text) {
+        setEnglishInput(text);
+        if (!text.trim()) return;
+
+        setIsTranslating(true);
+        try {
+            const response = await fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, targetLang: 'Arabic' })
+            });
+            const data = await response.json();
+            if (data.translatedText) {
+                setEditValue(data.translatedText);
+            }
+        } catch (err) {
+            console.error('Translation failed:', err);
+        } finally {
+            setIsTranslating(false);
         }
     }
 
@@ -178,14 +204,38 @@ export default function Answers() {
                                         <p className="text-xs text-indigo-400 mb-1 font-medium">AI replied:</p>
 
                                         {editingId === log.id ? (
-                                            <div className="mt-2 min-w-[300px]">
-                                                <textarea
-                                                    value={editValue}
-                                                    onChange={(e) => setEditValue(e.target.value)}
-                                                    className="w-full bg-zinc-950 border border-indigo-500/50 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[100px]"
-                                                    placeholder="Type what the AI *should* have said..."
-                                                    autoFocus
-                                                />
+                                            <div className="mt-2 min-w-[300px] space-y-4">
+                                                {/* English Helper Field */}
+                                                <div>
+                                                    <label className="text-[10px] text-indigo-400 uppercase tracking-wider font-bold mb-1 block">
+                                                        Compose in English (Translates to Arabic)
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={englishInput}
+                                                        onChange={(e) => handleEnglishTranslate(e.target.value)}
+                                                        className="w-full bg-zinc-950/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-sm text-zinc-300 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all"
+                                                        placeholder="Type your reply in English..."
+                                                        autoFocus
+                                                    />
+                                                    {isTranslating && (
+                                                        <span className="text-[10px] text-indigo-400/70 mt-1 block animate-pulse italic">
+                                                            Translating to Arabic...
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <div className="relative">
+                                                    <label className="text-[10px] text-indigo-400 uppercase tracking-wider font-bold mb-1 block">
+                                                        Arabic Correction (The Final Message)
+                                                    </label>
+                                                    <textarea
+                                                        value={editValue}
+                                                        onChange={(e) => setEditValue(e.target.value)}
+                                                        className="w-full bg-zinc-950 border border-indigo-500/50 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[100px]"
+                                                        placeholder="The final Arabic text..."
+                                                    />
+                                                </div>
                                                 <div className="flex justify-end gap-2 mt-3">
                                                     <button
                                                         onClick={() => setEditingId(null)}

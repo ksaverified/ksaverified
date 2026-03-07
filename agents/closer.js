@@ -107,6 +107,64 @@ class CloserAgent {
     }
 
     /**
+     * Sends a "Lead Warming" text to confirm interest before expensive generation.
+     */
+    async warmLead(businessName, phone) {
+        const formattedPhone = this.formatPhoneNumber(phone);
+        const message = `Hello ${businessName}! 💎 We are ALATLAS Intelligence. We're currently designing a premium AI-powered website for businesses in your area. 
+
+Would you like to see a custom preview for your business completely for free? Just reply 'YES' and we'll send it over!
+
+---
+
+مرحباً ${businessName}! 💎 نحن ALATLAS Intelligence. نقوم حالياً بتصميم موقع إلكتروني متميز مدعوم بالذكاء الاصطناعي للشركات في منطقتك.
+
+هل تود رؤية معاينة مخصصة لعملك مجاناً تماماً؟ فقط رد بـ "نعم" وسنرسلها لك!`;
+
+        console.log(`[Closer] Warming lead ${formattedPhone}...`);
+        return this.sendMessage(formattedPhone, message);
+    }
+
+    /**
+     * Sends the "1 Week Free + 19 SAR" promotion to existing leads.
+     */
+    async sendPromotion(businessName, phone, vercelUrl) {
+        const formattedPhone = this.formatPhoneNumber(phone);
+        const promoImageUrl = 'https://drop-servicing-pipeline.vercel.app/marketing/promo_19sar.png';
+        const portalUrl = 'https://drop-servicing-pipeline.vercel.app/client-dashboard';
+
+        const message = `Special Offer for ${businessName}! 🚀 
+
+We are launching a new promotion: Get 1 Week FREE to test your site, then pay only 19 SAR for the first month! (Normal price 99 SAR).
+
+Check your site here: ${vercelUrl}
+Manage everything in your portal: ${portalUrl}
+
+Reply 'INTERESTED' to activate this offer!
+
+---
+
+عرض خاص لـ ${businessName}! 🚀
+
+نحن نطلق عرضاً جديداً: احصل على أسبوع مجاني لاختبار موقعك، ثم ادفع 19 ريالاً فقط للشهر الأول! (السعر العادي 99 ريال).
+
+تحقق من موقعك هنا: ${vercelUrl}
+إدارة كل شيء في البوابة الخاصة بك: ${portalUrl}
+
+رد بـ "مهتم" لتفعيل هذا العرض!`;
+
+        console.log(`[Closer] Sending 19 SAR Promo to ${formattedPhone}...`);
+        try {
+            await this.sendMedia(formattedPhone, promoImageUrl, "Flash Sale: 1 Week FREE + 19 SAR 🚀");
+            await this.sendMessage(formattedPhone, message);
+            return true;
+        } catch (err) {
+            console.error(`[Closer] Promo send failed: ${err.message}`);
+            throw err;
+        }
+    }
+
+    /**
      * Generic method to send a message via the local WhatsApp service
      */
     async sendMessage(to, message) {

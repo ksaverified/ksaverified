@@ -340,6 +340,71 @@ class DatabaseService {
             console.error(`[DB] Error incrementing retry count for ${placeId}:`, updateError.message);
         }
     }
+
+    /**
+     * Fetch leads in 'scouted' status that haven't been 'warmed' yet
+     * We check the 'logs' table to see if a 'warming_sent' action exists for this place_id.
+     */
+    async getScoutedLeads(limit = 10) {
+        // 1. Get all scouted leads
+        const { data: leads, error } = await this.supabase
+            .from('leads')
+            .select('*')
+            .eq('status', 'scouted')
+            .order('updated_at', { ascending: true });
+
+        if (error) throw error;
+
+        // 2. Filter for those without a 'warming_sent' log (in memory for simplicity/performance in small sets)
+        const finalLeads = [];
+        for (const lead of leads) {
+            const { data: logs } = await this.supabase
+                .from('logs')
+                .select('id')
+                .eq('place_id', lead.place_id)
+                .eq('action', 'warming_sent')
+                .limit(1);
+
+            if (!logs || logs.length === 0) {
+                finalLeads.push(lead);
+            }
+            if (finalLeads.length >= limit) break;
+        }
+
+        return finalLeads;
+    }
+
+    /**
+     * Fetch leads in 'pitched' status that haven't received the 19 SAR promo yet
+     */
+    async getPitchedLeads(limit = 10) {
+        // 1. Get pitched leads
+        const { data: leads, error } = await this.supabase
+            .from('leads')
+            .select('*')
+            .eq('status', 'pitched')
+            .order('updated_at', { ascending: true });
+
+        if (error) throw error;
+
+        // 2. Filter for those without a 'promo_sent' log
+        const finalLeads = [];
+        for (const lead of leads) {
+            const { data: logs } = await this.supabase
+                .from('logs')
+                .select('id')
+                .eq('place_id', lead.place_id)
+                .eq('action', 'promo_sent')
+                .limit(1);
+
+            if (!logs || logs.length === 0) {
+                finalLeads.push(lead);
+            }
+            if (finalLeads.length >= limit) break;
+        }
+
+        return finalLeads;
+    }
 }
 
 module.exports = DatabaseService;

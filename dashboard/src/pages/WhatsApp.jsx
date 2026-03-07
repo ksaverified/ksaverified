@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { MessageCircle, Search, User, ChevronRight, Hash, Globe2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { MessageCircle, Search, User, ChevronRight, Hash, Globe2, Send, Loader2 } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 
 const TranslationTooltip = ({ text }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -142,6 +142,65 @@ export default function WhatsApp() {
         const date = new Date(isoString);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
+
+    const [englishReply, setEnglishReply] = useState('');
+    const [replyText, setReplyText] = useState('');
+    const [isTranslating, setIsTranslating] = useState(false);
+    const [isSending, setIsSending] = useState(false);
+
+    async function handleEnglishReplyTranslate(text) {
+        setEnglishReply(text);
+        if (!text.trim()) {
+            setReplyText('');
+            return;
+        }
+
+        setIsTranslating(true);
+        try {
+            const response = await fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text, targetLang: 'Arabic' })
+            });
+            const data = await response.json();
+            if (data.translatedText) {
+                setReplyText(data.translatedText);
+            }
+        } catch (err) {
+            console.error('Translation failed:', err);
+        } finally {
+            setIsTranslating(false);
+        }
+    }
+
+    async function handleSendReply() {
+        if (!activeThread || !replyText.trim() || isSending) return;
+
+        setIsSending(true);
+        try {
+            const response = await fetch('/api/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: activeThread.phone,
+                    message: replyText
+                })
+            });
+
+            if (response.ok) {
+                setEnglishReply('');
+                setReplyText('');
+                fetchMessages(activeThread.phone);
+            } else {
+                alert('Failed to send message. Please check the WhatsApp service.');
+            }
+        } catch (err) {
+            console.error('Send error:', err);
+            alert('Error sending message.');
+        } finally {
+            setIsSending(false);
+        }
+    }
 
     const formatDateIndicator = (isoString) => {
         const date = new Date(isoString);
@@ -298,8 +357,61 @@ export default function WhatsApp() {
                             </div>
 
                             {/* In the future: Text Input could go here if manual reply is added */}
-                            <div className="p-4 bg-zinc-900 border-t border-zinc-800 z-10 shrink-0 text-center text-xs text-zinc-600">
-                                🔒 Read-only view. The Chatbot AI manages these conversations autonomously.
+                            {/* Reply Area with Translation Bridge */}
+                            <div className="p-4 bg-zinc-900 border-t border-zinc-800 z-10 shrink-0 shadow-lg">
+                                <div className="max-w-4xl mx-auto space-y-4">
+                                    {/* English Translation Bridge */}
+                                    <div className="relative">
+                                        <div className="flex justify-between items-center mb-1.5">
+                                            <label className="text-[10px] text-emerald-500 uppercase tracking-wider font-bold">
+                                                Compose in English (Translates to Arabic)
+                                            </label>
+                                            {isTranslating && (
+                                                <div className="flex items-center gap-1.5 text-[10px] text-emerald-400 animate-pulse italic">
+                                                    <Loader2 className="w-3 h-3 animate-spin" /> Translating...
+                                                </div>
+                                            )}
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={englishReply}
+                                            onChange={(e) => handleEnglishReplyTranslate(e.target.value)}
+                                            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-300 focus:outline-none focus:border-emerald-500/50 transition-all"
+                                            placeholder="Type your reply in English here..."
+                                            disabled={isSending}
+                                        />
+                                    </div>
+
+                                    {/* Arabic Final Input & Send Button */}
+                                    <div className="flex gap-3 items-end">
+                                        <div className="flex-1 relative">
+                                            <textarea
+                                                value={replyText}
+                                                onChange={(e) => setReplyText(e.target.value)}
+                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-100 focus:outline-none focus:border-emerald-500 min-h-[44px] max-h-32 resize-none"
+                                                placeholder="Final Arabic message..."
+                                                rows={1}
+                                                disabled={isSending}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={handleSendReply}
+                                            disabled={isSending || !replyText.trim()}
+                                            className="h-[44px] px-6 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl flex items-center gap-2 transition-all shadow-lg shadow-emerald-900/20 shrink-0"
+                                        >
+                                            {isSending ? (
+                                                <Loader2 className="h-5 w-5 animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <Send className="h-4 w-4" /> Send
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <p className="text-[10px] text-zinc-600 text-center">
+                                        Sent via ALATLAS Intelligence Local Service 🛡️
+                                    </p>
+                                </div>
                             </div>
                         </>
                     ) : (
