@@ -105,7 +105,15 @@ export default function Payment() {
 
                             <div className="space-y-4">
                                 <p className={`text-sm text-zinc-400 font-medium ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t('payment.shareReceipt')}</p>
-                                <button className="w-full flex items-center justify-center gap-3 py-4 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl transition-all shadow-lg shadow-[#25D366]/20 group px-4">
+                                <button
+                                    onClick={() => {
+                                        const msg = lang === 'ar'
+                                            ? "لقد قمت للتو بالدفع لخطة Alatlas الخاصة بي، إليكم لقطة الشاشة"
+                                            : "I just paid for my Alatlas plan, here is the screenshot";
+                                        window.open(`https://wa.me/${stcNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+                                    }}
+                                    className="w-full flex items-center justify-center gap-3 py-4 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl transition-all shadow-lg shadow-[#25D366]/20 group px-4"
+                                >
                                     <MessageSquare className="h-5 w-5 transition-transform group-hover:scale-110" />
                                     {t('payment.sendWhatsApp')}
                                 </button>
@@ -129,7 +137,15 @@ export default function Payment() {
                         <p className="text-sm text-zinc-500 font-medium">{t('payment.supportDesc')}</p>
                     </div>
                 </div>
-                <button className="px-10 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-black rounded-2xl transition-all border border-zinc-700 uppercase tracking-widest text-xs">
+                <button
+                    onClick={() => {
+                        const msg = lang === 'ar'
+                            ? "أحتاج إلى دعم بخصوص حسابي"
+                            : "I need support with my account";
+                        window.open(`https://wa.me/${stcNumber}?text=${encodeURIComponent(msg)}`, '_blank');
+                    }}
+                    className="px-10 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-black rounded-2xl transition-all border border-zinc-700 uppercase tracking-widest text-xs"
+                >
                     {t('payment.contactSupport')}
                 </button>
             </div>
