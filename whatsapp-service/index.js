@@ -3,6 +3,7 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
 const qrImage = require('qr-image');
 const { downloadSession, uploadSession } = require('./supabaseStorage');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -17,7 +18,7 @@ async function startWhatsApp() {
 
     const client = new Client({
         authStrategy: new LocalAuth({
-            dataPath: '/tmp/.wwebjs_auth'
+            dataPath: path.join(__dirname, '.wwebjs_auth')
         }),
         authTimeoutMs: 180000,
         webVersionCache: {

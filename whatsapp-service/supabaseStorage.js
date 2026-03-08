@@ -8,7 +8,7 @@ require('dotenv').config();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 const BUCKET_NAME = 'whatsapp_sessions';
 const SESSION_FILE = 'wwebjs_auth.zip';
-const AUTH_DIR = '/tmp/.wwebjs_auth';
+const AUTH_DIR = path.join(__dirname, '.wwebjs_auth');
 
 async function ensureBucket() {
     try {
@@ -33,7 +33,7 @@ async function downloadSession() {
             return false;
         }
 
-        const zipPath = path.join('/tmp', SESSION_FILE);
+        const zipPath = path.join(__dirname, SESSION_FILE);
         const buffer = Buffer.from(await data.arrayBuffer());
         fs.writeFileSync(zipPath, buffer);
 
@@ -54,7 +54,7 @@ async function uploadSession() {
         return;
     }
 
-    const zipPath = path.join('/tmp', SESSION_FILE);
+    const zipPath = path.join(__dirname, SESSION_FILE);
     const output = fs.createWriteStream(zipPath);
     const archive = archiver('zip', { zlib: { level: 9 } });
 

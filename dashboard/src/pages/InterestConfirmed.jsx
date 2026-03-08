@@ -54,7 +54,7 @@ export default function InterestConfirmed() {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_logs' }, () => {
                 fetchThreads();
                 if (activeThread) {
-                    fetchMessages(activeThread.phone);
+                    fetchMessages(activeThread);
                 }
             })
             .subscribe();
@@ -71,58 +71,73 @@ export default function InterestConfirmed() {
 
     async function fetchThreads() {
         try {
-            // 1. Get the list of place_ids that have been warmed
-            const { data: warmingLogs, error: logError } = await supabase
+            // 1. Fetch leads with status 'warmed' or who have 'warming_sent' logs
+            // (Status 'warmed' is now the primary driver, logs are secondary/fallback)
+            const { data: leads, error: leadError } = await supabase
+                .from('leads')
+                .select('place_id, name, phone, status, updated_at')
+                .or('status.eq.warmed,status.eq.pitched,status.eq.published');
+
+            if (leadError) throw leadError;
+
+            // 2. We still might want to filter by warming_sent logs to ensure they actually received the message
+            // OR we can trust the 'warmed' status which we just migrated.
+            // Let's get the logs anyway to find the latest arrivals.
+            const { data: warmingLogs } = await supabase
                 .from('logs')
-                .select('place_id')
+                .select('place_id, created_at')
                 .eq('action', 'warming_sent');
 
-            if (logError) throw logError;
-            // Get unique place_ids
-            const warmedPlaceIds = [...new Set((warmingLogs || []).map(l => l.place_id).filter(id => !!id))];
+            const warmedMap = new Map();
+            (warmingLogs || []).forEach(l => warmedMap.set(l.place_id, l.created_at));
 
-            if (warmedPlaceIds.length === 0) {
+            // Only show leads that have the status OR the log
+            const filteredLeads = leads.filter(l => l.status === 'warmed' || l.status === 'pitched' || l.status === 'published' || warmedMap.has(l.place_id));
+
+            if (filteredLeads.length === 0) {
                 setThreads([]);
                 setLoading(false);
                 return;
             }
 
-            // 2. Get chat logs filtered by these place_ids
-            const { data, error } = await supabase
-                .from('chat_logs')
-                .select(`
-                    id, 
-                    phone, 
-                    message_in, 
-                    message_out, 
-                    translated_message,
-                    created_at,
-                    place_id,
-                    leads ( name )
-                `)
-                .in('place_id', warmedPlaceIds)
-                .order('created_at', { ascending: false });
+            // 3. For each lead, we want to show the "Last Interaction" from chat_logs if possible
+            const threadsWithLastMsg = await Promise.all(filteredLeads.map(async (lead) => {
+                const { data: lastChat } = await supabase
+                    .from('chat_logs')
+                    .select('message_in, message_out, created_at')
+                    .eq('place_id', lead.place_id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .single();
 
-            if (error) throw error;
-
-            // Group by phone number to create unique threads
-            const uniqueThreads = [];
-            const seenPhones = new Set();
-
-            data.forEach(log => {
-                if (!seenPhones.has(log.phone)) {
-                    seenPhones.add(log.phone);
-                    uniqueThreads.push({
-                        phone: log.phone,
-                        name: log.leads?.name || 'Unknown Lead',
-                        lastMessage: log.message_in || log.message_out || 'Interaction recorded',
-                        lastTime: log.created_at,
-                        isLastInbound: !!log.message_in
-                    });
+                // Fallback: If no place_id match, try matching by phone (cleaning for WhatsApp format if needed)
+                let chatInfo = lastChat;
+                if (!chatInfo && lead.phone) {
+                    const cleanPhone = lead.phone.replace(/\D/g, '');
+                    const { data: phoneChat } = await supabase
+                        .from('chat_logs')
+                        .select('message_in, message_out, created_at')
+                        .or(`phone.ilike.%${cleanPhone}%,phone.ilike.%${cleanPhone.slice(-9)}%`) // Match 966... or just 5...
+                        .order('created_at', { ascending: false })
+                        .limit(1)
+                        .single();
+                    chatInfo = phoneChat;
                 }
-            });
 
-            setThreads(uniqueThreads);
+                return {
+                    phone: lead.phone,
+                    name: lead.name,
+                    place_id: lead.place_id,
+                    lastMessage: chatInfo ? (chatInfo.message_in || chatInfo.message_out || 'Interaction recorded') : 'Awaiting response...',
+                    lastTime: chatInfo ? chatInfo.created_at : lead.updated_at || new Date().toISOString(),
+                    isLastInbound: !!chatInfo?.message_in
+                };
+            }));
+
+            // Sort by last message time (newest first)
+            threadsWithLastMsg.sort((a, b) => new Date(b.lastTime) - new Date(a.lastTime));
+
+            setThreads(threadsWithLastMsg);
         } catch (e) {
             console.error('Error fetching Interest Confirmed threads:', e);
         } finally {
@@ -130,14 +145,24 @@ export default function InterestConfirmed() {
         }
     }
 
-    async function fetchMessages(phone) {
-        if (!phone) return;
+    async function fetchMessages(thread) {
+        if (!thread) return;
         try {
-            const { data, error } = await supabase
-                .from('chat_logs')
-                .select('*')
-                .eq('phone', phone)
-                .order('created_at', { ascending: true }); // Chronological
+            const cleanPhone = thread.phone ? thread.phone.replace(/\D/g, '') : null;
+
+            let query = supabase.from('chat_logs').select('*');
+
+            if (thread.place_id && cleanPhone) {
+                query = query.or(`place_id.eq.${thread.place_id},phone.ilike.%${cleanPhone}%,phone.ilike.%${cleanPhone.slice(-9)}%`);
+            } else if (thread.place_id) {
+                query = query.eq('place_id', thread.place_id);
+            } else if (cleanPhone) {
+                query = query.or(`phone.ilike.%${cleanPhone}%,phone.ilike.%${cleanPhone.slice(-9)}%`);
+            } else {
+                return;
+            }
+
+            const { data, error } = await query.order('created_at', { ascending: true });
 
             if (error) throw error;
             setMessages(data || []);
@@ -148,7 +173,7 @@ export default function InterestConfirmed() {
 
     const handleSelectThread = (thread) => {
         setActiveThread(thread);
-        fetchMessages(thread.phone);
+        fetchMessages(thread);
     };
 
     const filteredThreads = threads.filter(t =>

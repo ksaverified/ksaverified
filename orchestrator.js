@@ -152,6 +152,7 @@ class Orchestrator {
         const success = await this.closer.warmLead(lead.name, lead.phone);
         if (success) {
           await this.db.addLog('closer', 'warming_sent', lead.place_id, { name: lead.name }, 'success');
+          await this.db.updateLeadStatus(lead.place_id, 'warmed');
         }
         await new Promise(r => setTimeout(r, 10000));
       } catch (e) {

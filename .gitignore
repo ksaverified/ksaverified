@@ -4,3 +4,7 @@ node_modules/
 .DS_Store
 *.log
 .vercel
+.wwebjs_auth
+wwebjs_auth.zip
+**/whatsapp-service/.wwebjs_auth
+**/whatsapp-service/wwebjs_auth.zip
