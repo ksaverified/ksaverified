@@ -8,7 +8,7 @@ const axios = require('axios');
 class CloserAgent {
     constructor() {
         // Local WhatsApp service endpoint (Custom microservice)
-        this.baseURL = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:8080';
+        this.baseURL = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:8081';
 
         // Set up axios instance for local service
         this.api = axios.create({
@@ -203,7 +203,8 @@ Reply 'INTERESTED' to activate this offer!
             if (response.data && response.data.success) return true;
             throw new Error(response.data?.error || 'Unknown error');
         } catch (error) {
-            throw new Error(`Text send failed: ${error.message}`);
+            const errorDetails = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+            throw new Error(`Text send failed: ${errorDetails}`);
         }
     }
 
@@ -216,7 +217,8 @@ Reply 'INTERESTED' to activate this offer!
             if (response.data && response.data.success) return true;
             throw new Error(response.data?.error || 'Unknown error');
         } catch (error) {
-            throw new Error(`Media send failed: ${error.message}`);
+            const errorDetails = error.response?.data ? JSON.stringify(error.response.data) : error.message;
+            throw new Error(`Media send failed: ${errorDetails}`);
         }
     }
 }

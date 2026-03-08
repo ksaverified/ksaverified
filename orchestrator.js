@@ -92,26 +92,26 @@ class Orchestrator {
 
         try {
           if (activeDbLead.status !== 'pitched') {
-            const health = await this.axios.get('http://localhost:8080/health');
+            const health = await this.axios.get('http://localhost:8081/health');
             if (!health.data.ready) throw new Error('WhatsApp not ready');
           }
 
           let currentHtml = activeDbLead.website_html || '';
           let vercelUrl = activeDbLead.vercel_url || '';
 
-          if (activeDbLead.status === 'scouted') {
+          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed') {
             await this.db.addLog('creator', 'generation_started', activeLead.placeId, { name: activeLead.name }, 'info');
             currentHtml = await this.creator.createWebsite(activeLead, this.db);
             await this.db.updateLeadStatus(activeLead.placeId, 'created', { website_html: currentHtml });
           }
 
-          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'created') {
+          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created') {
             await this.db.addLog('retoucher', 'audit_started', activeLead.placeId, { name: activeLead.name }, 'info');
             currentHtml = await this.retoucher.retouchWebsite(currentHtml, activeLead);
             await this.db.updateLeadStatus(activeLead.placeId, 'retouched', { website_html: currentHtml });
           }
 
-          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
+          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
             await this.db.addLog('publisher', 'deployment_started', activeLead.placeId, {}, 'info');
             vercelUrl = await this.publisher.handlePublish(activeLead.placeId);
             await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: vercelUrl });
@@ -146,6 +146,17 @@ class Orchestrator {
 
   async runWarmingCycle() {
     console.log('[Orchestrator] Running Lead Warming Cycle...');
+    try {
+      const health = await this.axios.get(`${this.closer.baseURL}/health`);
+      if (!health.data.ready) {
+        console.warn('[Orchestrator] WhatsApp not ready for warming. Skipping cycle.');
+        return;
+      }
+    } catch (e) {
+      console.warn('[Orchestrator] WhatsApp health check failed for warming cycle:', e.message);
+      return;
+    }
+
     const leads = await this.db.getScoutedLeads(15);
     for (const lead of leads) {
       try {
@@ -163,6 +174,17 @@ class Orchestrator {
 
   async runPromotionCycle() {
     console.log('[Orchestrator] Running 19 SAR Promotion Cycle...');
+    try {
+      const health = await this.axios.get(`${this.closer.baseURL}/health`);
+      if (!health.data.ready) {
+        console.warn('[Orchestrator] WhatsApp not ready for promotion. Skipping cycle.');
+        return;
+      }
+    } catch (e) {
+      console.warn('[Orchestrator] WhatsApp health check failed for promotion cycle:', e.message);
+      return;
+    }
+
     const leads = await this.db.getPitchedLeads(15);
     for (const lead of leads) {
       try {

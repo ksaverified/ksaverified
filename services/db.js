@@ -65,7 +65,7 @@ class DatabaseService {
         const { data, error } = await this.supabase
             .from('leads')
             .select('*')
-            .in('status', ['scouted', 'created', 'retouched', 'published'])
+            .in('status', ['scouted', 'warmed', 'created', 'retouched', 'published'])
             .or('retry_count.lt.3,retry_count.is.null')
             .order('updated_at', { ascending: true })
             .limit(1)
