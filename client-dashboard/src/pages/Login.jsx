@@ -4,6 +4,7 @@ import { useAuth } from '../components/AuthContext';
 import { useLanguage } from '../components/LanguageContext';
 import { Navigate } from 'react-router-dom';
 import { Lock, Phone, MessageCircle, Languages } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Login() {
     const { user } = useAuth();

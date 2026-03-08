@@ -21,10 +21,8 @@ async function startWhatsApp() {
             dataPath: path.join(__dirname, '.wwebjs_auth')
         }),
         authTimeoutMs: 180000,
-        webVersionCache: {
-            type: 'remote',
-            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html'
-        },
+        // Let whatsapp-web.js handle the version automatically for maximum stability
+        // webVersionCache: { ... }
         puppeteer: {
             headless: true,
             executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (process.platform === 'win32' ? null : '/usr/bin/chromium'),
@@ -58,6 +56,12 @@ async function startWhatsApp() {
         isReady = true;
         qrCodeData = null;
 
+        // Skip cloud backup on Windows to avoid EBUSY locking issues
+        if (process.platform === 'win32') {
+            console.log('[WhatsApp] Skipping Cloud backup on Windows (Session persistent in .wwebjs_auth)');
+            return;
+        }
+
         try {
             await uploadSession();
             console.log('[WhatsApp] Session backed up to Supabase.');
@@ -90,22 +94,50 @@ async function startWhatsApp() {
         if (!webhookUrl) return;
 
         try {
+            // Resolve real phone number if it's a LID (Critical for Chatbot identifying leads)
+            let fromPhone = msg.from;
+            let toPhone = msg.to;
+
+            if (fromPhone.endsWith('@lid')) {
+                try {
+                    const contact = await msg.getContact();
+                    if (contact && contact.number) {
+                        fromPhone = `${contact.number}@c.us`;
+                        console.log(`[WhatsApp] Resolved sender LID ${msg.from} to ${fromPhone}`);
+                    }
+                } catch (e) {
+                    console.warn(`[WhatsApp] Could not resolve from LID ${msg.from}: ${e.message}`);
+                }
+            }
+
+            if (toPhone && toPhone.endsWith('@lid')) {
+                try {
+                    const contact = await msg.getContact();
+                    if (contact && contact.number) {
+                        toPhone = `${contact.number}@c.us`;
+                        console.log(`[WhatsApp] Resolved recipient LID ${msg.to} to ${toPhone}`);
+                    }
+                } catch (e) {
+                    console.warn(`[WhatsApp] Could not resolve to LID ${msg.to}: ${e.message}`);
+                }
+            }
+
             const payload = {
                 event_type,
                 instanceId: 'local-docker',
                 data: {
                     id: msg.id._serialized,
-                    from: msg.from,
-                    to: msg.to,
+                    from: fromPhone,
+                    to: toPhone,
                     body: msg.body,
-                    type: 'chat', // whatsapp-web.js 'chat' is standard text
+                    type: 'chat',
                     fromMe: msg.fromMe,
                     timestamp: msg.timestamp
                 }
             };
 
             await axios.post(webhookUrl, payload);
-            console.log(`[Webhook] Forwarded ${event_type} for message ${msg.id.id}`);
+            console.log(`[Webhook] Forwarded ${event_type} (From: ${fromPhone})`);
         } catch (err) {
             console.error(`[Webhook] Failed to forward ${event_type}:`, err.message);
         }
@@ -223,8 +255,8 @@ async function startWhatsApp() {
             hasPupPage: !!(client && client.pupPage),
             qrCodeGenerated: !!qrCodeData
         };
-        const allOk = isReady && health.hasPupPage;
-        res.status(allOk ? 200 : 503).json(health);
+        const allOk = isReady && !!(client && client.pupPage);
+        res.status(allOk ? 200 : 503).send(health);
     });
 
     app.post('/send-media', async (req, res) => {
@@ -241,24 +273,49 @@ async function startWhatsApp() {
             console.log(`[WhatsApp] Fetching media from URL: ${mediaUrl}`);
             const media = await MessageMedia.fromUrl(mediaUrl);
 
-            let formattedNumber = to.replace(/[^0-9]/g, '');
-            if (!formattedNumber.endsWith('@c.us')) {
-                formattedNumber += '@c.us';
+            // Robust number formatting
+            let cleaned = to.replace(/\D/g, '');
+            if (cleaned.startsWith('05') && cleaned.length === 10) {
+                cleaned = '966' + cleaned.substring(1);
+            } else if (cleaned.length === 9 && cleaned.startsWith('5')) {
+                cleaned = '966' + cleaned;
             }
 
-            await client.sendMessage(formattedNumber, media, { caption: caption });
-            console.log(`[WhatsApp] Media sent successfully to ${to}`);
+            console.log(`[WhatsApp] Resolving & Warming: ${cleaned}`);
+
+            // Step 1: Resolve Number ID
+            const resolved = await client.getNumberId(cleaned);
+            if (!resolved) {
+                console.warn(`[WhatsApp] Number ${cleaned} is not on WhatsApp. Skipping.`);
+                return res.status(404).json({ error: 'Number not on WhatsApp' });
+            }
+
+            const finalId = resolved._serialized;
+
+            // Step 2: Warm up Contact and Chat state (Crucial for "No LID" error)
+            try {
+                await client.getContactById(finalId);
+                await client.getChatById(finalId);
+            } catch (warmErr) {
+                console.warn(`[WhatsApp] Warming skipped for ${finalId}: ${warmErr.message}`);
+            }
+
+            // Step 3: Send Media
+            await client.sendMessage(finalId, media, { caption: caption });
+            console.log(`[WhatsApp] Media sent successfully to ${finalId}`);
             res.json({ success: true, message: 'Media sent!' });
         } catch (error) {
             console.error('[WhatsApp] Media send error:', error);
 
-            // Critical error recovery
-            if (error.message.includes('reading \'sendMessage\'') || error.message.includes('TypeError')) {
-                console.error('[WhatsApp] CRITICAL ERROR DETECTED. Restarting service...');
-                setTimeout(() => process.exit(1), 1000);
-            }
+            // Detailed internal log
+            console.log(`[WhatsApp] Diagnostic: to=${to}, mediaUrl=${mediaUrl}, isReady=${isReady}`);
 
-            res.status(500).json({ error: 'Failed to send media', details: error.message });
+            res.status(500).json({
+                error: 'Failed to send media',
+                details: error.message,
+                isReady: isReady,
+                hasPupPage: !!(client && client.pupPage)
+            });
         }
     });
 
@@ -273,31 +330,49 @@ async function startWhatsApp() {
         }
 
         try {
-            // Format phone number to international format (e.g. 966...)
-            let formattedNumber = to.replace(/\D/g, '');
-            if (formattedNumber.startsWith('05') && formattedNumber.length === 10) {
-                formattedNumber = '966' + formattedNumber.substring(1);
-            } else if (formattedNumber.length === 9 && !formattedNumber.startsWith('966')) {
-                formattedNumber = '966' + formattedNumber;
+            // Robust number formatting
+            let cleaned = to.replace(/\D/g, '');
+            if (cleaned.startsWith('05') && cleaned.length === 10) {
+                cleaned = '966' + cleaned.substring(1);
+            } else if (cleaned.length === 9 && cleaned.startsWith('5')) {
+                cleaned = '966' + cleaned;
             }
 
-            if (!formattedNumber.endsWith('@c.us')) {
-                formattedNumber += '@c.us';
+            console.log(`[WhatsApp] Resolving & Warming: ${cleaned}`);
+
+            // Step 1: Resolve Number ID
+            const resolved = await client.getNumberId(cleaned);
+            if (!resolved) {
+                console.warn(`[WhatsApp] Number ${cleaned} is not on WhatsApp. Skipping.`);
+                return res.status(404).json({ error: 'Number not on WhatsApp' });
             }
 
-            await client.sendMessage(formattedNumber, message);
-            console.log(`[WhatsApp] Message sent successfully to ${to}`);
+            const finalId = resolved._serialized;
+
+            // Step 2: Warm up Contact and Chat state
+            try {
+                await client.getContactById(finalId);
+                await client.getChatById(finalId);
+            } catch (warmErr) {
+                console.warn(`[WhatsApp] Warming skipped for ${finalId}: ${warmErr.message}`);
+            }
+
+            // Step 3: Send Message
+            await client.sendMessage(finalId, message);
+            console.log(`[WhatsApp] Message sent successfully to ${finalId}`);
             res.json({ success: true, message: 'Message sent!' });
         } catch (error) {
             console.error('[WhatsApp] Send error:', error);
 
-            // Critical error recovery
-            if (error.message.includes('reading \'sendMessage\'') || error.message.includes('TypeError')) {
-                console.error('[WhatsApp] CRITICAL ERROR DETECTED. Restarting service...');
-                setTimeout(() => process.exit(1), 1000);
-            }
+            // Detailed internal log
+            console.log(`[WhatsApp] Diagnostic: to=${to}, messageSnippet=${message.substring(0, 50)}, isReady=${isReady}`);
 
-            res.status(500).json({ error: 'Failed to send message', details: error.message });
+            res.status(500).json({
+                error: 'Failed to send message',
+                details: error.message,
+                isReady: isReady,
+                hasPupPage: !!(client && client.pupPage)
+            });
         }
     });
 

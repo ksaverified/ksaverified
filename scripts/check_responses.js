@@ -1,57 +1,33 @@
-require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
-async function checkResponses() {
+async function checkSentResponses() {
     const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const startTime = '2026-03-07T05:30:00Z';
+    console.log('--- Checking for response_sent logs ---');
 
-    // 1. Total chat logs with inbound messages
-    const { data: responses, error: responseError } = await supabase
-        .from('chat_logs')
-        .select('*')
-        .not('message_in', 'is', null)
-        .gt('created_at', startTime)
-        .order('created_at', { ascending: false });
-
-    if (responseError) {
-        console.error('Error fetching chat logs:', responseError);
-        return;
-    }
-
-    // 2. Check for ANY chat logs (outbound too) to see if system is logging at all
-    const { count: allChatCount } = await supabase
-        .from('chat_logs')
-        .select('*', { count: 'exact', head: true });
-
-    // 3. Check for webhook logs/errors in 'logs' table
-    const { data: webhookLogs } = await supabase
+    const { data: logs, error } = await supabase
         .from('logs')
         .select('*')
-        .eq('agent', 'webhook')
+        .eq('agent', 'chatbot')
+        .eq('action', 'response_sent')
         .order('created_at', { ascending: false })
         .limit(5);
 
-    console.log(`\n--- Customer Engagement Analysis ---`);
-    console.log(`Total Responses since 05:30 AM: ${responses.length}`);
-    console.log(`Total Chat Logs in DB (All-time): ${allChatCount || 0}`);
-
-    if (responses.length > 0) {
-        console.log(`\nLast 3 Responses:`);
-        responses.slice(0, 3).forEach(r => {
-            console.log(`- From: ${r.phone} | Msg: "${r.message_in}" | At: ${r.created_at}`);
-        });
+    if (error) {
+        console.error('Error:', error.message);
+        return;
     }
 
-    if (webhookLogs && webhookLogs.length > 0) {
-        console.log(`\nRecent Webhook Activity:`);
-        webhookLogs.forEach(l => {
-            console.log(`- Action: ${l.action} | Status: ${l.status} | Details: ${JSON.stringify(l.details)}`);
+    if (!logs || logs.length === 0) {
+        console.log('No "response_sent" logs found.');
+    } else {
+        logs.forEach(log => {
+            console.log(`[${log.created_at}] Sent response: ${JSON.stringify(log.details)}`);
         });
     }
-    console.log(`------------------------------------\n`);
 }
 
-checkResponses();
+checkSentResponses();
