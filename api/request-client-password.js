@@ -48,37 +48,32 @@ module.exports = async function handler(request, response) {
         });
 
         if (createError) {
-            // Check if the error is due to the user already existing
+            // If the user already exists, we catch the "already registered" error and update.
             if (createError.message.includes('already been registered') || createError.status === 422) {
-                console.log(`[Client-Auth] User ${proxyEmail} already exists, locating and updating...`);
+                console.log(`[Client-Auth] User ${proxyEmail} already exists, recovering ID...`);
 
-                // Find the user ID to update them specifically
-                // Note: listUsers() returns a batch. For better scale, one might loop through pages, 
-                // but for this system, the user is likely in the recent batch or we can filter.
-                const { data: usersData, error: listError } = await supabaseAdmin.auth.admin.listUsers({
-                    perPage: 100
+                // Use generateLink as a direct way to get user object (failsafe against listUsers pagination)
+                const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+                    type: 'magiclink',
+                    email: proxyEmail
                 });
 
-                if (listError) throw listError;
-
-                const existingUser = usersData.users.find(u => u.email === proxyEmail);
-                if (!existingUser) {
-                    throw new Error(`User ${proxyEmail} exists but could not be located in the management list.`);
+                if (linkError || !linkData?.user) {
+                    throw new Error(`User exists but recovery failed: ${linkError?.message || 'No user data'}`);
                 }
 
                 const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
-                    existingUser.id,
+                    linkData.user.id,
                     { password: generatedPassword }
                 );
 
                 if (updateError) throw updateError;
-                console.log(`[Client-Auth] Successfully updated password for: ${phone}`);
+                console.log(`[Client-Auth] Updated password for: ${phone} (UID: ${linkData.user.id})`);
             } else {
-                // If it's a different error, rethrow it
                 throw createError;
             }
         } else {
-            console.log(`[Client-Auth] Created new client auth user for: ${phone}`);
+            console.log(`[Client-Auth] Created new client: ${phone}`);
         }
 
         // 5. Send the password via Local WhatsApp Service
