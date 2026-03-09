@@ -174,14 +174,18 @@ export default function Home() {
             const { count: scoutedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'scouted');
             const { count: warmingLogs } = await supabase.from('logs').select('*', { count: 'exact', head: true }).eq('action', 'warming_sent');
 
-            // Promotion Queue: Leads with status 'pitched' OR 'published' minus those with 'promo_sent' logs
-            const { count: pitchedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pitched');
+            // Promotion Queue Breakdown
+            // 1. Awaiting Pitch: leads in 'published' status
             const { count: publishedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'published');
+            // 2. Awaiting Promo: leads in 'pitched' status minus those with 'promo_sent' logs
+            const { count: pitchedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pitched');
             const { count: promoLogs } = await supabase.from('logs').select('*', { count: 'exact', head: true }).eq('action', 'promo_sent');
 
             setQueueSizes({
                 warming: Math.max(0, (scoutedCount || 0) - (warmingLogs || 0)),
-                promotion: Math.max(0, (pitchedCount || 0) + (publishedCount || 0) - (promoLogs || 0))
+                pitchBacklog: publishedCount || 0,
+                promoBacklog: Math.max(0, (pitchedCount || 0) - (promoLogs || 0)),
+                totalPromotion: Math.max(0, (publishedCount || 0) + (pitchedCount || 0) - (promoLogs || 0))
             });
         } catch (e) {
             console.error('Error fetching queue sizes:', e);
@@ -231,7 +235,32 @@ export default function Home() {
             {/* Pipeline Queues (Backlogs) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <StatCard delay={0.5} title="Warming Queue (Backlog)" value={queueSizes.warming} icon={Clock} color="bg-zinc-500" />
-                <StatCard delay={0.6} title="Promotion Queue (Backlog)" value={queueSizes.promotion} icon={Clock} color="bg-zinc-500" />
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, duration: 0.4 }}
+                    className="bg-surface p-6 rounded-2xl border border-zinc-800 flex flex-col justify-center hover:border-zinc-700 transition-colors shadow-lg"
+                >
+                    <div className="flex items-center gap-4 mb-3">
+                        <div className="p-4 rounded-xl bg-zinc-500 bg-opacity-10">
+                            <Clock className="h-6 w-6 text-zinc-500" />
+                        </div>
+                        <div>
+                            <p className="text-sm text-zinc-400 font-medium">Promotion Queue (Backlog)</p>
+                            <h3 className="text-2xl font-bold text-zinc-100 mt-1">{queueSizes.totalPromotion}</h3>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-2 pt-4 border-t border-zinc-800/50">
+                        <div>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-1">Awaiting Pitch</p>
+                            <p className="text-lg font-bold text-amber-400">{queueSizes.pitchBacklog}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-1">Awaiting Promo</p>
+                            <p className="text-lg font-bold text-emerald-400">{queueSizes.promoBacklog}</p>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
 
             {/* Bento Grid layout */}
