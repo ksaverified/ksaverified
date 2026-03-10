@@ -67,7 +67,7 @@ async function processIncomingChat(incomingPhone, messageText) {
     try {
         const translationPrompt = `Translate the following text to English for admin review. If it's already in English or just an emoji/symbol, just return the exact same text. Do not add any conversational filler, just output the translation:\n\n"${messageText}"`;
         const translationResponse = await chatbot.ai.models.generateContent({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-2.5-flash',
             contents: translationPrompt,
         });
         translatedMsg = translationResponse.text.trim();
