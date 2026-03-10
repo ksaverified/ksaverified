@@ -34,7 +34,7 @@ class ChatbotAgent {
 
         try {
             const result = await this.ai.models.generateContent({
-                model: 'gemini-1.5-flash',
+                model: 'gemini-2.5-flash',
                 contents: prompt
             });
             const intent = (result.text || result.response?.text || '').trim().toUpperCase();
@@ -111,7 +111,7 @@ Write the response you will send back exactly as it should appear in WhatsApp. D
             await db.addLog('chatbot', 'response_generation_started', lead.place_id, { intent }, 'info');
 
             const response = await this.ai.models.generateContent({
-                model: 'gemini-1.5-flash',
+                model: 'gemini-2.5-flash',
                 contents: prompt
             });
 
