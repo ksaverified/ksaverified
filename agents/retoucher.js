@@ -159,86 +159,64 @@ class RetoucherAgent {
         // This solves the missing hero image bug and the duplicate image bugs.
         cleanedHtml = cleanedHtml.replace(/https:\/\/images\.unsplash\.com\/photo-[^"'\s)]+/g, () => getNextImage());
 
-        // 4. Programmatic Structural Cleanup
-        // Remove image logos from headers (user wants clean text only)
-        cleanedHtml = cleanedHtml.replace(/<a[^>]*class="[^"]*flex items-center[^"]*"[^>]*>([\s\S]*?)<\/a>/g, (match, content) => {
-            // Remove any <img> tags inside the brand link
-            const cleanContent = content.replace(/<img[^>]*>/g, '');
-            // Refine the text styling for the brand name
-            const refinedContent = cleanContent.replace(/class="text-2xl font-bold"/, 'class="text-3xl font-extrabold tracking-tight text-white hover:text-primary-light transition-colors"');
-            return match.replace(content, refinedContent);
-        });
+        // 4. Programmatic Structural Cleanup & Header Enforcement
+        // Identify the brand name and remove image logos
+        let brandNameEn = business.name || 'Brand';
+        let brandNameAr = business.name || 'العلامة التجارية';
 
-        // Aggressive header layout & Contrast Enforcement
-        // Match ANY header tag regardless of attributes
-        cleanedHtml = cleanedHtml.replace(/<header[^>]*>/g, () => {
-             return `<header class="sticky top-0 w-full z-50 bg-black text-white shadow-2xl flex justify-between items-center px-6 py-4">`;
-        });
-        
-        // Remove redundant/duplicate header closing tags and buttons that cause layout mess
-        cleanedHtml = cleanedHtml.replace(/<\/header>[\s\S]*?<\/header>/g, '</header>');
-        cleanedHtml = cleanedHtml.replace(/<button id="mobile-menu-btn"[\s\S]*?<\/button>\s*<button id="mobile-menu-btn"[\s\S]*?<\/button>/g, (match) => match.split('</button>')[0] + '</button>');
+        // Enforce solid black premium header
+        const premiumHeader = `
+    <!-- Header -->
+    <header class="sticky top-0 w-full z-50 bg-black text-white shadow-2xl flex justify-between items-center px-6 py-4">
+        <!-- Logo/Brand -->
+        <a href="#home" class="flex items-center space-x-2 rtl:space-x-reverse">
+            <span class="text-3xl font-extrabold tracking-tight text-white hover:text-primary-light transition-colors">
+                <span data-lang="en">${brandNameEn}</span>
+                <span data-lang="ar">${brandNameAr}</span>
+            </span>
+        </a>
 
-        // Refined Language Switcher Style & Injection
-        const enBtn = `<button class="lang-en-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-lg w-full text-center" onclick="document.documentElement.setAttribute('lang', 'en')">English</button>`;
-        const arBtn = `<button class="lang-ar-btn bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-lg w-full text-center" onclick="document.documentElement.setAttribute('lang', 'ar')">عربي</button>`;
-        
-        const desktopEnBtn = `<button class="lang-en-btn hidden md:inline-block border border-white text-white hover:bg-gray-700 hover:text-white font-semibold py-2 px-4 rounded-lg transition-all ml-4" onclick="document.documentElement.setAttribute('lang', 'en')">English</button>`;
-        const desktopArBtn = `<button class="lang-ar-btn hidden md:inline-block border border-white text-white hover:bg-gray-700 hover:text-white font-semibold py-2 px-4 rounded-lg transition-all ml-4" onclick="document.documentElement.setAttribute('lang', 'ar')">عربي</button>`;
-        
-        // Remove ALL existing switcher instances
-        cleanedHtml = cleanedHtml.replace(/<div class="(?:absolute|fixed) top-4 (?:left|right)-4">[\s\S]*?<\/div>/g, '');
-        cleanedHtml = cleanedHtml.replace(/<button[^>]*class="[^"]*lang-(?:en|ar)-btn[^"]*"[^>]*>[\s\S]*?<\/button>/g, '');
-        // We only want to remove the switcher from the space-x-2 div, NOT the entire logo!
-        cleanedHtml = cleanedHtml.replace(/<button class="lang-en-btn[^>]*>[\s\S]*?<\/button>\s*<button class="lang-ar-btn[^>]*>[\s\S]*?<\/button>/g, '');
-        cleanedHtml = cleanedHtml.replace(/<!-- Language Switcher -->[\s\S]*?<div class="z-50 flex space-x-2">[\s\S]*?<\/div>/g, '');
-        cleanedHtml = cleanedHtml.replace(/<li>\s*<button class="lang-(?:en|ar)-btn[\s\S]*?<\/li>/g, '');
-        cleanedHtml = cleanedHtml.replace(/<button id="lang-toggle"[^>]*>[\s\S]*?<\/button>/g, '');
-        cleanedHtml = cleanedHtml.replace(/<button id="lang-switcher"[^>]*>[\s\S]*?<\/button>/g, '');
-        
-        // Remove old 'toggleLanguage()' links and buttons that conflict with our new system
-        cleanedHtml = cleanedHtml.replace(/<a[^>]*onclick="toggleLanguage\(\)"[^>]*>[\s\S]*?<\/a>/g, '');
-        cleanedHtml = cleanedHtml.replace(/<button[^>]*onclick="toggleLanguage\(\)"[^>]*>[\s\S]*?<\/button>/g, '');
+        <!-- Desktop Navigation -->
+        <nav id="desktop-nav" class="hidden md:flex space-x-6 lg:space-x-8 text-lg ml-auto mr-8">
+            <a href="#home" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Home</span><span data-lang="ar">الرئيسية</span></a>
+            <a href="#about" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">About</span><span data-lang="ar">من نحن</span></a>
+            <a href="#services" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Services</span><span data-lang="ar">الخدمات</span></a>
+            <a href="#contact" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Contact</span><span data-lang="ar">اتصل بنا</span></a>
+        </nav>
 
-        // Deduplicate style blocks for language logic
-        cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle: show only the other language \*\/[\s\S]*?}\s*\/\* Mobile-only language toggle: show only the other language \*\/[\s\S]*?}/g, (match) => {
-             return match.split('/* Mobile-only language toggle: show only the other language */')[1];
-        });
-
-        // Cleanup double 'class=' attributes
-        cleanedHtml = cleanedHtml.replace(/class="([^"]*)"\s*alt="([^"]*)"\s*class="([^"]*)"/g, 'alt="$2" class="$1 $3"');
-        
-        // Enforce uniform image heights
-        cleanedHtml = cleanedHtml.replace(/<img([^>]*)src="https:\/\/images\.unsplash\.com([^>]*)class="([^"]*)"([^>]*)>/g, (match, p1, p2, classStr, p4) => {
-            let cleanClasses = classStr.replace(/h-auto|w-full|h-56|object-cover/g, '').trim();
-            return `<img${p1}src="https://images.unsplash.com${p2}class="${cleanClasses} w-full h-56 object-cover"${p4}>`;
-        });
-
-        // Inject Mobile Menu & Sidebar Switcher
-        if (!cleanedHtml.includes('id="mobile-menu-btn"')) {
-            const sidebarLangItemNav = `<div class="md:hidden mt-12 py-6 border-t border-white/10 flex flex-col gap-4 w-full px-8">${enBtn}${arBtn}</div>`;
-            const sidebarLangItemUl = `<li class="md:hidden mt-12 py-6 border-t border-white/10 flex flex-col gap-4 w-full px-8">${enBtn}${arBtn}</li>`;
+        <!-- Dynamic Controls -->
+        <div class="flex items-center space-x-4 md:space-x-6 rtl:space-x-reverse">
+            <button onclick="toggleLanguage()" class="lang-en-btn text-white hover:text-primary-light font-bold hidden md:block">EN</button>
+            <button onclick="toggleLanguage()" class="lang-ar-btn text-white hover:text-primary-light font-bold hidden md:block">عربي</button>
             
-            const desktopLangSwitcher = `<div class="hidden md:flex items-center space-x-2 rtl:space-x-reverse ml-auto mr-4">${desktopEnBtn}${desktopArBtn}</div>`;
-            
-            if (cleanedHtml.includes('<nav')) {
-                cleanedHtml = cleanedHtml.replace(/<nav([^>]*)>/, `<nav id="mobile-menu"$1>`);
-                cleanedHtml = cleanedHtml.replace(/<\/nav>/, `${sidebarLangItemNav}\n            </nav>\n            ${desktopLangSwitcher}`);
-            } else {
-                cleanedHtml = cleanedHtml.replace(/<ul class="([^"]*)">/g, `<ul id="mobile-menu" class="hidden md:flex $1">`);
-                cleanedHtml = cleanedHtml.replace(/<\/ul>/, `${sidebarLangItemUl}\n            </ul>\n            ${desktopLangSwitcher}`);
-            }
-            
-            cleanedHtml = cleanedHtml.replace(/<\/header>/, `
-            <button id="mobile-menu-btn" class="block md:hidden text-white focus:outline-none transition-transform active:scale-95">
-                <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-            </button>
-        </header>`);
-        }
+            <div class="md:hidden flex items-center">
+                <input type="checkbox" id="mobile-menu-toggle" class="hidden peer">
+                <label for="mobile-menu-toggle" class="cursor-pointer text-white text-3xl peer-checked:text-primary-light transition-colors duration-200">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path class="hidden peer-checked:block" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path class="block peer-checked:hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </label>
+            </div>
+        </div>
+    </header>
+        `;
+
+        // Strip ALL existing headers and mobile nav controls from the start
+        cleanedHtml = cleanedHtml.replace(/<header[^>]*>[\s\S]*?<\/header>/g, '');
+        cleanedHtml = cleanedHtml.replace(/<div class="mobile-nav-menu[\s\S]*?<\/div>\s*<\/div>/g, ''); // Try to catch the sidebar too
+        cleanedHtml = cleanedHtml.replace(/<button id="mobile-menu-btn"[\s\S]*?<\/button>/g, '');
+
+        // Inject our new consolidated header after <body> starts
+        cleanedHtml = cleanedHtml.replace(/<body[^>]*>/, (match) => match + '\n' + premiumHeader);
+
+        // Cleanup redundant leftovers from partial replacements
+        cleanedHtml = cleanedHtml.replace(/s="overlay"><\/label>/g, '');
+        cleanedHtml = cleanedHtml.replace(/<\/header>\s*<\/header>/g, '</header>');
+
+
+        // Removed redundant injections as they are now consolidated in the premiumHeader above.
+
 
         // PHASE 2: AI Aesthetic Polish
         const systemPrompt = `You are a world-class UI/UX Designer.
@@ -284,16 +262,15 @@ ${cleanedHtml.substring(0, 15000)}
             const content = response.data.choices[0].message.content;
             
             // Extract the array from the JSON object if the model wrapped it
-            let edits = [];
             const parsed = typeof content === 'string' ? JSON.parse(content) : content;
-            edits = Array.isArray(parsed) ? parsed : (parsed.edits || Object.values(parsed)[0]);
+            const edits = Array.isArray(parsed) ? parsed : (parsed.edits || Object.values(parsed)[0]);
+
+            console.log(`[Retoucher] Received ${Array.isArray(edits) ? edits.length : 'invalid'} AI edits.`);
 
             if (!Array.isArray(edits)) {
-                console.warn("[Retoucher] Model didn't return an array. Skipping.");
-                return rawHtml;
+                console.warn("[Retoucher] Model didn't return an array. Skipping aesthetic enhancements.");
+                return cleanedHtml; // Return the regex-cleaned version if AI edits are invalid
             }
-
-            console.log(`[Retoucher] Applying ${edits.length} aesthetic enhancements...`);
 
             let finalHtml = cleanedHtml;
             for (const edit of edits) {
