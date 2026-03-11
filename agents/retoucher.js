@@ -161,18 +161,23 @@ class RetoucherAgent {
 
         // 4. Programmatic Structural Cleanup
         // Remove image logos from headers (user wants clean text only)
-        cleanedHtml = cleanedHtml.replace(/<header[\s\S]*?<a[^>]*class="[^"]*flex items-center[^"]*"[^>]*>([\s\S]*?)<\/a>/g, (match, content) => {
+        cleanedHtml = cleanedHtml.replace(/<a[^>]*class="[^"]*flex items-center[^"]*"[^>]*>([\s\S]*?)<\/a>/g, (match, content) => {
             // Remove any <img> tags inside the brand link
             const cleanContent = content.replace(/<img[^>]*>/g, '');
-            return match.replace(content, cleanContent);
+            // Refine the text styling for the brand name
+            const refinedContent = cleanContent.replace(/class="text-2xl font-bold"/, 'class="text-3xl font-extrabold tracking-tight text-white hover:text-primary-light transition-colors"');
+            return match.replace(content, refinedContent);
         });
 
-        // Aggressive header layout enforcement & contrast fix
-        cleanedHtml = cleanedHtml.replace(/<header class="([^"]*)">/g, (match, classes) => {
-            // Force solid dark background and white text for visibility
-            let cleanClasses = classes.replace(/pr-24|relative|bg-gray-900\/80|backdrop-blur-md|text-white|w-full|px-4/g, '').trim();
-            return `<header class="${cleanClasses} sticky top-0 bg-gray-900 text-white w-full px-4 flex justify-between items-center shadow-lg z-50">`;
+        // Aggressive header layout & Contrast Enforcement
+        // Match ANY header tag regardless of attributes
+        cleanedHtml = cleanedHtml.replace(/<header[^>]*>/g, () => {
+             return `<header class="sticky top-0 w-full z-50 bg-black text-white shadow-2xl flex justify-between items-center px-6 py-4">`;
         });
+        
+        // Remove redundant/duplicate header closing tags and buttons that cause layout mess
+        cleanedHtml = cleanedHtml.replace(/<\/header>[\s\S]*?<\/header>/g, '</header>');
+        cleanedHtml = cleanedHtml.replace(/<button id="mobile-menu-btn"[\s\S]*?<\/button>\s*<button id="mobile-menu-btn"[\s\S]*?<\/button>/g, (match) => match.split('</button>')[0] + '</button>');
 
         // Refined Language Switcher Style & Injection
         const enBtn = `<button class="lang-en-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-lg w-full text-center" onclick="document.documentElement.setAttribute('lang', 'en')">English</button>`;
