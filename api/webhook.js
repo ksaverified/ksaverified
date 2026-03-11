@@ -67,7 +67,7 @@ async function processIncomingChat(incomingPhone, messageText) {
     try {
         const translationPrompt = `Translate the following text to English for admin review. If it's already in English or just an emoji/symbol, just return the exact same text. Do not add any conversational filler, just output the translation:\n\n"${messageText}"`;
         const translationResponse = await chatbot.ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-1.5-flash',
             contents: translationPrompt,
         });
         translatedMsg = translationResponse.text.trim();
@@ -83,10 +83,9 @@ async function processIncomingChat(incomingPhone, messageText) {
     await db.saveInboundChatLog(placeId, incomingPhone, messageText, translatedMsg);
     console.log(`[Webhook] Inbound logged from ${incomingPhone} (Lead: ${lead?.name || 'Unknown'})`);
 
-    // 4. Trigger the Chatbot Agent to generate and send a reply ONLY if it's a known lead
-    if (lead) {
-        await chatbot.handleMessage(lead, incomingPhone, messageText, db);
-    }
+    // 4. Trigger the Chatbot Agent - DISABLED on Vercel to avoid duplication with local bot.
+    // The local bot already handles the logic and replies.
+    // await chatbot.handleMessage(lead, incomingPhone, messageText, db);
 }
 
 async function processOutboundChat(outgoingPhone, messageText) {

@@ -88,58 +88,106 @@ async function startWhatsApp() {
         process.exit(1);
     });
 
-    // 2. Incoming and Outgoing Message Listeners (Webhook Forwarding)
+    // 2. Incoming and Outgoing Message Listeners (Webhook Forwarding & Local Processing)
+    const DatabaseService = require('../services/db');
+    const ChatbotAgent = require('../agents/chatbot');
+    const db = new DatabaseService();
+    const chatbot = new ChatbotAgent();
+
     const forwardToWebhook = async (event_type, msg) => {
         const webhookUrl = process.env.WHATSAPP_WEBHOOK_URL;
-        if (!webhookUrl) return;
+        
+        let fromPhone = msg.from;
+        let toPhone = msg.to;
 
-        try {
-            // Resolve real phone number if it's a LID (Critical for Chatbot identifying leads)
-            let fromPhone = msg.from;
-            let toPhone = msg.to;
-
-            if (fromPhone.endsWith('@lid')) {
-                try {
-                    const contact = await msg.getContact();
-                    if (contact && contact.number) {
-                        fromPhone = `${contact.number}@c.us`;
-                        console.log(`[WhatsApp] Resolved sender LID ${msg.from} to ${fromPhone}`);
-                    }
-                } catch (e) {
-                    console.warn(`[WhatsApp] Could not resolve from LID ${msg.from}: ${e.message}`);
+        // Resolve real phone number if it's a LID
+        if (fromPhone.endsWith('@lid')) {
+            try {
+                const contact = await msg.getContact();
+                if (contact && contact.number) {
+                    fromPhone = `${contact.number}@c.us`;
                 }
+            } catch (e) {}
+        }
+
+        if (toPhone && toPhone.endsWith('@lid')) {
+            try {
+                const contact = await msg.getContact();
+                if (contact && contact.number) {
+                    toPhone = `${contact.number}@c.us`;
+                }
+            } catch (e) {}
+        }
+
+        const payload = {
+            event_type,
+            instanceId: 'local-direct',
+            data: {
+                id: msg.id._serialized,
+                from: fromPhone,
+                to: toPhone,
+                body: msg.body,
+                type: 'chat',
+                fromMe: msg.fromMe,
+                timestamp: msg.timestamp
             }
+        };
 
-            if (toPhone && toPhone.endsWith('@lid')) {
+        // --- LOCAL PROCESSING (The "Brains" now live here too) ---
+        if (event_type === 'message_received' && !msg.fromMe && msg.type === 'chat') {
+            const msgTimestamp = msg.timestamp * 1000;
+            const thirtyMinutesAgo = Date.now() - (30 * 60 * 1000);
+            const isRecent = msgTimestamp > thirtyMinutesAgo;
+
+            if (isRecent) {
+                console.log(`[Local-Bot] Processing inbound from ${fromPhone}...`);
+                
+                // 1. Translate locally (for dashboard view)
+                let translatedMsg = null;
                 try {
-                    const contact = await msg.getContact();
-                    if (contact && contact.number) {
-                        toPhone = `${contact.number}@c.us`;
-                        console.log(`[WhatsApp] Resolved recipient LID ${msg.to} to ${toPhone}`);
-                    }
-                } catch (e) {
-                    console.warn(`[WhatsApp] Could not resolve to LID ${msg.to}: ${e.message}`);
+                    const translationPrompt = `Translate the following text to English for admin review. If it's already in English or just an emoji/symbol, just return the exact same text. Do not add any conversational filler, just output the translation:\n\n"${msg.body}"`;
+                    const translationResponse = await chatbot.ai.models.generateContent({
+                        model: 'gemini-1.5-flash',
+                        contents: translationPrompt,
+                    });
+                    translatedMsg = translationResponse.text.trim();
+                } catch (err) {
+                    console.error('[Local-Bot] Translation failed:', err.message);
                 }
+
+                // 2. Identify lead and log
+                const lead = await db.getLeadByPhone(fromPhone);
+                const placeId = lead ? lead.place_id : null;
+                await db.saveInboundChatLog(placeId, fromPhone, msg.body, translatedMsg);
+
+                // 3. Handle via ChatbotAgent (REPLIES HAPPEN LOCALLY NOW)
+                chatbot.handleMessage(lead, fromPhone, msg.body, db).catch(e => {
+                    console.error('[Local-Bot] Handle message error:', e.message);
+                });
+            } else {
+                const lead = await db.getLeadByPhone(fromPhone);
+                const placeId = lead ? lead.place_id : null;
+                await db.saveInboundChatLog(placeId, fromPhone, msg.body, null);
+                console.log(`[Local-Bot] Old message logged (sync only) from ${fromPhone}`);
             }
+        }
 
-            const payload = {
-                event_type,
-                instanceId: 'local-docker',
-                data: {
-                    id: msg.id._serialized,
-                    from: fromPhone,
-                    to: toPhone,
-                    body: msg.body,
-                    type: 'chat',
-                    fromMe: msg.fromMe,
-                    timestamp: msg.timestamp
-                }
-            };
+        if (event_type === 'message_create' && msg.fromMe && msg.type === 'chat') {
+            const lead = await db.getLeadByPhone(toPhone);
+            const placeId = lead ? lead.place_id : null;
+            await db.saveOutboundChatLog(placeId, toPhone, msg.body);
+            console.log(`[Local-Bot] Outbound logged to ${toPhone}`);
+        }
 
-            await axios.post(webhookUrl, payload);
-            console.log(`[Webhook] Forwarded ${event_type} (From: ${fromPhone})`);
-        } catch (err) {
-            console.error(`[Webhook] Failed to forward ${event_type}:`, err.message);
+        // --- MIRROR TO WEBHOOK (Optional fallback/dashboard sync) ---
+        if (webhookUrl) {
+            try {
+                await axios.post(webhookUrl, payload, { timeout: 3000 });
+                console.log(`[Webhook] Mirror sent to Vercel (From: ${fromPhone})`);
+            } catch (err) {
+                // If ngrok is down, this fails, BUT the bot still worked above!
+                console.warn(`[Webhook] Mirror failed (Ngrok likely offline):`, err.message);
+            }
         }
     };
 

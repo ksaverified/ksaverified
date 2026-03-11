@@ -35,7 +35,7 @@ class ChatbotAgent {
 
         try {
             const result = await this.ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-1.5-flash',
                 contents: prompt
             });
             const intent = (result.text || result.response?.text || '').trim().toUpperCase();
@@ -53,16 +53,17 @@ class ChatbotAgent {
         try {
             // 1. Classify Intent first
             const intent = await this.classifyIntent(messageText);
-            await db.addLog('chatbot', 'intent_classified', lead.place_id, { intent, message: messageText }, 'info');
+            const placeId = lead ? lead.place_id : null;
+            await db.addLog('chatbot', 'intent_classified', placeId, { intent, message: messageText }, 'info');
 
             // 2. Filter out Auto-Replies
             if (intent === 'BUSINESS_AUTO_REPLY') {
-                console.log(`[Chatbot] Ignoring detected auto-reply from ${lead.name}`);
+                console.log(`[Chatbot] Ignoring detected auto-reply from ${lead?.name || incomingPhone}`);
                 return;
             }
 
-            // 3. Handle Explicit Interest (Automated Trial Activation)
-            if (intent === 'USER_INTERESTED' && (lead.status === 'scouted' || lead.status === 'warming_sent')) {
+            // 3. Handle Explicit Interest (Automated Trial Activation) - ONLY for known leads
+            if (lead && intent === 'USER_INTERESTED' && (lead.status === 'scouted' || lead.status === 'warming_sent')) {
                 console.log(`[Chatbot] Interest Confirmed for ${lead.name}. Activating Trial...`);
                 await db.updateLeadStatus(lead.place_id, 'interest_confirmed', { 
                     updated_at: new Date().toISOString() 
@@ -100,11 +101,16 @@ We are finalizing your custom AI-powered website now. You will receive a link to
                 trainingContext += "No past examples available. Use your best judgment.\n";
             }
 
+            // Fallbacks for unknown numbers
+            const businessName = lead ? lead.name : "Valued Business";
+            const previewUrl = lead ? lead.vercel_url : "https://drop-servicing-pipeline.vercel.app/client-dashboard";
+            const currentStatus = lead ? lead.status : "new inquiry";
+
             const prompt = `
 System Prompt:
 You are the ALATLAS AI Sales Assistant, representing ALATLAS Intelligence—a premium, automated web development and business intelligence agency. 
 
-Your goal is to answer questions from local business owners (like ${lead.name}) who received a cold WhatsApp message with a link to a preview website we built for them.
+Your goal is to answer questions from local business owners (like ${businessName}) who messaged you.
 
 NEW PROMOTION: 
 - 1 Week FREE Trial: They can test the site for 7 days without paying.
@@ -122,9 +128,9 @@ Detected Intent: ${intent}
 ${trainingContext}
 
 Current Lead Context:
-- Business Name: ${lead.name}
-- Preview Link: ${lead.vercel_url}
-- Pipeline Status: ${lead.status}
+- Business Name: ${businessName}
+- Preview Link: ${previewUrl}
+- Pipeline Status: ${currentStatus}
 
 User's New Message to you:
 "${messageText}"
@@ -135,7 +141,7 @@ Write the response you will send back exactly as it should appear in WhatsApp. D
             await db.addLog('chatbot', 'response_generation_started', lead.place_id, { intent }, 'info');
 
             const response = await this.ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-1.5-flash',
                 contents: prompt
             });
 
