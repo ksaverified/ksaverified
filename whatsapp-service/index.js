@@ -145,12 +145,7 @@ async function startWhatsApp() {
                 // 1. Translate locally (for dashboard view)
                 let translatedMsg = null;
                 try {
-                    const translationPrompt = `Translate the following text to English for admin review. If it's already in English or just an emoji/symbol, just return the exact same text. Do not add any conversational filler, just output the translation:\n\n"${msg.body}"`;
-                    const translationResponse = await chatbot.ai.models.generateContent({
-                        model: 'gemini-1.5-flash',
-                        contents: translationPrompt,
-                    });
-                    translatedMsg = translationResponse.text.trim();
+                    translatedMsg = await chatbot.translateText(msg.body);
                 } catch (err) {
                     console.error('[Local-Bot] Translation failed:', err.message);
                 }

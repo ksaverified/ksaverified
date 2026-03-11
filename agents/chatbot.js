@@ -1,24 +1,55 @@
-const { GoogleGenAI } = require('@google/genai');
+const axios = require('axios');
 const CloserAgent = require('./closer');
 
 /**
  * Chatbot Agent
  * Handles inbound WhatsApp messages, reads training data from Supabase, 
- * generates a contextual reply using Gemini, and sends it via Ultramsg.
+ * generates a contextual reply using OpenRouter, and sends it via Ultramsg.
  */
 class ChatbotAgent {
     constructor() {
-        this.apiKey = process.env.GEMINI_API_KEY;
+        this.apiKey = process.env.OPENROUTER_API_KEY;
+        this.model = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
+        
         if (!this.apiKey) {
-            console.warn('[Chatbot] GEMINI_API_KEY missing. Chatbot disabled.');
-        } else {
-            this.ai = new GoogleGenAI({ apiKey: this.apiKey });
+            console.warn('[Chatbot] OPENROUTER_API_KEY missing. Chatbot disabled.');
         }
     }
 
-    async classifyIntent(messageText) {
-        if (!this.ai) return 'UNKNOWN';
+    /**
+     * Core AI generation method using OpenRouter
+     */
+    async generateAI(prompt, customModel = null) {
+        if (!this.apiKey) return null;
 
+        try {
+            const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+                model: customModel || this.model,
+                messages: [
+                    { role: 'user', content: prompt }
+                ]
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${this.apiKey}`,
+                    'HTTP-Referer': 'https://github.com/daviddegroeve-git/drop-servicing-pipeline', // Optional, for OpenRouter rankings
+                    'X-Title': 'ALATLAS Chatbot'
+                }
+            });
+
+            return response.data.choices[0].message.content;
+        } catch (err) {
+            console.error('[Chatbot] AI Generation error:', err.response?.data || err.message);
+            return null;
+        }
+    }
+
+    async translateText(text) {
+        if (!text) return null;
+        const prompt = `Translate the following text to English for admin review. If it's already in English or just an emoji/symbol, just return the exact same text. Do not add any conversational filler, just output the translation:\n\n"${text}"`;
+        return this.generateAI(prompt);
+    }
+
+    async classifyIntent(messageText) {
         const prompt = `
         Analyze the following WhatsApp message from a local business and classify it into EXACTLY one of these categories:
         1. BUSINESS_AUTO_REPLY: Detailed business info, mission statements, "how can we help you", or "we are unavailable" messages that look like automatic responders.
@@ -33,23 +64,13 @@ class ChatbotAgent {
         Return ONLY the category name.
         `;
 
-        try {
-            const result = await this.ai.models.generateContent({
-                model: 'gemini-1.5-flash',
-                contents: prompt
-            });
-            const intent = (result.text || result.response?.text || '').trim().toUpperCase();
-            console.log(`[Chatbot] Classified intent: ${intent}`);
-            return intent;
-        } catch (err) {
-            console.error('[Chatbot] Intent classification failed:', err.message);
-            return 'UNKNOWN';
-        }
+        const result = await this.generateAI(prompt);
+        const intent = result ? result.trim().toUpperCase() : 'UNKNOWN';
+        console.log(`[Chatbot] Classified intent: ${intent}`);
+        return intent;
     }
 
     async handleMessage(lead, incomingPhone, messageText, db) {
-        if (!this.ai) return;
-
         try {
             // 1. Classify Intent first
             const intent = await this.classifyIntent(messageText);
@@ -138,26 +159,28 @@ User's New Message to you:
 Write the response you will send back exactly as it should appear in WhatsApp. Do not include quotes or meta-commentary.
             `;
 
-            await db.addLog('chatbot', 'response_generation_started', lead.place_id, { intent }, 'info');
+            await db.addLog('chatbot', 'response_generation_started', placeId, { intent }, 'info');
 
-            const response = await this.ai.models.generateContent({
-                model: 'gemini-1.5-flash',
-                contents: prompt
-            });
+            const replyText = await this.generateAI(prompt);
+            
+            if (!replyText) {
+                console.error('[Chatbot] Failed to generate AI response.');
+                return;
+            }
 
-            const replyText = (response.text || response.response?.text || '').trim();
             console.log(`[Chatbot] AI generated reply: ${replyText}`);
 
             // Send via CloserAgent
             const closer = new CloserAgent();
             await closer.sendMessage(incomingPhone, replyText);
 
-            await db.addLog('chatbot', 'response_sent', lead.place_id, { reply: replyText }, 'success');
+            await db.addLog('chatbot', 'response_sent', placeId, { reply: replyText }, 'success');
             console.log(`[Chatbot] Reply sent to ${incomingPhone}`);
 
         } catch (error) {
-            console.error(`[Chatbot] Error handling message: ${error.message}`);
-            await db.addLog('chatbot', 'error', lead.place_id || null, { message: error.message }, 'error');
+            const placeId = lead ? (lead.place_id || null) : null;
+            console.error(`[Chatbot] Error handling message (Lead: ${incomingPhone}):`, error.message);
+            await db.addLog('chatbot', 'error', placeId, { message: error.message }, 'error');
         }
     }
 }

@@ -65,12 +65,7 @@ async function processIncomingChat(incomingPhone, messageText) {
     // 1. First, always translate for admin review (especially if it's Arabic)
     let translatedMsg = null;
     try {
-        const translationPrompt = `Translate the following text to English for admin review. If it's already in English or just an emoji/symbol, just return the exact same text. Do not add any conversational filler, just output the translation:\n\n"${messageText}"`;
-        const translationResponse = await chatbot.ai.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: translationPrompt,
-        });
-        translatedMsg = translationResponse.text.trim();
+        translatedMsg = await chatbot.translateText(messageText);
     } catch (err) {
         console.error('[Webhook] Translation failed:', err.message);
     }
