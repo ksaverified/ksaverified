@@ -1,5 +1,5 @@
 require('dotenv').config();
-const Orchestrator = require('./orchestrator');
+const Orchestrator = require('../orchestrator');
 
 (async () => {
     try {

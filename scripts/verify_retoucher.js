@@ -1,4 +1,4 @@
-const RetoucherAgent = require('./agents/retoucher');
+const RetoucherAgent = require('../agents/retoucher');
 require('dotenv').config();
 
 async function testRetoucher() {

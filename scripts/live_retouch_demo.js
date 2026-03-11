@@ -1,4 +1,4 @@
-const RetoucherAgent = require('./agents/retoucher');
+const RetoucherAgent = require('../agents/retoucher');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 

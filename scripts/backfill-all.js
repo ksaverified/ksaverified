@@ -1,6 +1,6 @@
 require('dotenv').config();
-const DatabaseService = require('./services/db');
-const ChatbotAgent = require('./agents/chatbot');
+const DatabaseService = require('../services/db');
+const ChatbotAgent = require('../agents/chatbot');
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
