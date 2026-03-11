@@ -46,6 +46,40 @@ class RetoucherAgent {
         let imgIndex = 0;
         const getNextImage = () => premiumTechImages[imgIndex++ % premiumTechImages.length];
 
+        // 0. Inject Mobile Logic Styles & Scripts
+        const mobileStyles = `
+        /* Mobile-only language toggle: show only the other language */
+        @media (max-width: 768px) {
+            html[lang="en"] .lang-en-btn { display: none !important; }
+            html[lang="ar"] .lang-ar-btn { display: none !important; }
+        }
+        .mobile-menu-active { display: flex !important; flex-direction: column; position: absolute; top: 100%; left: 0; right: 0; background: rgba(17, 24, 39, 0.95); padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        `;
+
+        const mobileScript = `
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const menuBtn = document.getElementById('mobile-menu-btn');
+                const menu = document.getElementById('mobile-menu');
+                if (menuBtn && menu) {
+                    menuBtn.addEventListener('click', () => {
+                        menu.classList.toggle('hidden');
+                        menu.classList.toggle('mobile-menu-active');
+                    });
+                }
+            });
+        </script>
+        `;
+
+        // Inject CSS
+        if (!cleanedHtml.includes('mobile-menu-active')) {
+            cleanedHtml = cleanedHtml.replace('</style>', `${mobileStyles}\n    </style>`);
+        }
+        // Inject JS
+        if (!cleanedHtml.includes('mobile-menu-btn')) {
+            cleanedHtml = cleanedHtml.replace('</body>', `${mobileScript}\n</body>`);
+        }
+
         // 1. Purge all Google Maps photos (they render as Red X due to billing)
         cleanedHtml = cleanedHtml.replace(/https:\/\/maps\.googleapis\.com\/maps\/api\/place\/photo\?[^"'\s)]+/g, () => getNextImage());
         
@@ -61,7 +95,22 @@ class RetoucherAgent {
         cleanedHtml = cleanedHtml.replace(/<!-- Language Switcher -->[\s\S]*?<div class="z-50 flex space-x-2">[\s\S]*?<\/div>/g, '');
         
         // Convert the remaining fixed switcher inside header into a normal flex item
-        cleanedHtml = cleanedHtml.replace(/<div class="fixed top-4 right-4">\s*<div class="\s*flex space-x-2">([\s\S]*?)<\/div>\s*<\/div>/g, '<div class="hidden md:flex items-center space-x-2">$1</div>');
+        // Ensure it is NOT hidden on mobile so the "other-language-only" rule can work
+        cleanedHtml = cleanedHtml.replace(/<div class="fixed top-4 right-4">\s*<div class="\s*flex space-x-2">([\s\S]*?)<\/div>\s*<\/div>/g, '<div class="flex items-center space-x-2">$1</div>');
+        cleanedHtml = cleanedHtml.replace(/<div class="hidden md:flex items-center space-x-2">/g, '<div class="flex items-center space-x-2">');
+        
+        // Add specific classes to language buttons for mobile hide/show logic
+        const addLangClass = (html, id, className) => {
+            const regex = new RegExp(`<button([^>]*)id="${id}"([^>]*)>`, 'g');
+            return html.replace(regex, (match, p1, p2) => {
+                if (match.includes('class="')) {
+                    return match.replace('class="', `class="${className} `);
+                }
+                return `<button${p1}id="${id}"${p2} class="${className}">`;
+            });
+        };
+        cleanedHtml = addLangClass(cleanedHtml, 'lang-en', 'lang-en-btn');
+        cleanedHtml = addLangClass(cleanedHtml, 'lang-ar', 'lang-ar-btn');
         
         // Cleanup double 'class=' attributes on img tags caused by bad LLM JSON
         cleanedHtml = cleanedHtml.replace(/class="([^"]*)"\s*alt="([^"]*)"\s*class="([^"]*)"/g, 'alt="$2" class="$1 $3"');
@@ -79,10 +128,17 @@ class RetoucherAgent {
             </a>`);
 
         // Inject Mobile Menu Hamburger if it doesn't already exist
-        if (!cleanedHtml.includes('md:hidden')) {
-            cleanedHtml = cleanedHtml.replace(/<ul class="flex space-x-6">/g, '<ul class="hidden md:flex space-x-6">');
-            cleanedHtml = cleanedHtml.replace(/<\/ul>\s*<\/nav>/g, `</ul>
-            <button class="block md:hidden text-white hover:text-blue-400 focus:outline-none">
+        // Robust replacement: find the <ul> in nav and give it the ID, then replace any button with ours
+        if (!cleanedHtml.includes('id="mobile-menu-btn"')) {
+            // Give IDs to the menu list
+            cleanedHtml = cleanedHtml.replace(/<ul class="([^"]*)">/g, '<ul id="mobile-menu" class="hidden md:flex $1">');
+            
+            // Remove existing broken hamburger buttons
+            cleanedHtml = cleanedHtml.replace(/<button[^>]*>(?:[\s\S]*?svg[\s\S]*?)<\/button>/g, '');
+            
+            // Inject our clean hamburger button before the close of nav
+            cleanedHtml = cleanedHtml.replace(/<\/nav>/g, `
+            <button id="mobile-menu-btn" class="block md:hidden text-white hover:text-blue-400 focus:outline-none">
                 <svg class="w-8 h-8 fill-current" viewBox="0 0 24 24">
                     <path fill-rule="evenodd" d="M3 5h18a1 1 0 011 1v2a1 1 0 01-1 1H3a1 1 0 01-1-1V6a1 1 0 011-1zm0 6h18a1 1 0 011 1v2a1 1 0 01-1 1H3a1 1 0 01-1-1v-2a1 1 0 011-1zm0 6h18a1 1 0 011 1v2a1 1 0 01-1 1H3a1 1 0 01-1-1v-2a1 1 0 011-1z" clip-rule="evenodd"/>
                 </svg>
