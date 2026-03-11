@@ -183,8 +183,8 @@ class RetoucherAgent {
         const enBtn = `<button class="lang-en-btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-lg w-full text-center" onclick="document.documentElement.setAttribute('lang', 'en')">English</button>`;
         const arBtn = `<button class="lang-ar-btn bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-lg w-full text-center" onclick="document.documentElement.setAttribute('lang', 'ar')">عربي</button>`;
         
-        const desktopEnBtn = `<button class="lang-en-btn hidden md:inline-block border border-white text-white hover:bg-white hover:text-black font-semibold py-2 px-4 rounded-lg transition-all ml-4" onclick="document.documentElement.setAttribute('lang', 'en')">English</button>`;
-        const desktopArBtn = `<button class="lang-ar-btn hidden md:inline-block border border-white text-white hover:bg-white hover:text-black font-semibold py-2 px-4 rounded-lg transition-all ml-4" onclick="document.documentElement.setAttribute('lang', 'ar')">عربي</button>`;
+        const desktopEnBtn = `<button class="lang-en-btn hidden md:inline-block border border-white text-white hover:bg-gray-700 hover:text-white font-semibold py-2 px-4 rounded-lg transition-all ml-4" onclick="document.documentElement.setAttribute('lang', 'en')">English</button>`;
+        const desktopArBtn = `<button class="lang-ar-btn hidden md:inline-block border border-white text-white hover:bg-gray-700 hover:text-white font-semibold py-2 px-4 rounded-lg transition-all ml-4" onclick="document.documentElement.setAttribute('lang', 'ar')">عربي</button>`;
         
         // Remove ALL existing switcher instances
         cleanedHtml = cleanedHtml.replace(/<div class="(?:absolute|fixed) top-4 (?:left|right)-4">[\s\S]*?<\/div>/g, '');
@@ -248,7 +248,7 @@ CRITICAL RULES:
 1. **SIDEBAR LANGUAGE SWITCHER**: We have moved the language buttons (EN / عربي) INSIDE the mobile navigation menu (the '#mobile-menu' sidebar) and next to it for desktop. DO NOT delete them, and DO NOT move them back out. They are configured correctly.
 2. **HAMBURGER POSITION**: The header MUST stay 'flex justify-between' so the brand is on one side and the hamburger is on the other. Do not use 'absolute' positioning.
 3. **DO NOT MODIFY** the '#mobile-menu' structure or styling.
-4. **Header Style & Contrast**: Ensure the header is 'sticky', uses 'backdrop-blur-md', and has a background that provides HIGH CONTRAST for the text. If the header text is white, use 'bg-gray-900/80' or a very dark transparent background. If the header text is dark, use 'bg-white/90'. Do NOT leave text unreadable or invisible against the background image. Make sure the Brand Name and Menu Links are clearly visible. Add 'text-white' to the header text if the background is dark.
+4. **Header Style & Contrast**: The header MUST be solid 'bg-black' and text MUST be 'text-white'. DO NOT change the background color of the header or its height/padding. DO NOT use transparency or backdrop-blur on the header. Ensure the Brand Name and Menu Links remain white. Do NOT delete or move the language switcher buttons.
 5. **Glassmorphism**: Use 'backdrop-blur-lg' and 'bg-white/70' or 'bg-gray-900/70' appropriately for card backgrounds.
 
 BUSINESS CONTEXT:
