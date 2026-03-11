@@ -30,11 +30,11 @@ class RetoucherAgent {
         // LLMs struggle with exact string replacement of 800-character URLs. We do it via Regex first.
         let cleanedHtml = rawHtml;
         
-        // Select images based on business types to enforce correct theming
-        const businessTypesStr = (business.types || []).join(' ').toLowerCase();
+        // Select images based on business types and name to enforce correct theming
+        const businessTypesStr = ((business.types || []).join(' ') + ' ' + (business.name || '')).toLowerCase();
         let businessImages = [];
 
-        if (businessTypesStr.includes('hair') || businessTypesStr.includes('barber') || businessTypesStr.includes('salon')) {
+        if (businessTypesStr.includes('hair') || businessTypesStr.includes('barber') || businessTypesStr.includes('salon') || businessTypesStr.includes('saloon') || businessTypesStr.includes('grooming') || businessTypesStr.includes('حلاقة')) {
             businessImages = [
                 "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=1000&auto=format&fit=crop", // Barbershop
                 "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=1000&auto=format&fit=crop", // Hair styling
@@ -160,11 +160,6 @@ class RetoucherAgent {
         cleanedHtml = cleanedHtml.replace(/https:\/\/images\.unsplash\.com\/photo-[^"'\s)]+/g, () => getNextImage());
 
         // 4. Programmatic Structural Cleanup
-        // Remove ANY empty or near-empty divs in the header that break flex-flipping
-        cleanedHtml = cleanedHtml.replace(/<header[^>]*>[\s\S]*?<div class="flex items-center space-x-2">[\s\S]*?<\/div>/, (match) => {
-            return match.replace(/<div class="flex items-center space-x-2">[\s\S]*?<\/div>/, '');
-        });
-
         // Aggressive header layout enforcement
         cleanedHtml = cleanedHtml.replace(/<header class="([^"]*)">/g, (match, classes) => {
             let cleanClasses = classes.replace(/pr-24|relative/g, '').trim();
@@ -184,11 +179,16 @@ class RetoucherAgent {
         // Remove ALL existing switcher instances
         cleanedHtml = cleanedHtml.replace(/<div class="(?:absolute|fixed) top-4 (?:left|right)-4">[\s\S]*?<\/div>/g, '');
         cleanedHtml = cleanedHtml.replace(/<button[^>]*class="[^"]*lang-(?:en|ar)-btn[^"]*"[^>]*>[\s\S]*?<\/button>/g, '');
-        cleanedHtml = cleanedHtml.replace(/<div class="flex items-center space-x-2">\s*<button class="lang-en-btn[\s\S]*?<\/div>/g, '');
+        // We only want to remove the switcher from the space-x-2 div, NOT the entire logo!
+        cleanedHtml = cleanedHtml.replace(/<button class="lang-en-btn[^>]*>[\s\S]*?<\/button>\s*<button class="lang-ar-btn[^>]*>[\s\S]*?<\/button>/g, '');
         cleanedHtml = cleanedHtml.replace(/<!-- Language Switcher -->[\s\S]*?<div class="z-50 flex space-x-2">[\s\S]*?<\/div>/g, '');
         cleanedHtml = cleanedHtml.replace(/<li>\s*<button class="lang-(?:en|ar)-btn[\s\S]*?<\/li>/g, '');
         cleanedHtml = cleanedHtml.replace(/<button id="lang-toggle"[^>]*>[\s\S]*?<\/button>/g, '');
         cleanedHtml = cleanedHtml.replace(/<button id="lang-switcher"[^>]*>[\s\S]*?<\/button>/g, '');
+        
+        // Remove old 'toggleLanguage()' links and buttons that conflict with our new system
+        cleanedHtml = cleanedHtml.replace(/<a[^>]*onclick="toggleLanguage\(\)"[^>]*>[\s\S]*?<\/a>/g, '');
+        cleanedHtml = cleanedHtml.replace(/<button[^>]*onclick="toggleLanguage\(\)"[^>]*>[\s\S]*?<\/button>/g, '');
 
         // Deduplicate style blocks for language logic
         cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle: show only the other language \*\/[\s\S]*?}\s*\/\* Mobile-only language toggle: show only the other language \*\/[\s\S]*?}/g, (match) => {
