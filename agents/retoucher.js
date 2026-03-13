@@ -67,6 +67,94 @@ class RetoucherAgent {
                 "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?q=80&w=1000&auto=format&fit=crop", // Chef
                 "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1000&auto=format&fit=crop"  // Cafe ambiance
             ];
+        } else if (businessTypesStr.includes('boutique') || businessTypesStr.includes('fashion') || businessTypesStr.includes('dress') || businessTypesStr.includes('clothes') || businessTypesStr.includes('ملابس') || businessTypesStr.includes('ازياء')) {
+            businessImages = [
+                "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1000&auto=format&fit=crop", // High-end fashion
+                "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?q=80&w=1000&auto=format&fit=crop", // Boutique storefront
+                "https://images.unsplash.com/photo-1445205174273-59396b27d33b?q=80&w=1000&auto=format&fit=crop", // Dress collection
+                "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=1000&auto=format&fit=crop", // Fashion details
+                "https://images.unsplash.com/photo-1534126511673-b6899657816a?q=80&w=1000&auto=format&fit=crop", // Accessories
+                "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?q=80&w=1000&auto=format&fit=crop", // Fashion display
+                "https://images.unsplash.com/photo-1485231183945-80f6880da6d8?q=80&w=1000&auto=format&fit=crop", // Boutique interior
+                "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1000&auto=format&fit=crop"  // Retail experience
+            ];
+        } else if (businessTypesStr.includes('clinic') || businessTypesStr.includes('medical') || businessTypesStr.includes('doctor') || businessTypesStr.includes('health') || businessTypesStr.includes('عيادة') || businessTypesStr.includes('طبي')) {
+            businessImages = [
+                "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=1000&auto=format&fit=crop", // Modern clinic
+                "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=1000&auto=format&fit=crop", // Doctor
+                "https://images.unsplash.com/photo-1584515933487-779824d29309?q=80&w=1000&auto=format&fit=crop", // Medical equipment
+                "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?q=80&w=1000&auto=format&fit=crop", // Health consult
+                "https://images.unsplash.com/photo-1516549655169-df83a0774514?q=80&w=1000&auto=format&fit=crop", // Patient room
+                "https://images.unsplash.com/photo-1579684385127-1ef15d508118?q=80&w=1000&auto=format&fit=crop", // Exam room
+                "https://images.unsplash.com/photo-1581595220892-b0739db3ba8c?q=80&w=1000&auto=format&fit=crop", // Lab technician
+                "https://images.unsplash.com/photo-1629909613654-28e377c37b09?q=80&w=1000&auto=format&fit=crop"  // Medical office
+            ];
+        } else if (businessTypesStr.includes('supermarket') || businessTypesStr.includes('grocery') || businessTypesStr.includes('store') || businessTypesStr.includes('market') || businessTypesStr.includes('بقالة') || businessTypesStr.includes('سوبر')) {
+            businessImages = [
+                "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1000&auto=format&fit=crop", // Supermarket produce
+                "https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=1000&auto=format&fit=crop", // Store aisles
+                "https://images.unsplash.com/photo-147119394590b-35623395feb4?q=80&w=1000&auto=format&fit=crop", // Fresh fruit
+                "https://images.unsplash.com/photo-1534723452862-4c874018d66d?q=80&w=1000&auto=format&fit=crop", // Market stall
+                "https://images.unsplash.com/photo-1516594798947-e65505dbb29d?q=80&w=1000&auto=format&fit=crop", // Groceries
+                "https://images.unsplash.com/photo-1444858291040-58f756a3bea6?q=80&w=1000&auto=format&fit=crop", // Organic food
+                "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?q=80&w=1000&auto=format&fit=crop", // Convenience store
+                "https://images.unsplash.com/photo-1594918352528-665e8a9f626a?q=80&w=1000&auto=format&fit=crop"  // Retail shelves
+            ];
+        } else if (businessTypesStr.includes('carwash') || businessTypesStr.includes('car wash') || businessTypesStr.includes('detailing') || businessTypesStr.includes('غسيل')) {
+            businessImages = [
+                "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?q=80&w=1000&auto=format&fit=crop", // Car wash tunnel
+                "https://images.unsplash.com/photo-1601362840469-51e4d8d59085?q=80&w=1000&auto=format&fit=crop", // Pressure wash
+                "https://images.unsplash.com/photo-1629815197818-f60be2806ee3?q=80&w=1000&auto=format&fit=crop", // Detailing
+                "https://images.unsplash.com/photo-1552933153-43d4479bd7ac?q=80&w=1000&auto=format&fit=crop", // Clean car
+                "https://images.unsplash.com/photo-1599256621730-535171e28e50?q=80&w=1000&auto=format&fit=crop", // Foam wash
+                "https://images.unsplash.com/photo-1597766333691-4569bd898c69?q=80&w=1000&auto=format&fit=crop", // Polishing
+                "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?q=80&w=1000&auto=format&fit=crop", // Car sponges
+                "https://images.unsplash.com/photo-1507136566006-bb7aef5537d8?q=80&w=1000&auto=format&fit=crop"  // Shine
+            ];
+        } else if (businessTypesStr.includes('spa') || businessTypesStr.includes('massage') || businessTypesStr.includes('beauty parlor') || businessTypesStr.includes('سبا')) {
+            businessImages = [
+                "https://images.unsplash.com/photo-1544161515-4af6b1d4b1f2?q=80&w=1000&auto=format&fit=crop", // Massage
+                "https://images.unsplash.com/photo-1540555700478-4be289aefcf1?q=80&w=1000&auto=format&fit=crop", // Spa candles
+                "https://images.unsplash.com/photo-1512290923902-8a9f81dc2069?q=80&w=1000&auto=format&fit=crop", // Beauty face
+                "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?q=80&w=1000&auto=format&fit=crop", // Skin care
+                "https://images.unsplash.com/photo-1611099683487-de5d7a9adcbf?q=80&w=1000&auto=format&fit=crop", // Relaxing spa
+                "https://images.unsplash.com/photo-1515377905703-c4788e51af15?q=80&w=1000&auto=format&fit=crop", // Aromatherapy
+                "https://images.unsplash.com/photo-1600334089648-b0d9d3028eb2?q=80&w=1000&auto=format&fit=crop", // Spa interior
+                "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?q=80&w=1000&auto=format&fit=crop"  // Facial
+            ];
+        } else if (businessTypesStr.includes('sport') || businessTypesStr.includes('gym') || businessTypesStr.includes('fitness') || businessTypesStr.includes('رياضة')) {
+            businessImages = [
+                "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1000&auto=format&fit=crop", // Gym
+                "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=1000&auto=format&fit=crop", // Workout
+                "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1000&auto=format&fit=crop", // Fitness
+                "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=1000&auto=format&fit=crop", // Athlete
+                "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1000&auto=format&fit=crop", // Training
+                "https://images.unsplash.com/photo-1594882645126-14020914d58d?q=80&w=1000&auto=format&fit=crop", // Running
+                "https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=1000&auto=format&fit=crop", // Exercise
+                "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?q=80&w=1000&auto=format&fit=crop"  // Modern gym
+            ];
+        } else if (businessTypesStr.includes('flower') || businessTypesStr.includes('gift') || businessTypesStr.includes('ورد') || businessTypesStr.includes('هدايا')) {
+            businessImages = [
+                "https://images.unsplash.com/photo-1522673607200-164883efbfc1?q=80&w=1000&auto=format&fit=crop", // Flower shop
+                "https://images.unsplash.com/photo-1490750967868-88aa3386c946?q=80&w=1000&auto=format&fit=crop", // Bouquet
+                "https://images.unsplash.com/photo-1526047932273-341f2a7631f9?q=80&w=1000&auto=format&fit=crop", // Flowers
+                "https://images.unsplash.com/photo-1513151233558-d860c5398176?q=80&w=1000&auto=format&fit=crop", // Gift box
+                "https://images.unsplash.com/photo-1549462184-b09b977a8364?q=80&w=1000&auto=format&fit=crop", // Wrapping
+                "https://images.unsplash.com/photo-1523626752472-b55a6d7f1c0a?q=80&w=1000&auto=format&fit=crop", // Gift shop
+                "https://images.unsplash.com/photo-1487070183336-b8d23f722005?q=80&w=1000&auto=format&fit=crop", // Florist
+                "https://images.unsplash.com/photo-1453904300235-0f2f60b15b5d?q=80&w=1000&auto=format&fit=crop"  // Presentation
+            ];
+        } else if (businessTypesStr.includes('construct') || businessTypesStr.includes('contractor') || businessTypesStr.includes('build') || businessTypesStr.includes('مقاول') || businessTypesStr.includes('بناء')) {
+            businessImages = [
+                "https://images.unsplash.com/photo-1503387762-11a0fcfbd307?q=80&w=1000&auto=format&fit=crop", // Modern building
+                "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?q=80&w=1000&auto=format&fit=crop", // Construction site
+                "https://images.unsplash.com/photo-1504307651254-35680f3366d4?q=80&w=1000&auto=format&fit=crop", // Architecture
+                "https://images.unsplash.com/photo-1531834357221-ed7c2936279d?q=80&w=1000&auto=format&fit=crop", // Blueprint
+                "https://images.unsplash.com/photo-1581094288338-2314dddb7ec4?q=80&w=1000&auto=format&fit=crop", // Design
+                "https://images.unsplash.com/photo-1508450859948-4e04f9ad5b13?q=80&w=1000&auto=format&fit=crop", // Concrete
+                "https://images.unsplash.com/photo-1517581177682-a0833a0a1c61?q=80&w=1000&auto=format&fit=crop", // Iron work
+                "https://images.unsplash.com/photo-1590644365607-1c5a519a7a37?q=80&w=1000&auto=format&fit=crop"  // Engineering
+            ];
         } else {
              // Fallback to high-quality abstract / corporate / local business
              businessImages = [
@@ -224,15 +312,18 @@ class RetoucherAgent {
 
 
         // PHASE 2: AI Aesthetic Polish
-        const systemPrompt = `You are a world-class UI/UX Designer.
-Your job is to audit HTML/Tailwind code to ensure high aesthetic quality.
+        const systemPrompt = `You are a world-class UI/UX Designer and Frontend Auditor.
+Your job is to audit HTML/Tailwind code to ensure extremely high aesthetic quality and professional "premium" feel.
 
-CRITICAL RULES:
-1. **SIDEBAR LANGUAGE SWITCHER**: We have moved the language buttons (EN / عربي) INSIDE the mobile navigation menu (the '#mobile-menu' sidebar) and next to it for desktop. DO NOT delete them, and DO NOT move them back out. They are configured correctly.
-2. **HAMBURGER POSITION**: The header MUST stay 'flex justify-between' so the brand is on one side and the hamburger is on the other. Do not use 'absolute' positioning.
-3. **DO NOT MODIFY** the '#mobile-menu' structure or styling.
-4. **Header Style & Contrast**: The header MUST be solid 'bg-black' and text MUST be 'text-white'. DO NOT change the background color of the header or its height/padding. DO NOT use transparency or backdrop-blur on the header. Ensure the Brand Name and Menu Links remain white. Do NOT delete or move the language switcher buttons.
-5. **Glassmorphism**: Use 'backdrop-blur-lg' and 'bg-white/70' or 'bg-gray-900/70' appropriately for card backgrounds.
+CRITICAL AESTHETIC RULES:
+1. **SIDEBAR LANGUAGE SWITCHER**: Keep the language buttons (EN / عربي) INSIDE the mobile navigation menu ('#mobile-menu') and desktop header. 
+2. **LAYOUT & SPACING**: Ensure generous white space (use p-8, py-20, gap-12). All sections MUST have consistent vertical spacing.
+3. **TYPOGRAPHY**: Ensure text contrast is perfect. Use 'tracking-tight' for headers and 'leading-relaxed' for body text.
+4. **GLASSMORPHISM**: Use 'backdrop-blur-xl' and 'bg-white/10' or 'bg-black/40' for modern, sleek cards. Add subtle borders: 'border border-white/10'.
+5. **COLOR HARMONY**: Stick to a premium palette. If the business is luxury, use golds/blacks. If tech, use deep blues/slates.
+6. **INTERACTIONS**: Add hover effects to all buttons (e.g., 'hover:scale-105 transition-transform', 'hover:shadow-2xl').
+7. **FOOTER**: Ensure the footer is elegant, with clear links and social placeholders.
+8. **DO NOT MODIFY** the '#mobile-menu' logic or the main header structure we just injected. Focus on refining the INNER content of the sections.
 
 BUSINESS CONTEXT:
 ${business.name} operates in: ${(business.types || []).join(', ')}.

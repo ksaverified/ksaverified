@@ -80,6 +80,15 @@ class ChatbotAgent {
             // 2. Filter out Auto-Replies
             if (intent === 'BUSINESS_AUTO_REPLY') {
                 console.log(`[Chatbot] Ignoring detected auto-reply from ${lead?.name || incomingPhone}`);
+                
+                // Update the chat log status to 'ignored' so it doesn't stay in the pending dashboard
+                await db.supabase
+                    .from('chat_logs')
+                    .update({ status: 'ignored' })
+                    .eq('phone', incomingPhone)
+                    .eq('message_in', messageText)
+                    .eq('status', 'pending');
+                    
                 return;
             }
 

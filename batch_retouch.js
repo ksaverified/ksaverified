@@ -92,6 +92,18 @@ async function batchRetouchAll() {
                         console.error(`Failed to save retouched HTML for ${lead.place_id}:`, updateError.message);
                     } else {
                         console.log(`✅ Successfully saved retouched HTML for ${lead.name}`);
+                        
+                        // Log the completion for dashboard progress tracking
+                        await supabase
+                            .from('logs')
+                            .insert({
+                                agent: 'retoucher',
+                                action: 'retouch_completed',
+                                place_id: lead.place_id,
+                                status: 'success',
+                                details: { name: lead.name }
+                            });
+                            
                         processedCount++;
                     }
                 }

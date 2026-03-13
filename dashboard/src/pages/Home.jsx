@@ -7,24 +7,24 @@ import { APIProvider, Map as GoogleMap, AdvancedMarker } from '@vis.gl/react-goo
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
-const StatCard = ({ title, value, icon: Icon, color, delay }) => (
-    <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay, duration: 0.4 }}
-        className="bg-surface p-6 rounded-2xl border border-zinc-800 flex items-center gap-4 hover:border-zinc-700 transition-colors shadow-lg"
-    >
-        <div className={`p-4 rounded-xl ${color} bg-opacity-10`}>
-            <Icon className={`h-6 w-6 ${color.replace('bg-', 'text-')}`} />
-        </div>
-        <div>
-            <p className="text-sm text-zinc-400 font-medium">{title}</p>
-            <h3 className="text-2xl font-bold text-zinc-100 mt-1">{value}</h3>
-        </div>
-    </motion.div>
-);
-
 export default function Home() {
+    const StatCard = ({ title, value, icon: CardIcon, color, delay }) => (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay, duration: 0.4 }}
+            className="bg-surface p-6 rounded-2xl border border-zinc-800 flex items-center gap-4 hover:border-zinc-700 transition-colors shadow-lg"
+        >
+            <div className={`p-4 rounded-xl ${color} bg-opacity-10`}>
+                <CardIcon className={`h-6 w-6 ${color.replace('bg-', 'text-')}`} />
+            </div>
+            <div>
+                <p className="text-sm text-zinc-400 font-medium">{title}</p>
+                <h3 className="text-2xl font-bold text-zinc-100 mt-1">{value}</h3>
+            </div>
+        </motion.div>
+    );
+
     const [loading, setLoading] = useState(true);
 
     // Data states
@@ -36,6 +36,8 @@ export default function Home() {
     const [mapLeads, setMapLeads] = useState([]);
     const [engagementStats, setEngagementStats] = useState({ warming: 0, promo: 0 });
     const [queueSizes, setQueueSizes] = useState({ warming: 0, promotion: 0 });
+    const [retouchProgress, setRetouchProgress] = useState({ processed: 0, total: 0 });
+    const [retouchActivity, setRetouchActivity] = useState([]);
 
     useEffect(() => {
         fetchAllData(true);
@@ -79,7 +81,9 @@ export default function Home() {
             fetchPendingAnswers(),
             fetchRecentLogs(),
             fetchEngagementStats(),
-            fetchQueueSizes()
+            fetchQueueSizes(),
+            fetchRetouchProgress(),
+            fetchRetouchActivity()
         ]);
         if (showLoading) setLoading(false);
     }
@@ -97,7 +101,7 @@ export default function Home() {
             const counts = data.reduce((acc, lead) => {
                 acc[lead.status] = (acc[lead.status] || 0) + 1;
                 return acc;
-            }, { scouted: 0, created: 0, published: 0, pitched: 0, completed: 0 });
+            }, { scouted: 0, interest_confirmed: 0, created: 0, published: 0, pitched: 0, completed: 0 });
             setStats(counts);
 
             // Set Recent Leads (top 5)
@@ -192,6 +196,51 @@ export default function Home() {
         }
     }
 
+    async function fetchRetouchProgress() {
+        try {
+            // Count total leads with website_html
+            const { count: total, error: totalError } = await supabase
+                .from('leads')
+                .select('*', { count: 'exact', head: true })
+                .not('website_html', 'is', null);
+
+            if (totalError) throw totalError;
+
+            // Count retouches completed (recent logs)
+            // Note: Since we don't have a specific column for 'retouched_at', 
+            // we'll count entries in the logs table with action 'retouch_completed'
+            // or simply count leads updated in the last 24h as a proxy if needed.
+            // But let's use the logs approach as it's cleaner.
+            const { count: processed, error: logError } = await supabase
+                .from('logs')
+                .select('*', { count: 'exact', head: true })
+                .eq('action', 'retouch_completed');
+
+            if (logError) throw logError;
+
+            setRetouchProgress({ processed: processed || 0, total: total || 0 });
+        } catch (e) {
+            console.error('Error fetching retouch progress:', e);
+        }
+    }
+
+    async function fetchRetouchActivity() {
+        try {
+            const { data, error } = await supabase
+                .from('logs')
+                .select('*')
+                .eq('agent', 'retoucher')
+                .in('action', ['retouch_started', 'retouch_completed'])
+                .order('created_at', { ascending: false })
+                .limit(10);
+
+            if (error) throw error;
+            setRetouchActivity(data || []);
+        } catch (e) {
+            console.error('Error fetching retouch activity:', e);
+        }
+    }
+
     // Helper formatting
     const getStatusColor = (status) => {
         const colors = {
@@ -226,10 +275,17 @@ export default function Home() {
             {/* Top Row: Metric Cards */}
             {/* Main Engagement Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard delay={0.1} title="Total Leads Processed" value={stats.scouted + stats.created + stats.published + stats.pitched + stats.completed} icon={Users} color="bg-blue-500" />
+                <StatCard delay={0.1} title="Total Leads Processed" value={stats.scouted + stats.interest_confirmed + stats.created + stats.published + stats.pitched + stats.completed} icon={Users} color="bg-blue-500" />
                 <StatCard delay={0.2} title="Websites Ready" value={stats.published + stats.pitched + stats.completed} icon={Globe2} color="bg-purple-500" />
                 <StatCard delay={0.3} title="Pitches & Promos" value={stats.pitched + stats.completed + engagementStats.promo} icon={CheckCircle} color="bg-emerald-500" />
-                <StatCard delay={0.4} title="Interest Confirmed" value={engagementStats.warming} icon={Activity} color="bg-amber-500" />
+                <StatCard delay={0.4} title="Interest Confirmed" value={stats.interest_confirmed} icon={Activity} color="bg-amber-500" />
+                <StatCard 
+                    delay={0.5} 
+                    title="Retouch Audit" 
+                    value={`${retouchProgress.processed} / ${retouchProgress.total}`} 
+                    icon={Globe2} 
+                    color="bg-sky-500" 
+                />
             </div>
 
             {/* Pipeline Queues (Backlogs) */}
@@ -316,6 +372,51 @@ export default function Home() {
                             </tbody>
                         </table>
                         {recentLeads.length === 0 && <div className="text-center text-zinc-500 py-6">No leads found in pipeline.</div>}
+                    </div>
+
+                    {/* New Section: Recent Retouch Activity */}
+                    <div className="mt-10 pt-10 border-t border-zinc-800/50">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
+                                <Globe2 className="w-5 h-5 text-sky-500" /> Recent Retouch Activity
+                            </h2>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-zinc-500 uppercase bg-zinc-900/50">
+                                    <tr>
+                                        <th className="px-4 py-3 rounded-tl-lg">Business Name</th>
+                                        <th className="px-4 py-3">Action</th>
+                                        <th className="px-4 py-3">Status</th>
+                                        <th className="px-4 py-3 rounded-tr-lg text-right">Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {retouchActivity.map((log) => (
+                                        <tr key={log.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors">
+                                            <td className="px-4 py-3 font-medium text-zinc-200">
+                                                {log.details?.name || "Unknown Business"}
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className={`text-xs ${log.action === 'retouch_started' ? 'text-amber-400' : 'text-emerald-400'}`}>
+                                                    {log.action === 'retouch_started' ? 'Correction In Progress' : 'Correction Completed'}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${log.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'}`}>
+                                                    {log.status}
+                                                </span>
+                                            </td>
+                                            <td className="px-4 py-3 text-right text-zinc-500 text-xs">
+                                                {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            {retouchActivity.length === 0 && <div className="text-center text-zinc-500 py-6">No retouch activity found.</div>}
+                        </div>
                     </div>
                 </motion.div>
 

@@ -9,7 +9,44 @@ class DatabaseService {
             throw new Error('SUPABASE_URL or SUPABASE_ANON_KEY missing in environment variables.');
         }
 
-        this.supabase = createClient(this.supabaseUrl, this.supabaseKey);
+        // Increase timeout for fetch to 60 seconds (Node 22 default is lower/stricter)
+        this.supabase = createClient(this.supabaseUrl, this.supabaseKey, {
+            auth: {
+                persistSession: false
+            },
+            global: {
+                fetch: (url, options) => {
+                    return fetch(url, { 
+                        ...options, 
+                        signal: AbortSignal.timeout(60000) 
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     * Helper to retry DB operations
+     */
+    async withRetry(operation, maxRetries = 3, delay = 2000) {
+        let lastError;
+        for (let i = 0; i < maxRetries; i++) {
+            try {
+                return await operation();
+            } catch (err) {
+                lastError = err;
+                const isNetworkError = err.message.includes('fetch failed') || 
+                                     err.message.includes('Timeout') || 
+                                     err.code === 'UND_ERR_HEADERS_TIMEOUT';
+                
+                if (isNetworkError && i < maxRetries - 1) {
+                    console.warn(`[DB] Retry ${i+1}/${maxRetries} after error: ${err.message}`);
+                    await new Promise(r => setTimeout(r, delay * (i + 1)));
+                    continue;
+                }
+                throw err;
+            }
+        }
     }
 
     /**
@@ -17,25 +54,27 @@ class DatabaseService {
      * @param {Object} lead - The lead object (placeId, name, phone, address, location)
      */
     async upsertLead(lead) {
-        const { data, error } = await this.supabase
-            .from('leads')
-            .upsert({
-                place_id: lead.placeId,
-                name: lead.name,
-                phone: lead.phone,
-                address: lead.address,
-                lat: lead.location?.lat || null,
-                lng: lead.location?.lng || null,
-                photos: lead.photos || [],
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'place_id' })
-            .select();
+        return this.withRetry(async () => {
+            const { data, error } = await this.supabase
+                .from('leads')
+                .upsert({
+                    place_id: lead.placeId,
+                    name: lead.name,
+                    phone: lead.phone,
+                    address: lead.address,
+                    lat: lead.location?.lat || null,
+                    lng: lead.location?.lng || null,
+                    photos: lead.photos || [],
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'place_id' })
+                .select();
 
-        if (error) {
-            console.error(`[DB] Error upserting lead ${lead.placeId}:`, error.message);
-            throw error;
-        }
-        return data[0];
+            if (error) {
+                console.error(`[DB] Error upserting lead ${lead.placeId}:`, error.message);
+                throw error;
+            }
+            return data[0];
+        });
     }
 
     /**
@@ -44,17 +83,19 @@ class DatabaseService {
      * @returns {Promise<Object|null>} The lead or null if not found
      */
     async getLead(placeId) {
-        const { data, error } = await this.supabase
-            .from('leads')
-            .select('*')
-            .eq('place_id', placeId)
-            .single();
+        return this.withRetry(async () => {
+            const { data, error } = await this.supabase
+                .from('leads')
+                .select('*')
+                .eq('place_id', placeId)
+                .single();
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 is multiple/no rows returned (no rows in this case)
-            console.error(`[DB] Error fetching lead ${placeId}:`, error.message);
-            throw error;
-        }
-        return data || null;
+            if (error && error.code !== 'PGRST116') { // PGRST116 is multiple/no rows returned (no rows in this case)
+                console.error(`[DB] Error fetching lead ${placeId}:`, error.message);
+                throw error;
+            }
+            return data || null;
+        });
     }
 
     /**
@@ -62,20 +103,22 @@ class DatabaseService {
      * Includes leads that are 'scouted' (new) or interrupted in intermediate states.
      */
     async getPendingLead() {
-        const { data, error } = await this.supabase
-            .from('leads')
-            .select('*')
-            .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched', 'published'])
-            .or('retry_count.lt.3,retry_count.is.null')
-            .order('updated_at', { ascending: true })
-            .limit(1)
-            .single();
+        return this.withRetry(async () => {
+            const { data, error } = await this.supabase
+                .from('leads')
+                .select('*')
+                .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched', 'published'])
+                .or('retry_count.lt.3,retry_count.is.null')
+                .order('updated_at', { ascending: true })
+                .limit(1)
+                .single();
 
-        if (error && error.code !== 'PGRST116') {
-            console.error(`[DB] Error fetching pending lead:`, error.message);
-            throw error;
-        }
-        return data || null;
+            if (error && error.code !== 'PGRST116') {
+                console.error(`[DB] Error fetching pending lead:`, error.message);
+                throw error;
+            }
+            return data || null;
+        });
     }
 
     /**
@@ -85,24 +128,26 @@ class DatabaseService {
      * @param {Object} extraData - Optional. E.g. { website_html: '<html>...', vercel_url: 'https...' }
      */
     async updateLeadStatus(placeId, newStatus, extraData = {}) {
-        const updatePayload = {
-            status: newStatus,
-            updated_at: new Date().toISOString(),
-            ...extraData
-        };
+        return this.withRetry(async () => {
+            const updatePayload = {
+                status: newStatus,
+                updated_at: new Date().toISOString(),
+                ...extraData
+            };
 
-        const { data, error } = await this.supabase
-            .from('leads')
-            .update(updatePayload)
-            .eq('place_id', placeId)
-            .select();
+            const { data, error } = await this.supabase
+                .from('leads')
+                .update(updatePayload)
+                .eq('place_id', placeId)
+                .select();
 
-        if (error) {
-            console.error(`[DB] Error updating status for lead ${placeId}:`, error.message);
-            throw error;
-        }
+            if (error) {
+                console.error(`[DB] Error updating status for lead ${placeId}:`, error.message);
+                throw error;
+            }
 
-        return data[0];
+            return data[0];
+        });
     }
 
     /**
@@ -141,14 +186,16 @@ class DatabaseService {
             status
         };
 
-        const { error } = await this.supabase
-            .from('logs')
-            .insert(payload);
+        return this.withRetry(async () => {
+            const { error } = await this.supabase
+                .from('logs')
+                .insert(payload);
 
-        if (error) {
-            console.error(`[DB] Failed to insert log for ${agent}:`, error.message);
-            // Optionally throw or just fail silently to not block the pipeline
-        }
+            if (error) {
+                console.error(`[DB] Failed to insert log for ${agent}:`, error.message);
+                // Optionally throw or just fail silently to not block the pipeline
+            }
+        }).catch(() => {}); // Log errors shouldn't crash the app
     }
 
     /**
