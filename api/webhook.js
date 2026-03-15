@@ -2,7 +2,7 @@ const { waitUntil } = require('@vercel/functions');
 const DatabaseService = require('../services/db');
 const ChatbotAgent = require('../agents/chatbot');
 
-// Webhook handles both legacy Ultramsg and the new local WhatsApp microservice
+// Webhook handles the local WhatsApp microservice
 module.exports = async function handler(request, response) {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method not allowed' });
@@ -19,7 +19,7 @@ module.exports = async function handler(request, response) {
                 const messageText = payload.data.body;
                 const isFromMe = payload.data.fromMe === true;
 
-                // Support both Ultramsg (which doesn't usually echo) and local-docker
+                // Support local-docker
                 if (!isFromMe) {
                     // Safety: Only trigger AI responses for messages from the last 30 minutes
                     // Historic sync messages will have an older timestamp

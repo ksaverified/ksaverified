@@ -70,16 +70,16 @@ class CloserAgent {
         console.log(`[Closer] Sending Enhanced Pitch for ${businessName}...`);
 
         // Image and Portal details
-        const marketingImageUrl = 'https://drop-servicing-pipeline.vercel.app/marketing/offer.png';
-        const portalUrl = 'https://drop-servicing-pipeline.vercel.app/client-dashboard';
+        const marketingImageUrl = 'https://ksaverified.com/marketing/offer.png';
+        const portalUrl = 'https://ksaverified.com/client-dashboard';
 
         let templates;
         try {
             templates = await db.getSetting('whatsapp_template');
         } catch (e) {
             templates = {
-                en: "Hello {businessName}! 💎 We built a premium preview for your new website: {previewUrl}\n\nManage your site at your ALATLAS Portal: {portalUrl}\n\nYour Login Credentials:\nPhone: {phone}\nTemporary Password: *{password}*",
-                ar: "مرحباً {businessName}! 💎 لقد قمنا بإنشاء معاينة متميزة لموقعك الإلكتروني الجديد: {previewUrl}\n\nأدر موقعك من خلال بوابة ALATLAS: {portalUrl}\n\nبيانات تسجيل الدخول الخاصة بك:\nرقم الجوال: {phone}\nكلمة المرور المؤقتة: *{password}*"
+                en: "Hello {businessName}! 💎 We built a premium preview for your new website: {previewUrl}\n\nManage your site at your KSA Verified Portal: {portalUrl}\n\nYour Login Credentials:\nPhone: {phone}\nTemporary Password: *{password}*",
+                ar: "مرحباً {businessName}! 💎 لقد قمنا بإنشاء معاينة متميزة لموقعك الإلكتروني الجديد: {previewUrl}\n\nأدر موقعك من خلال بوابة KSA Verified: {portalUrl}\n\nبيانات تسجيل الدخول الخاصة بك:\nرقم الجوال: {phone}\nكلمة المرور المؤقتة: *{password}*"
             };
         }
 
@@ -106,7 +106,7 @@ class CloserAgent {
         try {
             // 1. Send Marketing Image FIRST
             console.log(`[Closer] Step 1: Sending marketing image to ${formattedPhone}...`);
-            await this.sendMedia(formattedPhone, marketingImageUrl, "ALATLAS Intelligence 💎");
+            await this.sendMedia(formattedPhone, marketingImageUrl, "KSA Verified 💎");
 
             // 2. Send the Access Details message SECOND
             console.log(`[Closer] Step 2: Sending dashboard details to ${formattedPhone}...`);
@@ -129,13 +129,13 @@ class CloserAgent {
     async warmLead(businessName, phone) {
         const formattedPhone = this.formatPhoneNumber(phone);
         if (!formattedPhone) return 'skipped_invalid';
-        const message = `Hello ${businessName}! 💎 We are ALATLAS Intelligence. We're currently designing a premium AI-powered website for businesses in your area. 
+        const message = `Hello ${businessName}! 💎 We are KSA Verified. We're currently designing a premium AI-powered website for businesses in your area. 
 
 Would you like to see a custom preview for your business completely for free? Just reply 'YES' and we'll send it over!
 
 ---
 
-مرحباً ${businessName}! 💎 نحن ALATLAS Intelligence. نقوم حالياً بتصميم موقع إلكتروني متميز مدعوم بالذكاء الاصطناعي للشركات في منطقتك.
+مرحباً ${businessName}! 💎 نحن KSA Verified. نقوم حالياً بتصميم موقع إلكتروني متميز مدعوم بالذكاء الاصطناعي للشركات في منطقتك.
 
 هل تود رؤية معاينة مخصصة لعملك مجاناً تماماً؟ فقط رد بـ "نعم" وسنرسلها لك!`;
 
@@ -160,8 +160,8 @@ Would you like to see a custom preview for your business completely for free? Ju
     async sendPromotion(businessName, phone, vercelUrl) {
         const formattedPhone = this.formatPhoneNumber(phone);
         if (!formattedPhone) return 'skipped_invalid';
-        const promoImageUrl = 'https://drop-servicing-pipeline.vercel.app/marketing/promo_19sar.png';
-        const portalUrl = 'https://drop-servicing-pipeline.vercel.app/client-dashboard';
+        const promoImageUrl = 'https://ksaverified.com/marketing/promo_19sar.png';
+        const portalUrl = 'https://ksaverified.com/client-dashboard';
 
         const message = `Special Offer for ${businessName}! 🚀 
 

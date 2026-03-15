@@ -153,8 +153,15 @@ class Orchestrator {
           await this.db.addLog('orchestrator', 'cycle_success', activeLead.placeId, { name: activeLead.name }, 'success');
         } catch (innerError) {
           console.error(`[Orchestrator] Failed lead ${activeLead.name}:`, innerError.message);
-          await this.db.addLog('orchestrator', 'lead_error', activeLead.placeId, { message: innerError.message }, 'error');
-          await this.db.incrementRetryCount(activeLead.placeId, innerError.message);
+          
+          if (innerError.message.includes('Number not on WhatsApp')) {
+            console.log(`[Orchestrator] Marking ${activeLead.name} as invalid permanently: Number not on WhatsApp.`);
+            await this.db.updateLeadStatus(activeLead.placeId, 'invalid', { last_error: 'Number not on WhatsApp' });
+            await this.db.addLog('orchestrator', 'lead_invalidated', activeLead.placeId, { reason: 'Number not on WhatsApp' }, 'warning');
+          } else {
+            await this.db.addLog('orchestrator', 'lead_error', activeLead.placeId, { message: innerError.message }, 'error');
+            await this.db.incrementRetryCount(activeLead.placeId, innerError.message);
+          }
         }
 
         activeDbLead = await this.db.getPendingLead();
@@ -257,6 +264,10 @@ class Orchestrator {
         await new Promise(r => setTimeout(r, 8000));
       } catch (e) {
         console.error(`[Orchestrator] Nudge failed for ${lead.name}:`, e.message);
+        if (e.message.includes('Number not on WhatsApp')) {
+            console.log(`[Orchestrator] Marking ${lead.name} as invalid permanently: Number not on WhatsApp.`);
+            await this.db.updateLeadStatus(lead.place_id, 'invalid', { last_error: 'Number not on WhatsApp' });
+        }
       }
     }
   }
@@ -264,7 +275,7 @@ class Orchestrator {
   startLoop() {
     const intervalMinutes = parseInt(process.env.RUN_INTERVAL_MINUTES || '60', 10);
     const intervalMs = intervalMinutes * 60 * 1000;
-    console.log(`[Orchestrator] Initializing ALATLAS Intelligence Pipeline...`);
+    console.log(`[Orchestrator] Initializing KSA Verified Pipeline...`);
     this.runPipeline();
     setInterval(() => this.runPipeline(), intervalMs);
   }

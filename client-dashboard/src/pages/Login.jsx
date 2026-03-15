@@ -21,7 +21,7 @@ export default function Login() {
 
     const formatPhoneForEmail = (p) => {
         const digits = p.replace(/\D/g, '');
-        return `${digits}@client.alatlas.local`;
+        return `${digits}@client.ksaverified.com`;
     };
 
     const handleLogin = async (e) => {
@@ -100,7 +100,7 @@ export default function Login() {
                 <div className="bg-surface border border-zinc-800/60 p-8 rounded-3xl shadow-2xl">
                     <div className="text-center mb-8">
                         <div className="inline-flex items-center justify-center mb-6">
-                            <img src="/logo.png" alt="ALATLAS" className="h-20 w-20 object-contain drop-shadow-2xl" />
+                            <img src="/logo.png" alt="KSA Verified" className="h-20 w-20 object-contain drop-shadow-2xl" />
                         </div>
                         <h1 className="text-4xl font-black text-white italic tracking-tighter">{t('login.title')}</h1>
                         <p className="text-zinc-500 mt-2 uppercase tracking-widest text-[10px] font-bold">{t('login.subtitle')}</p>

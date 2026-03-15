@@ -3,7 +3,7 @@ const DatabaseService = require('../services/db');
 
 async function showPriorityQuestions() {
     const db = new DatabaseService();
-    console.log('--- 🛡️ ALATLAS PRIORITY CHAT INBOX ---');
+    console.log('--- 🛡️ KSA VERIFIED PRIORITY CHAT INBOX ---');
 
     // Fetch chat logs
     const { data: logs, error } = await db.supabase

@@ -1,5 +1,5 @@
 const DatabaseService = require('../services/db');
-const { sendMessage } = require('../services/ultramsg');
+const CloserAgent = require('./closer');
 
 class BillerAgent {
     constructor() {
@@ -73,12 +73,12 @@ class BillerAgent {
         const price = lead.subscription_tier === 'yearly' ? '990' : '99';
 
         const message = `
-Hello from ALATLAS Agency 👋
+Hello from KSA Verified Agency 👋
 
 This is a friendly automated reminder that the ${subType} subscription for your website (${lead.name}) will expire in exactly *${days} ${dayWord}*.
 
 You can view your status and renew your subscription at your Dashboard: 
-👉 https://drop-servicing-pipeline.vercel.app/client-dashboard
+👉 https://ksaverified.com/client-dashboard
 
 Alternatively, transfer ${price} SAR to our STC Pay: +966 50 791 3514. 
 If you have already paid, please ignore this message.
@@ -94,7 +94,8 @@ If you have already paid, please ignore this message.
 
         try {
             // Send the actual WhatsApp message
-            await sendMessage(formattedPhone, message);
+            const closer = new CloserAgent();
+            await closer.sendMessage(formattedPhone, message);
 
             // Log the reminder
             await this.db.addLog('billing', 'reminder_sent', lead.place_id, { days_remaining: days, phone: formattedPhone }, 'success');

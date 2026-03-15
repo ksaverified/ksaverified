@@ -39,8 +39,8 @@ async function rescueLeads() {
                 // 3. Update Status
                 await db.updateLeadStatus(lead.place_id, 'published', { vercel_url: liveUrl });
 
-                // Step 2: Pitch with Ultramsg
-                console.log(`Pitching to ${lead.phone} via Ultramsg...`);
+                // Step 2: Pitch with WhatsApp
+                console.log(`Pitching to ${lead.phone} via WhatsApp...`);
                 await closer.pitchLead(lead.name, lead.phone, liveUrl, db);
                 await db.updateLeadStatus(lead.place_id, 'pitched');
 

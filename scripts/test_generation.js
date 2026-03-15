@@ -9,7 +9,7 @@ async function testGeneration() {
     const creator = new CreatorAgent();
 
     const testBusiness = {
-        name: "AlAtlas Riyadh Branch",
+        name: "KSA Verified Riyadh Branch",
         phone: "+966 50 123 4567",
         address: "King Fahd Road, Riyadh, Saudi Arabia",
         types: ["Restaurant", "Cafe"],

@@ -12,7 +12,7 @@ const translations = {
             portal: "Client Portal"
         },
         login: {
-            title: "ALATLAS",
+            title: "KSA Verified",
             subtitle: "Secure Client Portal",
             phoneLabel: "Phone Number (with Country Code)",
             passwordLabel: "Password",
@@ -88,7 +88,7 @@ const translations = {
             portal: "بوابة العملاء"
         },
         login: {
-            title: "الأطلس",
+            title: "KSA Verified",
             subtitle: "بوابة العملاء الآمنة",
             phoneLabel: "رقم الهاتف (مع رمز الدولة)",
             passwordLabel: "كلمة المرور",
@@ -158,10 +158,10 @@ const translations = {
 };
 
 export function LanguageProvider({ children }) {
-    const [lang, setLang] = useState(localStorage.getItem('alatlas_lang') || 'ar');
+    const [lang, setLang] = useState(localStorage.getItem('ksaverified_lang') || 'ar');
 
     useEffect(() => {
-        localStorage.setItem('alatlas_lang', lang);
+        localStorage.setItem('ksaverified_lang', lang);
         document.documentElement.lang = lang;
         document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     }, [lang]);

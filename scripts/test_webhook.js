@@ -21,9 +21,9 @@ async function testWebhook() {
 
     console.log(`[Test] Found lead: ${lead.name}`);
 
-    // MOCK the UltramsgService so we don't spam a real business during the test!
-    const UltramsgService = require('../services/ultramsg');
-    UltramsgService.sendMessage = async function (to, body) {
+    // MOCK the CloserAgent so we don't spam a real business during the test!
+    const CloserAgentModule = require('../agents/closer');
+    CloserAgentModule.prototype.sendMessage = async function (to, body) {
         console.log(`\n\n--- MOCKED WHATSAPP SEND ---`);
         console.log(`To: ${to}`);
         console.log(`Body:\n${body}`);

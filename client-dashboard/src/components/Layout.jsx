@@ -36,9 +36,9 @@ export default function Layout() {
             {/* Sidebar - Desktop */}
             <aside className="hidden lg:flex w-72 flex-col bg-[#11141b] border-r border-zinc-800/60 p-6 overflow-y-auto">
                 <div className="flex items-center gap-3 px-2 mb-10">
-                    <img src="/logo.png" alt="ALATLAS" className="h-10 w-10 object-contain" />
+                    <img src="/logo.png" alt="KSA Verified" className="h-10 w-10 object-contain" />
                     <div className="flex-1">
-                        <h2 className="text-xl font-black text-white italic tracking-tighter">ALATLAS</h2>
+                        <h2 className="text-xl font-black text-white italic tracking-tighter">KSA Verified</h2>
                         <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('nav.portal')}</p>
                     </div>
                 </div>
@@ -99,8 +99,8 @@ export default function Layout() {
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#11141b]/80 backdrop-blur-lg border-b border-zinc-800 z-50 px-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                    <img src="/logo.png" alt="ALATLAS" className="h-8 w-8 object-contain" />
-                    <span className="font-bold text-white tracking-tighter italic">ALATLAS</span>
+                    <img src="/logo.png" alt="KSA Verified" className="h-8 w-8 object-contain" />
+                    <span className="font-bold text-white tracking-tighter italic">KSA Verified</span>
                 </div>
                 <div className="flex items-center gap-2">
                     <button

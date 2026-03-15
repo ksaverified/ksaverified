@@ -108,8 +108,8 @@ export default function Payment() {
                                 <button
                                     onClick={() => {
                                         const msg = lang === 'ar'
-                                            ? "لقد قمت للتو بالدفع لخطة Alatlas الخاصة بي، إليكم لقطة الشاشة"
-                                            : "I just paid for my Alatlas plan, here is the screenshot";
+                                            ? "لقد قمت للتو بالدفع لخطة KSA Verified الخاصة بي، إليكم لقطة الشاشة"
+                                            : "I just paid for my KSA Verified plan, here is the screenshot";
                                         window.open(`https://wa.me/${stcNumber}?text=${encodeURIComponent(msg)}`, '_blank');
                                     }}
                                     className="w-full flex items-center justify-center gap-3 py-4 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl transition-all shadow-lg shadow-[#25D366]/20 group px-4"

@@ -46,30 +46,38 @@ class ScoutAgent {
 
         // Step 2: Get details for each place
         for (const place of places) {
-          const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number,website,reviews,types,photos&key=${this.apiKey}`;
-          const detailsResponse = await axios.get(detailsUrl);
+          // First pass: Only get Basic and Contact Data (cheaper)
+          const basicDetailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=name,formatted_phone_number,website,types&key=${this.apiKey}`;
+          const basicResponse = await axios.get(basicDetailsUrl);
 
-          if (detailsResponse.data.status === 'OK') {
-            const details = detailsResponse.data.result;
+          if (basicResponse.data.status === 'OK') {
+            const basicDetails = basicResponse.data.result;
 
-            if (details.formatted_phone_number && !details.website) {
-              console.log(`[Scout] Found match: ${details.name} (Phone: ${details.formatted_phone_number})`);
+            if (basicDetails.formatted_phone_number && !basicDetails.website) {
+              console.log(`[Scout] Found potential match: ${basicDetails.name}. Fetching expensive media data...`);
 
-              const topReviews = details.reviews
-                ? details.reviews.filter(r => r.rating >= 4).slice(0, 3).map(r => r.text)
+              // Second pass: Fetch expensive Atmosphere Data (reviews, photos) ONLY for valid leads
+              const mediaDetailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${place.place_id}&fields=reviews,photos&key=${this.apiKey}`;
+              const mediaResponse = await axios.get(mediaDetailsUrl);
+              const mediaDetails = mediaResponse.data.status === 'OK' ? mediaResponse.data.result : {};
+
+              console.log(`[Scout] Confirmed match: ${basicDetails.name} (Phone: ${basicDetails.formatted_phone_number})`);
+
+              const topReviews = mediaDetails.reviews
+                ? mediaDetails.reviews.filter(r => r.rating >= 4).slice(0, 3).map(r => r.text)
                 : [];
 
-              const photos = details.photos
-                ? details.photos.slice(0, 5).map(p => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${p.photo_reference}&key=${this.apiKey}`)
+              const photos = mediaDetails.photos
+                ? mediaDetails.photos.slice(0, 5).map(p => `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference=${p.photo_reference}&key=${this.apiKey}`)
                 : [];
 
               validLeads.push({
                 placeId: place.place_id,
-                name: details.name,
-                phone: details.formatted_phone_number,
+                name: basicDetails.name,
+                phone: basicDetails.formatted_phone_number,
                 address: place.formatted_address,
                 location: place.geometry?.location,
-                types: details.types || [],
+                types: basicDetails.types || [],
                 reviews: topReviews,
                 photos: photos
               });

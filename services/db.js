@@ -106,7 +106,7 @@ class DatabaseService {
         return this.withRetry(async () => {
             const { data, error } = await this.supabase
                 .from('leads')
-                .select('*')
+                .select('place_id, name, phone, address, lat, lng, photos, website_html, vercel_url, status, retry_count, updated_at')
                 .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched', 'published'])
                 .or('retry_count.lt.3,retry_count.is.null')
                 .order('updated_at', { ascending: true })
@@ -396,7 +396,7 @@ class DatabaseService {
         // 1. Get all scouted leads
         const { data: leads, error } = await this.supabase
             .from('leads')
-            .select('*')
+            .select('place_id, name, phone, status, updated_at')
             .eq('status', 'scouted')
             .order('updated_at', { ascending: true });
 
@@ -428,7 +428,7 @@ class DatabaseService {
         // 1. Get pitched leads
         const { data: leads, error } = await this.supabase
             .from('leads')
-            .select('*')
+            .select('place_id, name, phone, status, vercel_url, updated_at')
             .eq('status', 'pitched')
             .order('updated_at', { ascending: true });
 

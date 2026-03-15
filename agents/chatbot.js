@@ -32,7 +32,7 @@ class ChatbotAgent {
                 headers: {
                     'Authorization': `Bearer ${this.apiKey}`,
                     'HTTP-Referer': 'https://github.com/daviddegroeve-git/drop-servicing-pipeline', // Optional, for OpenRouter rankings
-                    'X-Title': 'ALATLAS Chatbot'
+                    'X-Title': 'KSA Verified Chatbot'
                 }
             });
 
@@ -138,7 +138,7 @@ We are finalizing your custom AI-powered website now. You will receive a link to
 
             const prompt = `
 System Prompt:
-You are the ALATLAS AI Sales Assistant, representing ALATLAS Intelligence—a premium, automated web development and business intelligence agency. 
+You are the KSA Verified AI Sales Assistant, representing KSA Verified—a premium, automated web development and business intelligence agency. 
 
 Your goal is to answer questions from local business owners (like ${businessName}) who messaged you.
 

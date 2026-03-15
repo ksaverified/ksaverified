@@ -1,7 +1,7 @@
 {
-  "name": "drop-servicing-pipeline",
+  "name": "ksaverified",
   "version": "1.0.0",
-  "description": "ALATLAS Intelligence - Automated SaaS pipeline",
+  "description": "KSA Verified - Automated SaaS pipeline",
   "main": "orchestrator.js",
   "scripts": {
     "start": "node orchestrator.js",

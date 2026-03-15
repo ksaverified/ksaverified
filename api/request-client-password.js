@@ -29,7 +29,7 @@ module.exports = async function handler(request, response) {
 
         // 2. Generate a 6-digit PIN string
         const generatedPassword = Math.floor(100000 + Math.random() * 900000).toString();
-        const proxyEmail = `${phone.replace(/\D/g, '')}@client.alatlas.local`;
+        const proxyEmail = `${phone.replace(/\D/g, '')}@client.ksaverified.com`;
 
         // 3. Initialize Supabase Admin client
         const supabaseAdmin = createClient(
@@ -78,7 +78,7 @@ module.exports = async function handler(request, response) {
 
         // 5. Send the password via Local WhatsApp Service
         const whatsappServiceUrl = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:8080';
-        const message = `Hello ${lead.name}! 💎\n\nYour temporary password for the ALATLAS Client Dashboard is: *${generatedPassword}*\n\nPlease log in using your phone number to manage your website.\n\nPortal: https://drop-servicing-pipeline.vercel.app/client-dashboard`;
+        const message = `Hello ${lead.name}! 💎\n\nYour temporary password for the KSA Verified Client Dashboard is: *${generatedPassword}*\n\nPlease log in using your phone number to manage your website.\n\nPortal: https://ksaverified.com/client-dashboard`;
 
         try {
             console.log(`[Client-Auth] Sending password to ${phone} via ${whatsappServiceUrl}`);

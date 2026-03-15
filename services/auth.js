@@ -48,7 +48,7 @@ class AuthService {
      */
     getProxyEmail(phone) {
         const cleanPhone = this.formatPhone(phone);
-        return `${cleanPhone}@client.alatlas.local`;
+        return `${cleanPhone}@client.ksaverified.com`;
     }
 
     /**

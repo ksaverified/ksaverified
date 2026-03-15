@@ -409,7 +409,7 @@ export default function WhatsApp() {
                                         </button>
                                     </div>
                                     <p className="text-[10px] text-zinc-600 text-center">
-                                        Sent via ALATLAS Intelligence Local Service 🛡️
+                                        Sent via KSA Verified Intelligence Local Service 🛡️
                                     </p>
                                 </div>
                             </div>
