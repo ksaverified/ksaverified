@@ -121,7 +121,7 @@ export default function Home() {
         try {
             const { data, error } = await supabase
                 .from('chat_logs')
-                .select('id, phone, message_in, message_out, translated_message, created_at, leads(name)')
+                .select('id, phone, message_in, message_out, translated_message, created_at')
                 .order('created_at', { ascending: false })
                 .limit(4);
             if (!error) setRecentChats(data || []);

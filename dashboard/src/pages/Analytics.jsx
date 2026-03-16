@@ -9,6 +9,12 @@ export default function Analytics() {
     const [health, setHealth] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const fetchAll = useCallback(async (showLoading = false) => {
+        if (showLoading) setLoading(true);
+        await Promise.all([fetchMetrics(), fetchHealth()]);
+        if (showLoading) setLoading(false);
+    }, []);
+
     useEffect(() => {
         fetchAll();
 
@@ -16,12 +22,6 @@ export default function Analytics() {
         const interval = setInterval(fetchAll, 60000);
         return () => clearInterval(interval);
     }, [fetchAll]);
-
-    const fetchAll = useCallback(async (showLoading = false) => {
-        if (showLoading) setLoading(true);
-        await Promise.all([fetchMetrics(), fetchHealth()]);
-        if (showLoading) setLoading(false);
-    }, []);
 
     async function fetchMetrics() {
         try {
