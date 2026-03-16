@@ -1,51 +1,57 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { Activity, CheckCircle, XCircle, RefreshCcw, BarChart3 } from 'lucide-react';
+import { Activity, CheckCircle, XCircle, RefreshCcw, BarChart3, Database, Zap, AlertTriangle } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 
 export default function Analytics() {
     const [metrics, setMetrics] = useState([]);
+    const [health, setHealth] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetchMetrics();
+        fetchAll();
 
         // Refresh every minute
-        const interval = setInterval(fetchMetrics, 60000);
+        const interval = setInterval(fetchAll, 60000);
         return () => clearInterval(interval);
+    }, [fetchAll]);
+
+    const fetchAll = useCallback(async (showLoading = false) => {
+        if (showLoading) setLoading(true);
+        await Promise.all([fetchMetrics(), fetchHealth()]);
+        if (showLoading) setLoading(false);
     }, []);
 
     async function fetchMetrics() {
-        setLoading(true);
         try {
-            // Call the custom Supabase RPC function we created
             const { data, error } = await supabase.rpc('get_agent_metrics');
-
             if (error) throw error;
 
-            // Format existing data and calculate Success Rates
             const formattedData = data.map(agentData => {
                 const totalAttempts = Number(agentData.completions) + Number(agentData.failures);
                 const successRate = totalAttempts > 0
                     ? Math.round((Number(agentData.completions) / totalAttempts) * 100)
                     : 0;
 
-                return {
-                    ...agentData,
-                    successRate
-                };
+                return { ...agentData, successRate };
             });
 
-            // Sort to ensure a consistent, logical order
-            const order = ['orchestrator', 'scout', 'creator', 'publisher', 'closer', 'biller'];
+            const order = ['orchestrator', 'scout', 'creator', 'publisher', 'closer', 'chatbot', 'biller'];
             formattedData.sort((a, b) => order.indexOf(a.agent) - order.indexOf(b.agent));
-
-            setMetrics(formattedData);
+            setMetrics(formattedData || []);
         } catch (error) {
             console.error('Error fetching analytics:', error);
-        } finally {
-            setLoading(false);
+        }
+    }
+
+    async function fetchHealth() {
+        try {
+            const { data, error } = await supabase.rpc('get_system_health');
+            if (error) throw error;
+            setHealth(data);
+        } catch (error) {
+            console.error('Error fetching system health:', error);
         }
     }
 
@@ -59,20 +65,77 @@ export default function Analytics() {
                 <div>
                     <h1 className="text-3xl font-bold text-zinc-100 flex items-center gap-3">
                         <BarChart3 className="h-8 w-8 text-primary" />
-                        Agent Analytics
+                        System Intelligence
                     </h1>
                     <p className="text-zinc-400 mt-2">
-                        Performance metrics across all autonomous AI agents. Track completions, unrectified failures, and self-corrections.
+                        Real-time resource monitoring and autonomous agent performance oversight.
                     </p>
                 </div>
                 <button
-                    onClick={fetchMetrics}
+                    onClick={fetchAll}
                     className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium rounded-lg transition-colors border border-zinc-700"
                 >
                     <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                    Refresh Stats
+                    Refresh Dash
                 </button>
             </header>
+
+            {/* System Health Section */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="bg-surface border border-zinc-800 p-6 rounded-2xl relative overflow-hidden group">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20">
+                            <Database className="h-5 w-5 text-blue-500" />
+                        </div>
+                        <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest border border-blue-500/20">Db Rows</span>
+                    </div>
+                    <div className="space-y-1">
+                        <h4 className="text-2xl font-black text-white">{health?.table_counts?.leads || 0}</h4>
+                        <p className="text-xs text-zinc-500 font-medium">Total Active Leads</p>
+                    </div>
+                </div>
+
+                <div className="bg-surface border border-zinc-800 p-6 rounded-2xl relative overflow-hidden group">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                            <Zap className="h-5 w-5 text-purple-500" />
+                        </div>
+                        <span className="text-[10px] bg-purple-500/10 text-purple-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest border border-purple-500/20">Active logs</span>
+                    </div>
+                    <div className="space-y-1">
+                        <h4 className="text-2xl font-black text-white">{health?.table_counts?.logs || 0}</h4>
+                        <p className="text-xs text-zinc-500 font-medium">System Events Count</p>
+                    </div>
+                </div>
+
+                <div className="bg-surface border border-zinc-800 p-6 rounded-2xl relative overflow-hidden group">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                            <Activity className="h-5 w-5 text-emerald-500" />
+                        </div>
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest border border-emerald-500/20">24h Thrpt</span>
+                    </div>
+                    <div className="space-y-1">
+                        <h4 className="text-2xl font-black text-white">{health?.recent_activity || 0}</h4>
+                        <p className="text-xs text-zinc-500 font-medium">Ops Last 24 Hours</p>
+                    </div>
+                </div>
+
+                <div className="bg-surface border border-zinc-800 p-6 rounded-2xl relative overflow-hidden group">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="h-10 w-10 rounded-xl bg-red-500/10 flex items-center justify-center border border-red-500/20">
+                            <AlertTriangle className="h-5 w-5 text-red-500" />
+                        </div>
+                        <span className="text-[10px] bg-red-500/10 text-red-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest border border-red-500/20">Errors</span>
+                    </div>
+                    <div className="space-y-1">
+                        <h4 className={`text-2xl font-black ${health?.errors_24h > 10 ? 'text-red-400' : 'text-zinc-100'}`}>
+                            {health?.errors_24h || 0}
+                        </h4>
+                        <p className="text-xs text-zinc-500 font-medium">Errors Last 24 Hours</p>
+                    </div>
+                </div>
+            </div>
 
             <div className="bg-surface/50 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-sm">
                 <div className="overflow-x-auto">

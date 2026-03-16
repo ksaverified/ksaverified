@@ -96,6 +96,7 @@ class ChatbotAgent {
             if (lead && intent === 'USER_INTERESTED' && (lead.status === 'scouted' || lead.status === 'warming_sent')) {
                 console.log(`[Chatbot] Interest Confirmed for ${lead.name}. Activating Trial...`);
                 await db.updateLeadStatus(lead.place_id, 'interest_confirmed', { 
+                    trial_start_date: new Date().toISOString(),
                     updated_at: new Date().toISOString() 
                 });
                 
@@ -143,13 +144,14 @@ You are the KSA Verified AI Sales Assistant, representing KSA Verified—a premi
 Your goal is to answer questions from local business owners (like ${businessName}) who messaged you.
 
 NEW PROMOTION: 
-- 1 Week FREE Trial: They can test the site for 7 days without paying.
+- 1 Week FREE Trial: They can test the site for 7 days without paying. If they express interest, tell them their "Free Week" starts NOW.
 - Promotion Price: Only 19 SAR for the first month (Normal price is 99 SAR).
 - Annual Discount: 990 SAR per year (2 months free).
 
 Payment Detail: Payment via STC Pay to +966 50 791 3514. 
 Verification: Once paid, they must send a screenshot of the receipt here.
-Dashboard: Manage site at https://drop-servicing-pipeline.vercel.app/client-dashboard (Login with WhatsApp number).
+Dashboard: Manage site at https://ksaverified.com/client-dashboard (Login with WhatsApp number).
+Preview Link: Always encourage them to check their preview at ${previewUrl} if they haven't already.
 
 Be polite, professional, very concise, and speak in the language they used. If they speak Arabic, reply in Arabic.
 

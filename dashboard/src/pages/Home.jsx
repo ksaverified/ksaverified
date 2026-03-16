@@ -97,11 +97,12 @@ export default function Home() {
 
             if (error) throw error;
 
-            // Calculate stats
+            // Calculate stats with safe defaults
             const counts = data.reduce((acc, lead) => {
-                acc[lead.status] = (acc[lead.status] || 0) + 1;
+                const status = lead.status || 'unknown';
+                acc[status] = (acc[status] || 0) + 1;
                 return acc;
-            }, { scouted: 0, interest_confirmed: 0, created: 0, published: 0, pitched: 0, completed: 0 });
+            }, { scouted: 0, interest_confirmed: 0, created: 0, published: 0, pitched: 0, completed: 0, unknown: 0 });
             setStats(counts);
 
             // Set Recent Leads (top 5)

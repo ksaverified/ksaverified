@@ -1,5 +1,9 @@
 -- KSA Verified Backend Schema
 
+DROP TABLE IF EXISTS settings CASCADE;
+DROP TABLE IF EXISTS chat_logs CASCADE;
+DROP TABLE IF EXISTS logs CASCADE;
+DROP TABLE IF EXISTS leads CASCADE;
 -- 1. Create LEADS table
 CREATE TABLE leads (
     place_id TEXT PRIMARY KEY,
@@ -12,6 +16,14 @@ CREATE TABLE leads (
     photos JSONB DEFAULT '[]'::jsonb,
     website_html TEXT,
     vercel_url TEXT,
+    subscription_tier TEXT DEFAULT 'None'::text,
+    payment_date TIMESTAMP WITH TIME ZONE,
+    reminded_5d BOOLEAN DEFAULT false,
+    reminded_3d BOOLEAN DEFAULT false,
+    reminded_1d BOOLEAN DEFAULT false,
+    trial_start_date TIMESTAMP WITH TIME ZONE,
+    reminded_2d_before BOOLEAN DEFAULT false,
+    reminded_1d_before BOOLEAN DEFAULT false,
     retry_count INTEGER DEFAULT 0,
     last_error TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

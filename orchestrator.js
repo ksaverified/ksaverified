@@ -65,6 +65,7 @@ class Orchestrator {
         await this.runPromotionCycle();
         await this.runWarmingCycle();
         await this.runNudgeCycle();
+        await this.runTrialReminderCycle();
       }
 
       // Step 2: Process intermediate leads (backlog)
@@ -268,6 +269,52 @@ class Orchestrator {
             console.log(`[Orchestrator] Marking ${lead.name} as invalid permanently: Number not on WhatsApp.`);
             await this.db.updateLeadStatus(lead.place_id, 'invalid', { last_error: 'Number not on WhatsApp' });
         }
+      }
+    }
+  }
+
+  async runTrialReminderCycle() {
+    console.log('[Orchestrator] Running Trial Reminder Cycle...');
+    try {
+      const health = await this.axios.get(`${this.closer.baseURL}/health`);
+      if (!health.data.ready) return;
+    } catch (e) { return; }
+
+    // Fetch leads with an active trial that haven't been reminded for 2d or 1d before finish
+    const { data: leads, error } = await this.db.supabase
+      .from('leads')
+      .not('trial_start_date', 'is', null)
+      .or('reminded_2d_before.eq.false,reminded_1d_before.eq.false')
+      .limit(20);
+
+    if (error || !leads) return;
+
+    const now = Date.now();
+    const oneDayMs = 24 * 60 * 60 * 1000;
+
+    for (const lead of leads) {
+      try {
+        const trialStart = new Date(lead.trial_start_date).getTime();
+        const daysSinceStart = (now - trialStart) / oneDayMs;
+
+        // Reminder 1: 5 days after start (2 days left)
+        if (daysSinceStart >= 5 && daysSinceStart < 6 && !lead.reminded_2d_before) {
+          console.log(`[Orchestrator] Sending 2-day pre-expiry reminder to ${lead.name}`);
+          await this.closer.sendTrialReminder(lead, 2);
+          await this.db.supabase.from('leads').update({ reminded_2d_before: true }).eq('place_id', lead.place_id);
+          await this.db.addLog('closer', 'trial_reminder_2d', lead.place_id, { name: lead.name }, 'success');
+        } 
+        // Reminder 2: 6 days after start (1 day left)
+        else if (daysSinceStart >= 6 && daysSinceStart < 7 && !lead.reminded_1d_before) {
+          console.log(`[Orchestrator] Sending 1-day pre-expiry reminder to ${lead.name}`);
+          await this.closer.sendTrialReminder(lead, 1);
+          await this.db.supabase.from('leads').update({ reminded_1d_before: true }).eq('place_id', lead.place_id);
+          await this.db.addLog('closer', 'trial_reminder_1d', lead.place_id, { name: lead.name }, 'success');
+        }
+
+        await new Promise(r => setTimeout(r, 8000));
+      } catch (e) {
+        console.error(`[Orchestrator] Trial reminder failed for ${lead.name}:`, e.message);
       }
     }
   }

@@ -1,0 +1,11 @@
+node_modules
+.wwebjs_auth
+whatsapp-service/.wwebjs_auth
+whatsapp-service/wwebjs_auth.zip
+backups
+logs
+.DS_Store
+.git
+.vercel
+**/*.lock
+**/LOCK

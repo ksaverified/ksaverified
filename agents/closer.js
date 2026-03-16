@@ -227,6 +227,50 @@ Reply 'INTERESTED' to activate this offer!
             throw new Error(`Media send failed: ${errorDetails}`);
         }
     }
+
+    /**
+     * Sends a bilingual trial expiration reminder.
+     * @param {Object} lead - The lead record from DB
+     * @param {number} daysRemaining - Days left (e.g., 2 or 1)
+     */
+    async sendTrialReminder(lead, daysRemaining) {
+        const formattedPhone = this.formatPhoneNumber(lead.phone);
+        if (!formattedPhone) return false;
+
+        const portalUrl = 'https://ksaverified.com/client-dashboard';
+        const stcPayDetails = 'STC Pay: +966 50 791 3514';
+
+        const messageEn = `Hi ${lead.name}! 💎 Your 1-week FREE trial expires in *${daysRemaining} day${daysRemaining > 1 ? 's' : ''}*. 
+
+To keep your premium AI website active and published, you can now activate your subscription for only *19 SAR* for the first month! (Normal price 99 SAR).
+
+Check your site: ${lead.vercel_url}
+Payment: ${stcPayDetails}
+Portal: ${portalUrl}
+
+Please send a screenshot of your payment receipt here to finalize your activation! 🚀`;
+
+        const messageAr = `مرحباً ${lead.name}! 💎 تنتهي تجربة الأسبوع المجاني الخاصة بك خلال *${daysRemaining} يوم*.
+
+لإبقاء موقعك المتميز المدعوم بالذكاء الاصطناعي نشطاً ومنشوراً، يمكنك الآن تفعيل اشتراكك مقابل *19 ريال فقط* للشهر الأول! (السعر العادي 99 ريال).
+
+تحقق من موقعك: ${lead.vercel_url}
+الدفع: ${stcPayDetails}
+البوابة: ${portalUrl}
+
+يرجى إرسال لقطة شاشة لإيصال الدفع هنا لإتمام التفعيل! 🚀`;
+
+        const messageBody = `${messageEn}\n\n---\n\n${messageAr}`;
+
+        console.log(`[Closer] Sending ${daysRemaining}-day Trial Reminder to ${formattedPhone}...`);
+        try {
+            await this.sendMessage(formattedPhone, messageBody);
+            return true;
+        } catch (err) {
+            console.error(`[Closer] Trial reminder failed for ${formattedPhone}: ${err.message}`);
+            throw err;
+        }
+    }
 }
 
 module.exports = CloserAgent;

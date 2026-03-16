@@ -1,8 +1,6 @@
 FROM node:20-slim
 
-# Install latest chrome dev package and fonts to support major charsets (Chinese, Japanese, Arabic, Hebrew, Thai and a few others)
-# Note: this installs the necessary libs to make the bundled version of Chromium that Puppeteer
-# installs, work.
+# Install latest chrome dev package and fonts
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-ipafont-gothic \
@@ -32,14 +30,25 @@ RUN apt-get update && apt-get install -y \
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 ENV NODE_ENV=production
+
+# Set working directory
 WORKDIR /app
 
-COPY package*.json ./
+# Copy shared dependencies
+COPY services/ ./services/
+COPY agents/ ./agents/
+
+# Copy WhatsApp service package and install at the ROOT level (/app)
+# This ensures shared services from /app/services can find modules in /app/node_modules
+COPY whatsapp-service/package*.json ./
 RUN npm install
 
-COPY . .
+# Copy WhatsApp service code into its own subdirectory
+COPY whatsapp-service/ ./whatsapp-service/
 
 # Expose the API port
-EXPOSE 8080
+EXPOSE 8081
 
+# Start from the service subdirectory
+WORKDIR /app/whatsapp-service
 CMD ["npm", "start"]
