@@ -8,7 +8,7 @@ const axios = require('axios');
 class CloserAgent {
     constructor() {
         // Local WhatsApp service endpoint (Custom microservice)
-        this.baseURL = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:8081';
+        this.baseURL = process.env.WHATSAPP_SERVICE_URL || 'http://127.0.0.1:8081';
 
         // Set up axios instance for local service
         this.api = axios.create({

@@ -3,10 +3,11 @@ const { createClient } = require('@supabase/supabase-js');
 class DatabaseService {
     constructor() {
         this.supabaseUrl = process.env.SUPABASE_URL;
-        this.supabaseKey = process.env.SUPABASE_ANON_KEY;
+        // Use Service Role Key for server-side operations (bypasses RLS for backend agents)
+        this.supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
         if (!this.supabaseUrl || !this.supabaseKey) {
-            throw new Error('SUPABASE_URL or SUPABASE_ANON_KEY missing in environment variables.');
+            throw new Error('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing in environment variables.');
         }
 
         // Increase timeout for fetch to 60 seconds (Node 22 default is lower/stricter)
