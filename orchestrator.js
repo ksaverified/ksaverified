@@ -283,6 +283,7 @@ class Orchestrator {
     // Fetch leads with an active trial that haven't been reminded for 2d or 1d before finish
     const { data: leads, error } = await this.db.supabase
       .from('leads')
+      .select('*')
       .not('trial_start_date', 'is', null)
       .or('reminded_2d_before.eq.false,reminded_1d_before.eq.false')
       .limit(20);
