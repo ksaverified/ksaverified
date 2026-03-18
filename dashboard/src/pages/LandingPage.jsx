@@ -319,22 +319,27 @@ const LandingPage = () => {
                             </div>
                             <span className="font-heading font-bold text-2xl tracking-tight">KSA <span className="text-brand">Verified</span></span>
                         </div>
-                        {/* Links */}
-                        <div className="hidden md:flex items-center space-x-8">
-                            <a className="text-gray-300 hover:text-white transition-colors" href="#">{currentT.home}</a>
-                            <a className="text-gray-300 hover:text-white transition-colors" href="#services">{currentT.solutions}</a>
-                            <a className="text-gray-300 hover:text-white transition-colors" href="#pricing">{currentT.pricing}</a>
-                            <div className="h-6 w-px bg-white/20"></div>
-                            <a href="/client-dashboard/login" className="px-5 py-2 rounded-twelve border border-white/20 hover:bg-white/5 transition-all text-sm font-medium">
+                        {/* Mobile & Desktop Actions (Always visible) */}
+                        <div className="flex items-center gap-4">
+                            {/* Client Login (Hidden on small mobile if it feels too cramped, but let's try keeping it) */}
+                            <a href="/client-dashboard/login" className="hidden sm:block px-5 py-2 rounded-twelve border border-white/20 hover:bg-white/5 transition-all text-sm font-medium">
                                 {currentT.clientLogin}
                             </a>
+                            
                             {/* Language Toggle */}
                             <button 
                                 onClick={toggleLang}
-                                className="flex items-center gap-2 text-sm font-semibold text-gold border border-gold/30 px-3 py-1 rounded-full hover:bg-gold/10 transition-all uppercase"
+                                className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-gold border border-gold/30 px-3 py-1.5 rounded-full hover:bg-gold/10 transition-all uppercase"
                             >
                                 {lang === 'en' ? 'EN | العربية' : 'AR | English'}
                             </button>
+                        </div>
+
+                        {/* Desktop-only Navigation Links */}
+                        <div className="hidden lg:flex items-center space-x-8 mr-4 rtl:mr-0 rtl:ml-4">
+                            <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#">{currentT.home}</a>
+                            <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#services">{currentT.solutions}</a>
+                            <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#pricing">{currentT.pricing}</a>
                         </div>
                     </div>
                 </div>
