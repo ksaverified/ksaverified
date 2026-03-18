@@ -1,117 +1,181 @@
 import { useState } from 'react';
 import { Outlet, NavLink, Link } from 'react-router-dom';
-import { LayoutDashboard, Users, Activity, Settings, Zap, Globe, Map as MapIcon, MessageSquare, BarChart3, MessageCircle, LogOut, UserCheck } from 'lucide-react';
+import {
+    LayoutDashboard, Radio, Map as MapIcon, Globe,
+    MessageCircle, UserCheck, MessageSquare,
+    BarChart3, Activity, Settings, Zap, LogOut,
+    ChevronDown
+} from 'lucide-react';
 import GlobalStatusBar from './GlobalStatusBar';
 import { useAuth } from './AuthContext';
 import { supabase } from '../lib/supabase';
 
+const NAV_SECTIONS = [
+    {
+        label: null,
+        items: [
+            { to: '/admin', icon: LayoutDashboard, label: 'Command Center', exact: true },
+        ]
+    },
+    {
+        label: 'Awareness',
+        color: 'text-blue-400',
+        items: [
+            { to: '/pipeline', icon: Radio, label: 'Lead Pipeline' },
+            { to: '/map', icon: MapIcon, label: 'Scout Map' },
+            { to: '/websites', icon: Globe, label: 'Live Sites' },
+        ]
+    },
+    {
+        label: 'Conversion',
+        color: 'text-emerald-400',
+        items: [
+            { to: '/whatsapp', icon: MessageCircle, label: 'WhatsApp Inbox' },
+            { to: '/interest-confirmed', icon: UserCheck, label: 'Hot Leads' },
+            { to: '/answers', icon: MessageSquare, label: 'AI Reply Review' },
+        ]
+    },
+    {
+        label: 'Retention',
+        color: 'text-purple-400',
+        items: [
+            { to: '/analytics', icon: BarChart3, label: 'Performance' },
+        ]
+    },
+    {
+        label: 'System',
+        color: 'text-zinc-500',
+        items: [
+            { to: '/logs', icon: Activity, label: 'Live Logs' },
+            { to: '/settings', icon: Settings, label: 'Settings' },
+        ]
+    },
+];
+
+const NavItem = ({ to, icon: Icon, label, exact }) => (
+    <NavLink
+        to={to}
+        end={exact}
+        className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${isActive
+                ? 'bg-primary/10 text-primary font-semibold border border-primary/20 shadow-sm shadow-primary/10'
+                : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/60'
+            }`
+        }
+    >
+        <Icon className="h-4 w-4 shrink-0" />
+        {label}
+    </NavLink>
+);
+
 const Layout = () => {
     const { user } = useAuth();
-    const navItems = [
-        { to: '/', icon: LayoutDashboard, label: 'Overview' },
-        { to: '/pipeline', icon: Users, label: 'Pipeline' },
-        { to: '/interest-confirmed', icon: UserCheck, label: 'Interest Confirmed' },
-        { to: '/map', icon: MapIcon, label: 'Map' },
-        { to: '/answers', icon: MessageSquare, label: 'Answers' },
-        { to: '/whatsapp', icon: MessageCircle, label: 'WhatsApp Inbox' },
-        { to: '/analytics', icon: BarChart3, label: 'Analytics' },
-        { to: '/websites', icon: Globe, label: 'Live Sites' },
-        { to: '/logs', icon: Activity, label: 'Live Logs' },
-        { to: '/settings', icon: Settings, label: 'Settings' },
-    ];
-
     const [triggering, setTriggering] = useState(false);
+    const [navCollapsed, setNavCollapsed] = useState({});
 
     const handleTrigger = async () => {
         if (triggering) return;
         setTriggering(true);
         try {
-            // Call the Vercel serverless function directly
             const res = await fetch('/api/trigger', { method: 'POST' });
             if (!res.ok) throw new Error('Failed to trigger');
-            alert('🚀 Manual agent cycle launched! Switch to the Live Logs tab to watch the magic happen.');
+            alert('🚀 Pipeline cycle launched! Check Live Logs for progress.');
         } catch (e) {
             console.error(e);
-            alert('❌ Failed to trigger pipeline manually. Ensure your backend is running.');
+            alert('❌ Failed to trigger pipeline. Ensure the backend is running.');
         } finally {
             setTriggering(false);
         }
     };
 
     const handleLogout = async () => {
-        const { error } = await supabase.auth.signOut();
-        if (error) console.error('Error logging out:', error.message);
+        await supabase.auth.signOut();
+    };
+
+    const toggleSection = (label) => {
+        setNavCollapsed(prev => ({ ...prev, [label]: !prev[label] }));
     };
 
     return (
-        <div className="flex h-screen bg-background">
+        <div className="flex h-screen bg-background overflow-hidden">
             {/* Sidebar */}
-            <aside className="w-64 bg-surface border-r border-zinc-800 flex flex-col">
-                <div className="p-6 border-b border-zinc-800">
-                    <Link to="/" className="flex flex-col gap-1 transition-opacity hover:opacity-80">
-                        <div className="flex items-center gap-3">
-                            <img src="/logo.png" alt="KSA Verified" className="h-8 w-8 object-contain" />
-                            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-purple-500 bg-clip-text text-transparent italic tracking-tighter">
+            <aside className="w-60 bg-surface border-r border-zinc-800/80 flex flex-col shrink-0">
+                {/* Logo */}
+                <div className="px-5 py-5 border-b border-zinc-800/80">
+                    <Link to="/admin" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+                        <img src="/logo.png" alt="KSA Verified" className="h-7 w-7 object-contain" />
+                        <div>
+                            <h1 className="text-base font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent leading-tight">
                                 KSA Verified
                             </h1>
+                            <p className="text-[9px] text-zinc-500 uppercase tracking-[0.2em] font-semibold">Ops Console</p>
                         </div>
-                        <p className="text-[10px] text-zinc-500 ml-11 uppercase tracking-[0.2em] font-bold">Intelligence Ops</p>
                     </Link>
                 </div>
 
-                <nav className="flex-1 p-4 space-y-2">
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.to}
-                            to={item.to}
-                            className={({ isActive }) =>
-                                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                    ? 'bg-primary/10 text-primary font-medium border border-primary/20'
-                                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50'
-                                }`
-                            }
-                        >
-                            <item.icon className="h-5 w-5" />
-                            {item.label}
-                        </NavLink>
+                {/* Navigation */}
+                <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+                    {NAV_SECTIONS.map((section, si) => (
+                        <div key={si} className={si > 0 ? 'pt-2' : ''}>
+                            {section.label && (
+                                <button
+                                    onClick={() => toggleSection(section.label)}
+                                    className="w-full flex items-center justify-between px-3 py-1.5 mb-1 group"
+                                >
+                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${section.color}`}>
+                                        {section.label}
+                                    </span>
+                                    <ChevronDown className={`h-3 w-3 text-zinc-600 transition-transform ${navCollapsed[section.label] ? '-rotate-90' : ''}`} />
+                                </button>
+                            )}
+                            {!navCollapsed[section.label] && (
+                                <div className="space-y-0.5">
+                                    {section.items.map((item) => (
+                                        <NavItem key={item.to} {...item} />
+                                    ))}
+                                </div>
+                            )}
+                            {si < NAV_SECTIONS.length - 1 && section.label && (
+                                <div className="mt-2 border-t border-zinc-800/50" />
+                            )}
+                        </div>
                     ))}
                 </nav>
 
-                <div className="p-4 border-t border-zinc-800">
+                {/* Bottom actions */}
+                <div className="px-3 pb-4 pt-2 border-t border-zinc-800/80 space-y-3">
                     <button
                         onClick={handleTrigger}
                         disabled={triggering}
-                        className={`w-full py-3 px-4 ${triggering ? 'bg-primary/50 cursor-not-allowed' : 'bg-primary hover:bg-blue-600'} text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-primary/20 mb-4`}
+                        className={`w-full py-2.5 px-4 ${triggering ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-blue-500'} text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20`}
                     >
                         <Zap className={`h-4 w-4 fill-current ${triggering ? 'animate-pulse' : ''}`} />
-                        {triggering ? 'Launching...' : 'Trigger Pipeline'}
+                        {triggering ? 'Running...' : 'Trigger Pipeline'}
                     </button>
 
-                    <div className="pt-4 border-t border-zinc-800">
-                        <div className="flex items-center gap-3 px-2 mb-4">
-                            <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-                                {user?.email?.charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-xs font-semibold text-zinc-100 truncate">{user?.email}</p>
-                                <p className="text-[10px] text-zinc-500">Administrator</p>
-                            </div>
+                    <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl bg-zinc-900/50 border border-zinc-800">
+                        <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary/40 to-purple-500/40 flex items-center justify-center text-primary font-bold text-xs border border-primary/20 shrink-0">
+                            {user?.email?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-zinc-100 truncate">{user?.email}</p>
+                            <p className="text-[10px] text-zinc-500">Administrator</p>
                         </div>
                         <button
                             onClick={handleLogout}
-                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-zinc-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all duration-200"
+                            title="Sign out"
+                            className="text-zinc-600 hover:text-red-400 transition-colors p-1 rounded"
                         >
-                            <LogOut className="h-4 w-4" />
-                            Sign Out
+                            <LogOut className="h-3.5 w-3.5" />
                         </button>
                     </div>
                 </div>
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 overflow-auto bg-[#0a0a0b] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(59,130,246,0.1),rgba(255,255,255,0))] relative flex flex-col">
+            <main className="flex-1 overflow-auto bg-[#080809] bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,rgba(59,130,246,0.08),transparent)] flex flex-col">
                 <GlobalStatusBar />
-                <div className="p-8 max-w-7xl mx-auto flex-1 w-full">
+                <div className="p-6 flex-1 w-full max-w-screen-2xl mx-auto">
                     <Outlet />
                 </div>
             </main>

@@ -11,6 +11,7 @@ import Analytics from './pages/Analytics';
 import WhatsApp from './pages/WhatsApp';
 import InterestConfirmed from './pages/InterestConfirmed';
 import Login from './pages/Login';
+import LandingPage from './pages/LandingPage';
 import { AuthProvider } from './components/AuthContext';
 import AuthGuard from './components/AuthGuard';
 
@@ -19,11 +20,12 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Route */}
+          {/* Public Routes */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/manage" element={<Login />} />
 
-          {/* Protected Routes */}
-          <Route path="/" element={
+          {/* Protected Admin Routes */}
+          <Route path="/admin" element={
             <AuthGuard>
               <Layout />
             </AuthGuard>
