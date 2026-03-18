@@ -88,6 +88,16 @@ const LandingPage = () => {
             showcaseSub: "See what Saudi businesses are building with KSA Verified.",
             viewAll: "View All Templates",
             poweredBy: "Powered by",
+            whyTitle: "Why KSA Verified?",
+            whySub: "The smart bridge between your visionary business and the global market.",
+            whyHeroTitle: "Elevate Your Digital Presence",
+            whyHeroDesc: "Empowering Saudi business owners with a premium digital presence, KSA Verified is the smart bridge between your vision and the global market. Our AI-driven platform crafts a world-class website for your business in seconds—deeply localized, lightning-fast, and 100% free for the first year.",
+            whyPoint1: "Vision 2030 Ready",
+            whyPoint1Desc: "Built specifically for the Kingdom's unique market and ambitious goals.",
+            whyPoint2: "AI-Driven Localization",
+            whyPoint2Desc: "Deeply customized content that speaks your customers' language natively.",
+            whyPoint3: "Verified Status",
+            whyPoint3Desc: "Join a trusted network of validated Saudi businesses and lead the digital economy.",
             companyDesc: "Empowering the next generation of Saudi digital commerce. High-performance websites built for the local market.",
             copyright: "© 2026 KSA Verified. A KSA Intelligence Ops Venture."
         },
@@ -123,6 +133,16 @@ const LandingPage = () => {
             showcaseSub: "شاهد ما تبنيه الشركات السعودية مع KSA Verified.",
             viewAll: "عرض جميع القوالب",
             poweredBy: "بدعم من",
+            whyTitle: "لماذا KSA Verified؟",
+            whySub: "الجسر الذكي بين عملك الطموح والسوق العالمي.",
+            whyHeroTitle: "ارتقِ بتواجدك الرقمي",
+            whyHeroDesc: "تمكين أصحاب الأعمال في السعودية من خلال حضور رقمي متميز؛ 'KSA Verified' هي الجسر الذكي بين رؤيتك والسوق العالمي. تقوم منصتنا المدعومة بالذكاء الاصطناعي بإنشاء موقع إلكتروني عالمي المستوى لعملك في ثوانٍ معدودة—مخصص محلياً بعمق، سريع البرق، ومجاني 100% للسنة الأولى.",
+            whyPoint1: "جاهزية لرؤية 2030",
+            whyPoint1Desc: "مصممة خصيصاً لسوق المملكة الطموح وأهدافه المستقبلية.",
+            whyPoint2: "تخصيص ذكي",
+            whyPoint2Desc: "محتوى مخصص بعمق يخاطب عملائك بلغتهم الأم وثقافتهم.",
+            whyPoint3: "حالة التحقق",
+            whyPoint3Desc: "انضم إلى شبكة موثوقة من الشركات السعودية المعتمدة وتقدّم في الاقتصاد الرقمي.",
             companyDesc: "تمكين الجيل القادم من التجارة الرقمية السعودية. مواقع عالية الأداء صممت للسوق المحلي.",
             copyright: "© 2026 KSA Verified. مشروع من KSA Intelligence Ops."
         }
@@ -379,6 +399,82 @@ const LandingPage = () => {
                     </div>
                 </section>
                 {/* END: Hero Section */}
+
+                {/* BEGIN: Why Section (Bilingual Ad Copy) */}
+                <section className="py-24 px-4 bg-gradient-to-b from-[#0a0a0c] to-[#121215] border-y border-white/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-1/3 h-full bg-brand/5 blur-[120px] rounded-full translate-x-1/2" />
+                    <div className="max-w-7xl mx-auto">
+                        <div className="grid lg:grid-cols-2 gap-16 items-center">
+                            <motion.div 
+                                initial={{ opacity: 0, x: lang === 'en' ? -30 : 30 }}
+                                whileInView={{ opacity: 1, x: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8 }}
+                                className="text-left rtl:text-right"
+                            >
+                                <div className="inline-block px-4 py-1.5 mb-6 border border-gold/30 bg-gold/5 rounded-full text-gold text-xs font-bold tracking-widest uppercase">
+                                    {currentT.whyTitle}
+                                </div>
+                                <h2 className="text-4xl md:text-5xl font-heading font-extrabold mb-6 leading-tight">
+                                    {currentT.whyHeroTitle}
+                                </h2>
+                                <p className="text-gray-400 text-lg leading-relaxed mb-8">
+                                    {currentT.whyHeroDesc}
+                                </p>
+                                <div className="space-y-6">
+                                    <div className="flex gap-4">
+                                        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center">
+                                            <CheckCircle2 className="w-6 h-6 text-gold" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-lg font-bold text-white mb-1">{currentT.whyPoint1}</h4>
+                                            <p className="text-gray-500 text-sm">{currentT.whyPoint1Desc}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-brand/10 border border-brand/20 flex items-center justify-center">
+                                            <Zap className="w-6 h-6 text-brand" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-lg font-bold text-white mb-1">{currentT.whyPoint2}</h4>
+                                            <p className="text-gray-500 text-sm">{currentT.whyPoint2Desc}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex gap-4">
+                                        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                                            <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                                        </div>
+                                        <div>
+                                            <h4 className="text-lg font-bold text-white mb-1">{currentT.whyPoint3}</h4>
+                                            <p className="text-gray-500 text-sm">{currentT.whyPoint3Desc}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                            
+                            <motion.div 
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8 }}
+                                className="relative rounded-[40px] overflow-hidden border border-white/10 shadow-2xl group"
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10" />
+                                <img 
+                                    src="https://images.unsplash.com/photo-1574169208507-84376144848b?auto=format&fit=crop&q=80&w=800" 
+                                    alt="Saudi Business Digital Hub" 
+                                    className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                                <div className="absolute bottom-8 left-8 right-8 z-20 text-left rtl:text-right">
+                                    <div className="backdrop-blur-xl bg-white/5 border border-white/10 p-6 rounded-3xl">
+                                        <p className="text-gold font-bold mb-1">{currentT.regularPrice}</p>
+                                        <h4 className="text-2xl font-bold text-white leading-tight">{currentT.foundingMember}</h4>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    </div>
+                </section>
 
                 {/* BEGIN: Offer Section (Trial) */}
                 <section className="py-20 px-4" id="pricing">
