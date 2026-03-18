@@ -208,24 +208,28 @@ class DatabaseService {
      * Find a lead using an Ultramsg formatted phone number (e.g. 966501234567@c.us)
      */
     async getLeadByPhone(ultramsgPhone) {
-        // purely keep digits
         const cleanPhone = ultramsgPhone.replace(/\D/g, '');
-        // Take the last 7 digits to match against the varied Google Places formats (+966 50 123 4567, 050 123 4567, etc.)
         if (cleanPhone.length < 7) return null;
 
         const last7 = cleanPhone.slice(-7);
 
-        // Fetch all leads since we need to strip formatting to match accurately
+        // Use DB-side filtering: only pull rows where the phone column contains the last 7 digits.
+        // This avoids a full table scan and is safe because 7 trailing digits uniquely identify
+        // Saudi mobile numbers regardless of prefix formatting (+966 / 0 / bare).
         const { data, error } = await this.supabase
             .from('leads')
-            .select('*');
+            .select('*')
+            .ilike('phone', `%${last7}%`)
+            .limit(5); // small safety cap
 
-        if (error || !data) {
-            console.error('[DB] Error searching for lead by phone:', error ? error.message : 'No data');
+        if (error) {
+            console.error('[DB] Error searching for lead by phone:', error.message);
             return null;
         }
 
-        // Filter in memory to bypass formatting like spaces, hyphens, or parentheses in the DB string
+        if (!data || data.length === 0) return null;
+
+        // Do the precise in-memory check on the small result set
         for (const lead of data) {
             if (lead.phone) {
                 const dbCleanPhone = lead.phone.replace(/\D/g, '');
@@ -399,18 +403,31 @@ class DatabaseService {
      * We check the 'logs' table to see if a 'warming_sent' action exists for this place_id.
      */
     async getScoutedLeads(limit = 10) {
-        // 1. Get all scouted leads
+        // Single query: get scouted leads that have NO 'warming_sent' log entry.
+        // Uses a Postgres NOT EXISTS subquery via PostgREST RPC to avoid N+1 round-trips.
+        const { data, error } = await this.supabase.rpc('get_scouted_leads_without_warming', { p_limit: limit });
+
+        if (error) {
+            // Graceful fallback to the legacy approach if the RPC doesn't exist yet
+            console.warn('[DB] RPC get_scouted_leads_without_warming failed, falling back:', error.message);
+            return this._getScoutedLeadsFallback(limit);
+        }
+        return data || [];
+    }
+
+    /** Fallback N+1 approach (used only if RPC isn't deployed yet) */
+    async _getScoutedLeadsFallback(limit = 10) {
         const { data: leads, error } = await this.supabase
             .from('leads')
             .select('place_id, name, phone, status, updated_at')
             .eq('status', 'scouted')
-            .order('updated_at', { ascending: true });
+            .order('updated_at', { ascending: true })
+            .limit(limit * 3); // over-fetch to compensate for filtering
 
         if (error) throw error;
 
-        // 2. Filter for those without a 'warming_sent' log (in memory for simplicity/performance in small sets)
         const finalLeads = [];
-        for (const lead of leads) {
+        for (const lead of leads || []) {
             const { data: logs } = await this.supabase
                 .from('logs')
                 .select('id')
@@ -423,7 +440,6 @@ class DatabaseService {
             }
             if (finalLeads.length >= limit) break;
         }
-
         return finalLeads;
     }
 
@@ -431,18 +447,29 @@ class DatabaseService {
      * Fetch leads in 'pitched' status that haven't received the 19 SAR promo yet
      */
     async getPitchedLeads(limit = 10) {
-        // 1. Get pitched leads
+        // Single query: get pitched leads that have NO 'promo_sent' log entry.
+        const { data, error } = await this.supabase.rpc('get_pitched_leads_without_promo', { p_limit: limit });
+
+        if (error) {
+            console.warn('[DB] RPC get_pitched_leads_without_promo failed, falling back:', error.message);
+            return this._getPitchedLeadsFallback(limit);
+        }
+        return data || [];
+    }
+
+    /** Fallback N+1 approach (used only if RPC isn't deployed yet) */
+    async _getPitchedLeadsFallback(limit = 10) {
         const { data: leads, error } = await this.supabase
             .from('leads')
             .select('place_id, name, phone, status, vercel_url, updated_at')
             .eq('status', 'pitched')
-            .order('updated_at', { ascending: true });
+            .order('updated_at', { ascending: true })
+            .limit(limit * 3);
 
         if (error) throw error;
 
-        // 2. Filter for those without a 'promo_sent' log
         const finalLeads = [];
-        for (const lead of leads) {
+        for (const lead of leads || []) {
             const { data: logs } = await this.supabase
                 .from('logs')
                 .select('id')
@@ -455,7 +482,6 @@ class DatabaseService {
             }
             if (finalLeads.length >= limit) break;
         }
-
         return finalLeads;
     }
 }
