@@ -11,14 +11,14 @@ class BillerAgent {
         console.log('[Biller] Checking for expiring subscriptions...');
 
         try {
-            // Fetch all completed leads with a payment date
+            // Fetch completed leads with a payment date (cap at 50 per cycle to avoid overload)
             const { data: leads, error } = await this.db.supabase
                 .from('leads')
-                .select('*')
+                .select('place_id, name, phone, status, payment_date, subscription_tier, reminded_5d, reminded_3d, reminded_1d')
                 .eq('status', 'completed')
                 .not('payment_date', 'is', null)
-                // Also we need to make sure they have a phone number to send to
-                .not('phone', 'is', null);
+                .not('phone', 'is', null)
+                .limit(50);
 
             if (error) {
                 console.error('[Biller] Error fetching leads', error);

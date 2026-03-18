@@ -24,9 +24,34 @@ class Orchestrator {
   /**
    * Executes a single pipeline run
    */
+  /**
+   * Circuit-breaker: checks if Supabase is reachable before running a cycle.
+   * Returns true if healthy, false if the DB should be left alone.
+   */
+  async isSupabaseHealthy() {
+    try {
+      const url = `${process.env.SUPABASE_URL}/rest/v1/`;
+      const response = await this.axios.get(url, {
+        headers: { apikey: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY },
+        timeout: 8000,
+        validateStatus: (s) => s < 500 // 4xx are fine (auth etc), 5xx/521 means DB is down
+      });
+      return true;
+    } catch (err) {
+      console.warn('[Orchestrator] 🔴 Supabase health check failed:', err.message);
+      return false;
+    }
+  }
+
   async runPipeline() {
     if (this.isRunning) {
       console.log('[Orchestrator] Cycle already in progress. Skipping.');
+      return;
+    }
+
+    // Circuit breaker: bail immediately if Supabase is unreachable
+    if (!(await this.isSupabaseHealthy())) {
+      console.warn('[Orchestrator] ⚠️ Supabase is down — skipping this cycle to avoid flooding.');
       return;
     }
 
