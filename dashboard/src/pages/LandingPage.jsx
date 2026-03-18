@@ -1,90 +1,328 @@
 import React, { useState, useEffect } from 'react';
 
-const translations = {
-    en: {
-        title: "KSA Verified",
-        subtitle: "Premium AI-powered business websites for Saudi entrepreneurs. Professional, fast, and local.",
-        adminAccess: "Admin Access",
-        clientLogin: "Client Login",
-        offerTitle: "Launch Your Presence for FREE",
-        trial: "1 Week Free Trial",
-        whatsapp: "Automatic WhatsApp Lead Sync",
-        analytics: "Professional Analytics",
-        pricing: "19 SAR/mo (First Year)",
-        noCommitment: "No commitment. Cancel anytime.",
-        getStarted: "Get Started Now"
-    },
-    ar: {
-        title: "KSA Verified",
-        subtitle: "مواقع أعمال متميزة مدعومة بالذكاء الاصطناعي لرواد الأعمال السعوديين. احترافية وسريعة ومحلية.",
-        adminAccess: "دخول المسؤول",
-        clientLogin: "دخول العميل",
-        offerTitle: "أطلق تواجدك مجانًا",
-        trial: "تجربة مجانية لمدة أسبوع",
-        whatsapp: "مزامنة تلقائية لعملاء واتساب",
-        analytics: "تحليلات احترافية",
-        pricing: "19 ريال/شهر (السنة الأولى)",
-        noCommitment: "بدون التزام. يمكنك الإلغاء في أي وقت.",
-        getStarted: "ابدأ الآن"
-    }
-};
-
 const LandingPage = () => {
     const [lang, setLang] = useState('en');
-    const t = translations[lang];
 
     useEffect(() => {
         document.dir = lang === 'ar' ? 'rtl' : 'ltr';
     }, [lang]);
 
-    return (
-        <div className={`min-h-screen bg-[#080809] text-white flex flex-col items-center justify-center p-6 text-center transition-all duration-500 font-sans ${lang === 'ar' ? 'font-arabic' : ''}`}>
-            {/* Lang Switcher */}
-            <div className="absolute top-6 right-6">
-                <button 
-                    onClick={() => setLang(lang === 'en' ? 'ar' : 'en')}
-                    className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-full text-sm font-bold border border-zinc-700 transition-all"
-                >
-                    {lang === 'en' ? 'Arabic / العربية' : 'English / الإنجليزية'}
-                </button>
-            </div>
+    const toggleLang = () => setLang(prev => (prev === 'en' ? 'ar' : 'en'));
 
-            <h1 className="text-5xl md:text-7xl font-extrabold bg-gradient-to-r from-blue-400 to-purple-600 bg-clip-text text-transparent mb-4">
-                {t.title}
-            </h1>
-            <p className="text-xl text-zinc-400 max-w-2xl mb-8 leading-relaxed">
-                {t.subtitle}
-            </p>
-            
-            <div className="flex flex-wrap gap-4 justify-center">
-                <a href="/admin" className="px-8 py-3 bg-primary hover:bg-blue-500 rounded-xl font-bold transition-all shadow-lg shadow-primary/20">
-                    {t.adminAccess}
-                </a>
-                <a href="/client-dashboard/login" className="px-8 py-3 bg-zinc-800 hover:bg-zinc-700 rounded-xl font-bold transition-all border border-zinc-700">
-                    {t.clientLogin}
-                </a>
-            </div>
-            
-            <div className="mt-20 p-8 rounded-3xl bg-zinc-900/50 border border-zinc-800 max-w-lg backdrop-blur-md">
-                <h2 className="text-2xl font-bold mb-6 text-blue-400">{t.offerTitle}</h2>
-                <ul className={`text-left space-y-4 mb-8 ${lang === 'ar' ? 'text-right' : ''}`}>
-                    <li className="flex items-center gap-3">
-                        <span className="text-emerald-400 text-xl">✓</span> {t.trial}
-                    </li>
-                    <li className="flex items-center gap-3">
-                        <span className="text-emerald-400 text-xl">✓</span> {t.whatsapp}
-                    </li>
-                    <li className="flex items-center gap-3">
-                        <span className="text-emerald-400 text-xl">✓</span> {t.analytics}
-                    </li>
-                    <li className="flex items-center gap-3">
-                        <span className="text-emerald-400 text-xl">✓</span> {t.pricing}
-                    </li>
-                </ul>
-                <p className="text-xs text-zinc-500 uppercase tracking-widest font-bold border-t border-zinc-800 pt-6">
-                    {t.noCommitment}
-                </p>
-            </div>
+    // Translation mapping for dynamic text
+    const t = {
+        en: {
+            home: "Home",
+            solutions: "Solutions",
+            pricing: "Pricing",
+            clientLogin: "Client Login",
+            vision: "Saudi Vision 2030 Ready",
+            heroTitle: <>Your Premium Digital Presence, <br/><span className="text-gradient">100% Free.</span></>,
+            heroSub: "AI-powered business websites specifically engineered for Saudi entrepreneurs. Professional, lightning-fast, and deeply localized.",
+            getStarted: "Get Started",
+            viewShowcase: "View Showcase",
+            offerTitle: <>GET YOUR WEBSITE <br/><span className="text-gold">100% FREE</span></>,
+            offerSub: "No hidden fees. No setup costs. Start your Saudi business journey with zero risk.",
+            feature1: "1 Week Full Access Free Trial",
+            feature2: "19 SAR/month for the first year",
+            feature3: "No Long-term Commitment",
+            regularPrice: "Regularly 199 SAR",
+            claimOffer: "Claim My Free Site",
+            foundingMember: "Founding Member Offer",
+            enterpriseTitle: "Enterprise Features for Local Growth",
+            enterpriseSub: "Everything you need to run your business in the Kingdom.",
+            srv1Title: "Automatic Website Generation",
+            srv1Desc: "Our AI creates a high-converting site based on your industry in seconds.",
+            srv2Title: "WhatsApp Lead Integration",
+            srv2Desc: "Direct connection to your customers where they prefer to chat most.",
+            srv3Title: "Analytics Dashboard",
+            srv3Desc: "Understand your traffic and conversions with simplified local data insights.",
+            srv4Title: "Business Growth Tools",
+            srv4Desc: "Integrated SEO and marketing modules to scale beyond the neighborhood.",
+            showcaseTitle: "Sample Masterpieces",
+            showcaseSub: "See what Saudi businesses are building with KSA Verified.",
+            viewAll: "View All Templates",
+            poweredBy: "Powered by",
+            companyDesc: "Empowering the next generation of Saudi digital commerce. High-performance websites built for the local market.",
+            copyright: "© 2026 KSA Verified. A KSA Intelligence Ops Venture."
+        },
+        ar: {
+            home: "الرئيسية",
+            solutions: "الحلول",
+            pricing: "الأسعار",
+            clientLogin: "دخول العميل",
+            vision: "جاهز لرؤية السعودية 2030",
+            heroTitle: <>تواجدك الرقمي المتميز، <br/><span className="text-gradient">مجاني 100%.</span></>,
+            heroSub: "مواقع أعمال مدعومة بالذكاء الاصطناعي مصممة خصيصاً لرواد الأعمال السعوديين. احترافية، سريعة البرق، ومحلية بعمق.",
+            getStarted: "ابدأ الآن",
+            viewShowcase: "عرض النماذج",
+            offerTitle: <>احصل على موقعك <br/><span className="text-gold">مجاناً 100%</span></>,
+            offerSub: "لا توجد رسوم خفية. لا توجد تكاليف إعداد. ابدأ رحلتك التجارية في السعودية بدون مخاطر.",
+            feature1: "تجربة مجانية كاملة لمدة أسبوع",
+            feature2: "19 ريال/شهرياً للسنة الأولى",
+            feature3: "بدون التزام طويل الأمد",
+            regularPrice: "السعر الأصلي 199 ريال",
+            claimOffer: "احصل على موقعي المجاني",
+            foundingMember: "عرض العضو المؤسس",
+            enterpriseTitle: "ميزات احترافية للنمو المحلي",
+            enterpriseSub: "كل ما تحتاجه لإدارة عملك في المملكة.",
+            srv1Title: "إنشاء تلقائي للمواقع",
+            srv1Desc: "يقوم ذكاؤنا الاصطناعي بإنشاء موقع عالي التحويل بناءً على مجالك في ثوانٍ.",
+            srv2Title: "تكامل مع واتساب",
+            srv2Desc: "اتصال مباشر مع عملائك حيث يفضلون الدردشة أكثر.",
+            srv3Title: "لوحة تحليلات",
+            srv3Desc: "افهم حركة مرور موقعك وتحويلاتك من خلال رؤى بيانات محلية مبسطة.",
+            srv4Title: "أدوات نمو الأعمال",
+            srv4Desc: "وحدات تحسين محركات البحث والتسويق المتكاملة للتوسع خارج الحي.",
+            showcaseTitle: "روائع من أعمالنا",
+            showcaseSub: "شاهد ما تبنيه الشركات السعودية مع KSA Verified.",
+            viewAll: "عرض جميع القوالب",
+            poweredBy: "بدعم من",
+            companyDesc: "تمكين الجيل القادم من التجارة الرقمية السعودية. مواقع عالية الأداء صممت للسوق المحلي.",
+            copyright: "© 2026 KSA Verified. مشروع من KSA Intelligence Ops."
+        }
+    };
+
+    const currentT = t[lang];
+
+    return (
+        <div className={`font-sans antialiased text-[#f8f9fa] bg-[#0a0a0c] ${lang === 'ar' ? 'font-arabic' : ''}`}>
+            {/* BEGIN: Navigation */}
+            <nav className="fixed top-0 w-full z-50 glass-card border-b border-white/10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex justify-between items-center h-20">
+                        {/* Logo */}
+                        <div className="flex items-center gap-2">
+                            <div className="w-10 h-10 bg-brand rounded-twelve flex items-center justify-center glow-purple">
+                                <span className="text-white font-bold text-xl">K</span>
+                            </div>
+                            <span className="font-heading font-bold text-2xl tracking-tight">KSA <span className="text-brand">Verified</span></span>
+                        </div>
+                        {/* Links */}
+                        <div className="hidden md:flex items-center space-x-8">
+                            <a className="text-gray-300 hover:text-white transition-colors" href="#">{currentT.home}</a>
+                            <a className="text-gray-300 hover:text-white transition-colors" href="#services">{currentT.solutions}</a>
+                            <a className="text-gray-300 hover:text-white transition-colors" href="#pricing">{currentT.pricing}</a>
+                            <div className="h-6 w-px bg-white/20"></div>
+                            <a href="/client-dashboard/login" className="px-5 py-2 rounded-twelve border border-white/20 hover:bg-white/5 transition-all text-sm font-medium">
+                                {currentT.clientLogin}
+                            </a>
+                            {/* Language Toggle */}
+                            <button 
+                                onClick={toggleLang}
+                                className="flex items-center gap-2 text-sm font-semibold text-gold border border-gold/30 px-3 py-1 rounded-full hover:bg-gold/10 transition-all uppercase"
+                            >
+                                {lang === 'en' ? 'EN | العربية' : 'AR | English'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+            {/* END: Navigation */}
+
+            <main>
+                {/* BEGIN: Hero Section */}
+                <section className="relative pt-40 pb-20 px-4 overflow-hidden">
+                    <div className="hero-glow -top-24 -left-24"></div>
+                    <div className="hero-glow -right-24 top-48 left-auto bg-gradient-radial from-electric/10 to-transparent"></div>
+                    <div className="max-w-7xl mx-auto text-center">
+                        <div className="inline-block px-4 py-1.5 mb-6 border border-brand/50 bg-brand/10 rounded-full text-brand-light text-sm font-semibold tracking-wide uppercase">
+                            {currentT.vision}
+                        </div>
+                        <h1 className="font-heading text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
+                            {currentT.heroTitle}
+                        </h1>
+                        <p className="max-w-2xl mx-auto text-gray-400 text-lg md:text-xl mb-10 leading-relaxed">
+                            {currentT.heroSub}
+                        </p>
+                        <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                            <a href="/client-dashboard/login" className="px-10 py-4 bg-brand hover:bg-brand-dark text-white font-bold rounded-twelve shadow-lg glow-purple transition-all text-lg min-w-[200px] flex items-center justify-center">
+                                {currentT.getStarted}
+                            </a>
+                            <a href="#showcase" className="px-10 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-twelve transition-all text-lg min-w-[200px] flex items-center justify-center">
+                                {currentT.viewShowcase}
+                            </a>
+                        </div>
+                    </div>
+                </section>
+                {/* END: Hero Section */}
+
+                {/* BEGIN: Offer Section (Trial) */}
+                <section className="py-20 px-4" id="pricing">
+                    <div className="max-w-5xl mx-auto">
+                        <div className="glass-card rounded-[24px] p-8 md:p-12 relative overflow-hidden border-2 border-brand/20">
+                            <div className="absolute top-0 right-0 p-6 opacity-10">
+                                <svg className="w-32 h-32 text-brand" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"></path></svg>
+                            </div>
+                            <div className="grid md:grid-cols-2 gap-12 items-center text-left rtl:text-right">
+                                <div>
+                                    <h2 className="text-3xl font-heading font-bold mb-4">{currentT.offerTitle}</h2>
+                                    <p className="text-gray-400 mb-8">{currentT.offerSub}</p>
+                                    <ul className="space-y-4">
+                                        <li className="flex items-center gap-3">
+                                            <div className="w-5 h-5 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center shrink-0">✓</div>
+                                            <span>{currentT.feature1}</span>
+                                        </li>
+                                        <li className="flex items-center gap-3">
+                                            <div className="w-5 h-5 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center shrink-0">✓</div>
+                                            <span>{currentT.feature2}</span>
+                                        </li>
+                                        <li className="flex items-center gap-3">
+                                            <div className="w-5 h-5 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center shrink-0">✓</div>
+                                            <span>{currentT.feature3}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div className="bg-black/40 rounded-twelve p-8 text-center border border-white/5">
+                                    <span className="block text-gray-500 line-through text-lg">{currentT.regularPrice}</span>
+                                    <div className="text-6xl font-extrabold my-2 text-white">0 <span className="text-xl font-normal text-gray-400">SAR</span></div>
+                                    <p className="text-sm text-brand-light font-bold tracking-widest uppercase mb-6">{currentT.foundingMember}</p>
+                                    <a href="/client-dashboard/login" className="w-full py-4 bg-white text-black font-bold rounded-twelve hover:bg-gray-200 transition-all block text-center">
+                                        {currentT.claimOffer}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                {/* END: Offer Section --> */}
+
+                {/* BEGIN: Services Section */}
+                <section className="py-24 px-4 bg-[#0d0d10]" id="services">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl font-heading font-bold mb-4">{currentT.enterpriseTitle}</h2>
+                            <p className="text-gray-400">{currentT.enterpriseSub}</p>
+                        </div>
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 text-left rtl:text-right">
+                            {/* Card 1 */}
+                            <div className="glass-card p-8 rounded-twelve hover:border-brand/40 transition-all group">
+                                <div className="w-12 h-12 bg-brand/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                    <svg className="w-6 h-6 text-brand-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path></svg>
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">{currentT.srv1Title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">{currentT.srv1Desc}</p>
+                            </div>
+                            {/* Card 2 */}
+                            <div className="glass-card p-8 rounded-twelve hover:border-electric/40 transition-all group">
+                                <div className="w-12 h-12 bg-electric/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                    <svg className="w-6 h-6 text-electric" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path></svg>
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">{currentT.srv2Title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">{currentT.srv2Desc}</p>
+                            </div>
+                            {/* Card 3 */}
+                            <div className="glass-card p-8 rounded-twelve hover:border-brand/40 transition-all group">
+                                <div className="w-12 h-12 bg-brand/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                    <svg className="w-6 h-6 text-brand-light" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path></svg>
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">{currentT.srv3Title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">{currentT.srv3Desc}</p>
+                            </div>
+                            {/* Card 4 --> */}
+                            <div className="glass-card p-8 rounded-twelve hover:border-electric/40 transition-all group">
+                                <div className="w-12 h-12 bg-electric/20 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                                    <svg className="w-6 h-6 text-electric" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"></path></svg>
+                                </div>
+                                <h3 className="text-xl font-bold mb-3">{currentT.srv4Title}</h3>
+                                <p className="text-gray-400 text-sm leading-relaxed">{currentT.srv4Desc}</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                {/* END: Services Section --> */}
+
+                {/* BEGIN: Showcase Section */}
+                <section className="py-24 px-4 overflow-hidden" id="showcase">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 text-left rtl:text-right">
+                            <div>
+                                <h2 className="text-4xl font-heading font-bold mb-4">{currentT.showcaseTitle}</h2>
+                                <p className="text-gray-400">{currentT.showcaseSub}</p>
+                            </div>
+                            <a className="text-brand-light font-bold flex items-center gap-2 hover:gap-4 transition-all" href="#">
+                                {currentT.viewAll} <span>{lang === 'ar' ? '←' : '→'}</span>
+                            </a>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-8 text-left rtl:text-right">
+                            {/* Item 1 */}
+                            <div className="group relative overflow-hidden rounded-twelve">
+                                <img alt="Mauve Roses Template" className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANC0NZvWh1aNf5OcXD_FuTKLrby7eSD7ZmhgG12pfZ9gYiYGw0iopZjST4GyxX2UBxNegVGkZN08mxsw7AK7Bie0zK1PYlu3riWNUgB5MtHNYYKNhow92ch6mTSL_Ub1X2X7UFJ0OQTNJAkwrlz3vSZtG4PKW6J9BYjgTfexsFvL7VtBZuLQO4ARljCr1996MppvWHL1s7fc45wbkfC-S_JXv-iRhRJVNMVGfKoUUy9ab2j79TsZBmm4vF5KN24umix93QS73wcEg"/>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                                    <span className="text-xs font-bold text-brand-light tracking-widest uppercase mb-2">Luxury Florist</span>
+                                    <h3 className="text-2xl font-bold">Mauve Roses</h3>
+                                </div>
+                            </div>
+                            {/* Item 2 */}
+                            <div className="group relative overflow-hidden rounded-twelve">
+                                <img alt="Local Barber Template" className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd57AfzCiDHasq4-Tjrn4QpaP7742FvdBe4C4BcNsTixsgJLcFCJWGhadsEJeqAZH73gt3ok-vBiOefbjf7zhd9eIshw9NrYUd6Eh97lsv0zogbjKp3cWGR2Pqdm5mHGEWptHo_vLdhqg4GBvXYtUdcu6BdzB4rx5w2paPS23QPlkP850xCg5QBSqmVlAyrMeocXfaxnk0Kbn5QJL0aYfJWGKY2uP8q-OdYkHx6FfBEE9EgljhatB7dPxDdCoXxAQ-BVMa7Hiecgg"/>
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
+                                    <span className="text-xs font-bold text-electric tracking-widest uppercase mb-2">Service Business</span>
+                                    <h3 className="text-2xl font-bold">The Local Barber</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                {/* END: Showcase Section --> */}
+
+                {/* BEGIN: Trust Banner */}
+                <section className="py-12 border-y border-white/5 bg-white/[0.02]">
+                    <div className="max-w-7xl mx-auto px-4 text-center">
+                        <p className="text-gray-500 font-medium tracking-widest uppercase text-sm mb-0">
+                            {currentT.poweredBy} <span className="text-white font-bold px-2 py-1 bg-brand/20 rounded ml-2 mr-2">KSA Intelligence Ops</span>
+                        </p>
+                    </div>
+                </section>
+                {/* END: Trust Banner --> */}
+            </main>
+
+            {/* BEGIN: Footer */}
+            <footer className="pt-20 pb-10 px-4 bg-[#050507]">
+                <div className="max-w-7xl mx-auto">
+                    <div className="grid md:grid-cols-4 gap-12 mb-16 text-left rtl:text-right">
+                        <div className="col-span-2">
+                            <div className="flex items-center gap-2 mb-6">
+                                <div className="w-8 h-8 bg-brand rounded-twelve flex items-center justify-center">
+                                    <span className="text-white font-bold">K</span>
+                                </div>
+                                <span className="font-heading font-bold text-xl">KSA Verified</span>
+                            </div>
+                            <p className="text-gray-500 max-w-sm mb-6">
+                                {currentT.companyDesc}
+                            </p>
+                        </div>
+                        <div>
+                            <h4 className="font-bold mb-6">{currentT.solutions}</h4>
+                            <ul className="space-y-4 text-gray-500 text-sm">
+                                <li><a className="hover:text-brand-light transition-colors" href="#">E-commerce</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="#">Service Booking</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="#">Local Retail</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="#">Consulting</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold mb-6">{lang === 'en' ? 'Company' : 'الشركة'}</h4>
+                            <ul className="space-y-4 text-gray-500 text-sm">
+                                <li><a className="hover:text-brand-light transition-colors" href="#">About Us</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="#">Privacy Policy</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="#">Terms of Service</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="#">Contact</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+                        <p className="text-xs text-gray-600">{currentT.copyright}</p>
+                        <div className="flex gap-6 opacity-50 grayscale">
+                            {/* Placeholder for payment logos using text for now if images fail */}
+                            <span className="text-[10px] font-bold tracking-tighter">VISA</span>
+                            <span className="text-[10px] font-bold tracking-tighter">MADA</span>
+                            <span className="text-[10px] font-bold tracking-tighter">APPLE PAY</span>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+            {/* END: Footer --> */}
         </div>
     );
 };

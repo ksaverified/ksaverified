@@ -43,7 +43,7 @@ export default function Payment() {
                                 <p className="text-2xl font-black text-white">{t('payment.starterPlan')}</p>
                                 <p className="text-sm text-zinc-500">{t('payment.monthly')}</p>
                             </div>
-                            <p className="text-xl font-bold text-blue-500"> {t('payment.sar')} 99 <span className="text-xs text-zinc-600">{t('payment.perMo')}</span></p>
+                            <p className="text-xl font-bold text-blue-500"> {t('payment.sar')} {t('payment.price')} <span className="text-xs text-zinc-600">{t('payment.perMo')}</span></p>
                         </div>
                     </div>
 
