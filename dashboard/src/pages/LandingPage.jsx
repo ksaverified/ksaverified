@@ -320,10 +320,14 @@ const LandingPage = () => {
                             <span className="font-heading font-bold text-2xl tracking-tight">KSA <span className="text-brand">Verified</span></span>
                         </div>
                         {/* Mobile & Desktop Actions (Always visible) */}
-                        <div className="flex items-center gap-4">
-                            {/* Client Login (Hidden on small mobile if it feels too cramped, but let's try keeping it) */}
-                            <a href="/client-dashboard/login" className="hidden sm:block px-5 py-2 rounded-twelve border border-white/20 hover:bg-white/5 transition-all text-sm font-medium">
-                                {currentT.clientLogin}
+                        <div className="flex items-center gap-3">
+                            <a 
+                                href="/client-dashboard/login" 
+                                className="px-3 sm:px-5 py-2 rounded-twelve border border-white/20 hover:bg-white/5 transition-all text-sm font-medium flex items-center gap-2"
+                                title={currentT.clientLogin}
+                            >
+                                <User className="w-4 h-4" />
+                                <span className="hidden xs:inline">{currentT.clientLogin}</span>
                             </a>
                             
                             {/* Language Toggle */}
