@@ -32,7 +32,7 @@ const translations = {
             status: "Status",
             businessName: "Business Name",
             plan: "Plan",
-            starter: "Starter",
+            starter: "Founding Member",
             loading: "Loading your website preview...",
             noWebsite: "No Website Found",
             noWebsiteDesc: "We couldn't find a website associated with your account yet. If you just registered, please wait a few minutes or contact support."
@@ -109,7 +109,7 @@ const translations = {
             status: "الحالة",
             businessName: "اسم العمل",
             plan: "الخطة",
-            starter: "البداية",
+            starter: "عضو مؤسس",
             loading: "جاري تحميل معاينة موقعك...",
             noWebsite: "لم يتم العثور على موقع",
             noWebsiteDesc: "لم نتمكن من العثور على موقع مرتبط بحسابك بعد. إذا كنت قد سجلت للتو، يرجى الانتظار بضع دقائق أو الاتصال بالدعم."
