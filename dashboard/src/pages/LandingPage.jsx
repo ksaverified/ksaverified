@@ -1,7 +1,52 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Smartphone, CheckCircle2, ChevronRight, Zap, XCircle } from 'lucide-react';
 
 const LandingPage = () => {
     const [lang, setLang] = useState('en');
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [step, setStep] = useState(1); // 1: Phone, 2: Confirm/Manual, 3: Building, 4: Success
+    const [phone, setPhone] = useState('');
+    const [lookupResult, setLookupResult] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [manualData, setManualData] = useState({ name: '', category: '', description: '' });
+
+    const handleLookup = async () => {
+        setLoading(true);
+        try {
+            const resp = await fetch(`/api/lookup?phone=${encodeURIComponent(phone)}`);
+            if (resp.ok) {
+                const result = await resp.json();
+                setLookupResult(result.data);
+                setStep(2);
+            } else {
+                setLookupResult(null);
+                setStep(2);
+            }
+        } catch (err) {
+            console.error('Lookup failed', err);
+            setStep(2);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRegister = async (businessData) => {
+        setLoading(true);
+        setStep(3);
+        try {
+            await fetch('/api/register-lead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ businessData })
+            });
+            setTimeout(() => setStep(4), 3000); // Simulate build progress for UX
+        } catch (err) {
+            console.error('Registration failed', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         document.dir = lang === 'ar' ? 'rtl' : 'ltr';
@@ -87,6 +132,182 @@ const LandingPage = () => {
 
     return (
         <div className={`font-sans antialiased text-[#f8f9fa] bg-[#0a0a0c] ${lang === 'ar' ? 'font-arabic' : ''}`}>
+            {/* Onboarding Modal Overlay */}
+            <AnimatePresence>
+                {isModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div 
+                            initial={{ opacity: 0 }} 
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                            onClick={() => setIsModalOpen(false)}
+                        />
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="relative bg-[#121215] border border-white/10 p-8 rounded-[32px] max-w-lg w-full shadow-2xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand to-transparent opacity-50" />
+                            
+                            <button 
+                                onClick={() => setIsModalOpen(false)}
+                                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+                            >
+                                <XCircle className="h-6 w-6" />
+                            </button>
+
+                            {step === 1 && (
+                                <div className="space-y-6">
+                                    <div className="text-center">
+                                        <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand/10 border border-brand/20 mb-4">
+                                            <Smartphone className="h-8 w-8 text-brand" />
+                                        </div>
+                                        <h2 className="text-2xl font-heading font-bold">{lang === 'en' ? 'Build My Website' : 'ابنِ موقعي'}</h2>
+                                        <p className="text-gray-400 mt-2">{lang === 'en' ? 'Enter your WhatsApp number to start.' : 'أدخل رقم الواتساب الخاص بك للبدء.'}</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <input 
+                                            type="tel"
+                                            placeholder="966 5X XXX XXXX"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-brand/50 transition-all font-mono"
+                                        />
+                                        <button 
+                                            onClick={handleLookup}
+                                            disabled={!phone || loading}
+                                            className="w-full py-4 bg-brand hover:brightness-110 text-white font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-brand/20 flex items-center justify-center gap-2"
+                                        >
+                                            {loading ? (
+                                                <div className="h-5 w-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <span>{lang === 'en' ? 'CONTINUE' : 'استمرار'}</span>
+                                                    <ChevronRight className="h-5 w-5" />
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 2 && (
+                                <div className="space-y-6">
+                                    {lookupResult ? (
+                                        <>
+                                            <div className="text-center">
+                                                <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 border border-emerald-500/20 mb-4">
+                                                    <CheckCircle2 className="h-8 w-8 text-emerald-500" />
+                                                </div>
+                                                <h2 className="text-xl font-heading font-bold">{lang === 'en' ? 'Is this your business?' : 'هل هذا هو عملك؟'}</h2>
+                                                <div className="mt-4 p-4 bg-white/5 rounded-2xl border border-white/10">
+                                                    <p className="text-lg font-bold text-white leading-tight">{lookupResult.name}</p>
+                                                    <p className="text-sm text-gray-500 mt-1">{lookupResult.address}</p>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <button 
+                                                    onClick={() => setLookupResult(null)}
+                                                    className="py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all"
+                                                >
+                                                    {lang === 'en' ? 'Not me' : 'ليس أنا'}
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleRegister(lookupResult)}
+                                                    className="py-3 bg-brand text-white font-bold rounded-xl hover:brightness-110 transition-all shadow-lg shadow-brand/20"
+                                                >
+                                                    {lang === 'en' ? 'Yes, build it!' : 'نعم، ابنهِ!'}
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="text-center">
+                                                <h2 className="text-xl font-heading font-bold">{lang === 'en' ? 'Tell us about your business' : 'أخبرنا عن عملك'}</h2>
+                                                <p className="text-gray-500 text-sm mt-1">{lang === 'en' ? "We couldn't find you on Maps. Please fill in the details." : "لم نجدك على الخرائط. يرجى ملء التفاصيل."}</p>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <input 
+                                                    placeholder={lang === 'en' ? 'Business Name' : 'اسم العمل'}
+                                                    value={manualData.name}
+                                                    onChange={(e) => setManualData({...manualData, name: e.target.value})}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white"
+                                                />
+                                                <input 
+                                                    placeholder={lang === 'en' ? 'Category (e.g. Restaurant, Cafe)' : 'الفئة (مثلاً مطعم، مقهى)'}
+                                                    value={manualData.category}
+                                                    onChange={(e) => setManualData({...manualData, category: e.target.value})}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white"
+                                                />
+                                                <textarea 
+                                                    placeholder={lang === 'en' ? 'Short description of your services' : 'وصف قصير لخدماتك'}
+                                                    value={manualData.description}
+                                                    onChange={(e) => setManualData({...manualData, description: e.target.value})}
+                                                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white h-24"
+                                                />
+                                                <button 
+                                                    onClick={() => handleRegister({ ...manualData, phone, types: [manualData.category] })}
+                                                    disabled={!manualData.name || !manualData.category}
+                                                    className="w-full py-4 bg-brand text-white font-bold uppercase tracking-widest rounded-xl hover:brightness-110 transition-all shadow-lg shadow-brand/20"
+                                                >
+                                                    {lang === 'en' ? 'BUILD MY SITE' : 'ابنِ موقعي'}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
+                            {step === 3 && (
+                                <div className="text-center py-8 space-y-6">
+                                    <div className="relative h-24 w-24 mx-auto">
+                                        <div className="absolute inset-0 border-4 border-brand/20 rounded-full" />
+                                        <div className="absolute inset-0 border-4 border-brand border-t-transparent rounded-full animate-spin" />
+                                        <Zap className="absolute inset-0 m-auto h-12 w-12 text-brand animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-heading font-bold">{lang === 'en' ? 'Building Your Site...' : 'جاري بناء موقعك...'}</h2>
+                                        <p className="text-gray-400 mt-2">{lang === 'en' ? 'Gemini AI is crafting your professional design.' : 'يقوم Gemini AI بصياغة تصميمك الاحترافي.'}</p>
+                                    </div>
+                                    <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden border border-white/10">
+                                        <motion.div 
+                                            initial={{ width: 0 }}
+                                            animate={{ width: '100%' }}
+                                            transition={{ duration: 10, ease: "linear" }}
+                                            className="h-full bg-brand shadow-[0_0_15px_rgba(139,92,246,0.5)]"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {step === 4 && (
+                                <div className="text-center space-y-6">
+                                    <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-4 animate-bounce">
+                                        <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-heading font-bold tracking-tight">{lang === 'en' ? 'Almost Ready!' : 'جاهز تقريباً!'}</h2>
+                                        <p className="text-gray-400 mt-3 leading-relaxed">
+                                            {lang === 'en' 
+                                            ? "Great! We're finishing the touch-ups. You will receive a WhatsApp message with your preview link in a few minutes." 
+                                            : "رائع! نحن ننهي اللمسات الأخيرة. ستتلقى رسالة واتساب تحتوي على رابط المعاينة خلال بضع دقائق."}
+                                        </p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsModalOpen(false)}
+                                        className="w-full py-4 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all border border-white/10"
+                                    >
+                                        {lang === 'en' ? 'BACK TO HOME' : 'العودة للرئيسية'}
+                                    </button>
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
             {/* BEGIN: Navigation */}
             <nav className="fixed top-0 w-full z-50 glass-card border-b border-white/10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -136,9 +357,12 @@ const LandingPage = () => {
                             {currentT.heroSub}
                         </p>
                         <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-                            <a href="/client-dashboard/login" className="px-10 py-4 bg-brand hover:bg-brand-dark text-white font-bold rounded-twelve shadow-lg glow-purple transition-all text-lg min-w-[200px] flex items-center justify-center">
+                            <button 
+                                onClick={() => { setIsModalOpen(true); setStep(1); }}
+                                className="px-10 py-4 bg-brand hover:brightness-110 text-white font-bold rounded-twelve shadow-lg glow-purple transition-all text-lg min-w-[200px] flex items-center justify-center"
+                            >
                                 {currentT.getStarted}
-                            </a>
+                            </button>
                             <a href="#showcase" className="px-10 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-twelve transition-all text-lg min-w-[200px] flex items-center justify-center">
                                 {currentT.viewShowcase}
                             </a>
