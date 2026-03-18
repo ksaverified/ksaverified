@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Smartphone, CheckCircle2, ChevronRight, Zap, XCircle } from 'lucide-react';
+import { Smartphone, CheckCircle2, ChevronRight, Zap, XCircle, User } from 'lucide-react';
 
 const LandingPage = () => {
     const [lang, setLang] = useState('en');
@@ -313,9 +313,9 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-20">
                         {/* Logo */}
-                        <div className="flex items-center gap-2">
-                            <div className="w-10 h-10 bg-brand rounded-twelve flex items-center justify-center glow-purple">
-                                <span className="text-white font-bold text-xl">K</span>
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 flex items-center justify-center glow-gold">
+                                <img src="/logo.png" alt="KSA Verified Logo" className="w-full h-full object-contain rounded-twelve" />
                             </div>
                             <span className="font-heading font-bold text-2xl tracking-tight">KSA <span className="text-brand">Verified</span></span>
                         </div>
@@ -511,9 +511,9 @@ const LandingPage = () => {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid md:grid-cols-4 gap-12 mb-16 text-left rtl:text-right">
                         <div className="col-span-2">
-                            <div className="flex items-center gap-2 mb-6">
-                                <div className="w-8 h-8 bg-brand rounded-twelve flex items-center justify-center">
-                                    <span className="text-white font-bold">K</span>
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 flex items-center justify-center">
+                                    <img src="/logo.png" alt="KSA Verified Logo" className="w-full h-full object-contain" />
                                 </div>
                                 <span className="font-heading font-bold text-xl">KSA Verified</span>
                             </div>

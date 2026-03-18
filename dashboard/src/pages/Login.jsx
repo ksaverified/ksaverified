@@ -48,12 +48,15 @@ const Login = () => {
                 transition={{ duration: 0.4 }}
                 className="z-10 w-full max-w-md p-8 lg:p-12 mb-12"
             >
-                {/* Logo/Brand (Simple Text for now) */}
+                {/* Logo/Brand */}
                 <div className="text-center mb-10">
+                    <div className="inline-flex items-center justify-center mb-6">
+                        <img src="/logo.png" alt="KSA Verified" className="h-20 w-20 object-contain drop-shadow-2xl" />
+                    </div>
                     <h1 className="text-4xl font-black tracking-tight text-white mb-2">
-                        Dashboard<span className="text-blue-500">.</span>
+                        KSA <span className="text-blue-500">Verified</span>
                     </h1>
-                    <p className="text-gray-400 text-sm font-medium">Administrator Access Portal</p>
+                    <p className="text-gray-400 text-sm font-medium uppercase tracking-widest text-[10px]">Operations Console</p>
                 </div>
 
                 <div className="bg-[#11141b] p-8 rounded-2xl border border-gray-800 shadow-2xl relative overflow-hidden group">
