@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/AuthContext';
 import { useLanguage } from '../components/LanguageContext';
 import { Navigate } from 'react-router-dom';
-import { Lock, Phone, MessageCircle, Languages } from 'lucide-react';
+import { Lock, Phone, MessageCircle, Languages, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Login() {
@@ -76,6 +76,17 @@ export default function Login() {
 
     return (
         <div className="min-h-screen bg-[#0a0c10] flex items-center justify-center p-4">
+            {/* Back to Home Button */}
+            <div className={`absolute top-8 ${lang === 'ar' ? 'right-8' : 'left-8'} z-50`}>
+                <a
+                    href="https://ksaverified.com"
+                    className="flex items-center gap-2 px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-xl text-zinc-400 hover:text-white transition-all backdrop-blur-md"
+                >
+                    <ArrowLeft className={`w-4 h-4 ${lang === 'ar' ? 'rotate-180' : ''}`} />
+                    <span className="text-sm font-bold uppercase">{lang === 'ar' ? 'الرئيسية' : 'Home'}</span>
+                </a>
+            </div>
+
             {/* Language Switcher Float */}
             <div className={`absolute top-8 ${lang === 'ar' ? 'left-8' : 'right-8'} z-50`}>
                 <button
