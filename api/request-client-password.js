@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const axios = require('axios');
 const DatabaseService = require('../services/db');
+require('dotenv').config();
 
 module.exports = async function handler(request, response) {
     if (request.method !== 'POST') {
@@ -77,7 +78,8 @@ module.exports = async function handler(request, response) {
         }
 
         // 5. Send the password via Local WhatsApp Service
-        const whatsappServiceUrl = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:8080';
+        // Prioritize WHATSAPP_SERVICE_URL from env, default to 127.0.0.1:8081 for Docker local
+        const whatsappServiceUrl = process.env.WHATSAPP_SERVICE_URL || 'http://127.0.0.1:8081';
         const message = `Hello ${lead.name}! 💎\n\nYour temporary password for the KSA Verified Client Dashboard is: *${generatedPassword}*\n\nPlease log in using your phone number to manage your website.\n\nPortal: https://ksaverified.com/client-dashboard`;
 
         try {
@@ -88,9 +90,17 @@ module.exports = async function handler(request, response) {
             });
             console.log(`[Client-Auth] Sent password via local service to ${phone}`, waResponse.data);
         } catch (waError) {
-            console.error(`[Client-Auth] WhatsApp Service Error:`, waError.response?.data || waError.message);
+            console.error(`[Client-Auth] WhatsApp Service Connection Failed:`, {
+                url: whatsappServiceUrl,
+                error: waError.message,
+                code: waError.code,
+                response: waError.response?.data
+            });
             const errorDetail = waError.response?.data?.error || waError.message;
-            return response.status(500).json({ error: `WhatsApp Error: ${errorDetail}` });
+            return response.status(500).json({ 
+                error: `WhatsApp Error: ${errorDetail}`,
+                help: `Ensure your local WhatsApp Docker container is running on port 8081.`
+            });
         }
 
         return response.status(200).json({ success: true, message: 'Password sent successfully.' });
