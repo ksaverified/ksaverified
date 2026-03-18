@@ -1,69 +1,118 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
-import { Users, Globe2, CheckCircle, Clock, Map as MapIcon, MessageCircle, MessageSquare, Activity, ChevronRight, Languages } from 'lucide-react';
+import {
+    Users, Globe2, MessageSquare, TrendingUp,
+    MessageCircle, Activity, ChevronRight,
+    Radio, Zap, AlertTriangle, CheckCircle, Clock
+} from 'lucide-react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
-import { APIProvider, Map as GoogleMap, AdvancedMarker } from '@vis.gl/react-google-maps';
 
-const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
+// ─── Sub-components ──────────────────────────────────────────────
 
-export default function Home() {
-    const StatCard = ({ title, value, icon: CardIcon, color, delay }) => (
+// eslint-disable-next-line no-unused-vars
+const KpiCard = ({ title, value, icon: CardIcon, accent, sub, delay, linkTo }) => {
+    const card = (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay, duration: 0.4 }}
-            className="bg-surface p-6 rounded-2xl border border-zinc-800 flex items-center gap-4 hover:border-zinc-700 transition-colors shadow-lg"
+            transition={{ delay, duration: 0.35 }}
+            className={`relative bg-surface rounded-2xl border border-zinc-800 p-5 flex flex-col gap-3 hover:border-zinc-700 transition-all duration-200 shadow-lg hover:shadow-xl group overflow-hidden ${linkTo ? 'cursor-pointer' : ''}`}
         >
-            <div className={`p-4 rounded-xl ${color} bg-opacity-10`}>
-                <CardIcon className={`h-6 w-6 ${color.replace('bg-', 'text-')}`} />
+            <div className={`absolute inset-x-0 top-0 h-px bg-gradient-to-r ${accent} opacity-60`} />
+            <div className="flex justify-between items-start">
+                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${accent} bg-opacity-10 border border-white/5 flex items-center justify-center`}>
+                    <CardIcon className="h-5 w-5 text-white" />
+                </div>
+                {linkTo && <ChevronRight className="h-4 w-4 text-zinc-700 group-hover:text-zinc-400 transition-colors" />}
             </div>
             <div>
-                <p className="text-sm text-zinc-400 font-medium">{title}</p>
-                <h3 className="text-2xl font-bold text-zinc-100 mt-1">{value}</h3>
+                <p className="text-[11px] text-zinc-500 font-semibold uppercase tracking-widest mb-1">{title}</p>
+                <h3 className="text-3xl font-black text-zinc-100 leading-none">{value}</h3>
+                {sub && <p className="text-xs text-zinc-500 mt-1">{sub}</p>}
             </div>
         </motion.div>
     );
+    return linkTo ? <Link to={linkTo}>{card}</Link> : card;
+};
 
+const FunnelBar = ({ label, count, total, color }) => {
+    const pct = total > 0 ? Math.max(4, Math.round((count / total) * 100)) : 0;
+    return (
+        <div className="flex items-center gap-3">
+            <div className="w-28 shrink-0 text-right">
+                <span className="text-xs text-zinc-400 font-medium capitalize">{label}</span>
+            </div>
+            <div className="flex-1 bg-zinc-900 rounded-full h-6 overflow-hidden relative">
+                <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 0.8, delay: 0.3 }}
+                    className={`h-full rounded-full ${color} flex items-center justify-end pr-2`}
+                >
+                    {count > 0 && <span className="text-[10px] font-bold text-white/90 leading-none">{count}</span>}
+                </motion.div>
+            </div>
+            <div className="w-8 text-right">
+                <span className="text-xs font-bold text-zinc-300">{count}</span>
+            </div>
+        </div>
+    );
+};
+
+const statusConfig = {
+    scouted:            { label: 'Scouted',           color: 'bg-blue-500',    badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+    warming_sent:       { label: 'Warming Sent',       color: 'bg-sky-400',     badge: 'bg-sky-500/15 text-sky-400 border-sky-500/30' },
+    warmed:             { label: 'Warmed',             color: 'bg-amber-400',   badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+    created:            { label: 'Site Created',       color: 'bg-violet-500',  badge: 'bg-violet-500/15 text-violet-400 border-violet-500/30' },
+    retouched:          { label: 'Retouched',          color: 'bg-purple-400',  badge: 'bg-purple-500/15 text-purple-400 border-purple-500/30' },
+    published:          { label: 'Published',          color: 'bg-cyan-500',    badge: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30' },
+    pitched:            { label: 'Pitched',            color: 'bg-emerald-500', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+    interest_confirmed: { label: 'Hot Lead',           color: 'bg-orange-400',  badge: 'bg-orange-500/15 text-orange-400 border-orange-500/30' },
+    completed:          { label: 'Customer',           color: 'bg-indigo-400',  badge: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/30' },
+    invalid:            { label: 'Invalid',            color: 'bg-zinc-600',    badge: 'bg-zinc-700 text-zinc-400 border-zinc-600' },
+};
+
+const FUNNEL_STAGES = [
+    { key: 'scouted',            label: 'Scouted',    color: 'bg-blue-500' },
+    { key: 'warming_sent',       label: 'Warming',    color: 'bg-sky-400' },
+    { key: 'pitched',            label: 'Pitched',    color: 'bg-emerald-500' },
+    { key: 'interest_confirmed', label: 'Interested', color: 'bg-orange-400' },
+    { key: 'completed',          label: 'Customer',   color: 'bg-indigo-400' },
+];
+
+// ─── Main Component ──────────────────────────────────────────────
+
+export default function Home() {
     const [loading, setLoading] = useState(true);
-
-    // Data states
-    const [stats, setStats] = useState({ scouted: 0, created: 0, published: 0, pitched: 0, completed: 0 });
+    const [stats, setStats] = useState({});
     const [recentLeads, setRecentLeads] = useState([]);
     const [recentChats, setRecentChats] = useState([]);
     const [pendingAnswers, setPendingAnswers] = useState(0);
     const [recentLogs, setRecentLogs] = useState([]);
-    const [mapLeads, setMapLeads] = useState([]);
-    const [engagementStats, setEngagementStats] = useState({ warming: 0, promo: 0 });
-    const [queueSizes, setQueueSizes] = useState({ warming: 0, promotion: 0 });
-    const [retouchProgress, setRetouchProgress] = useState({ processed: 0, total: 0 });
-    const [retouchActivity, setRetouchActivity] = useState([]);
+    const [queueSizes, setQueueSizes] = useState({ warming: 0, pitchBacklog: 0, promoBacklog: 0 });
+    const [totalLeads, setTotalLeads] = useState(0);
 
     useEffect(() => {
-        fetchAllData(true);
+        fetchAll(true);
 
-        // Subscribe to relevant realtime updates
         const leadsSub = supabase.channel('home_leads')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => {
-                fetchStatsAndRecentLeads();
+                fetchLeads();
                 fetchQueueSizes();
-            })
-            .subscribe();
+            }).subscribe();
 
         const chatSub = supabase.channel('home_chats')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'chat_logs' }, () => {
                 fetchRecentChats();
                 fetchPendingAnswers();
-            })
-            .subscribe();
+            }).subscribe();
 
         const logsSub = supabase.channel('home_logs')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => {
                 fetchRecentLogs();
-                fetchEngagementStats();
-                fetchQueueSizes();
-            })
-            .subscribe();
+            }).subscribe();
 
         return () => {
             supabase.removeChannel(leadsSub);
@@ -73,61 +122,36 @@ export default function Home() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    async function fetchAllData(showLoading = false) {
+    async function fetchAll(showLoading = false) {
         if (showLoading) setLoading(true);
-        await Promise.all([
-            fetchStatsAndRecentLeads(),
-            fetchRecentChats(),
-            fetchPendingAnswers(),
-            fetchRecentLogs(),
-            fetchEngagementStats(),
-            fetchQueueSizes(),
-            fetchRetouchProgress(),
-            fetchRetouchActivity()
-        ]);
+        await Promise.all([fetchLeads(), fetchRecentChats(), fetchPendingAnswers(), fetchRecentLogs(), fetchQueueSizes()]);
         if (showLoading) setLoading(false);
     }
 
-    async function fetchStatsAndRecentLeads() {
+    async function fetchLeads() {
         try {
-            const { data, error } = await supabase
-                .from('leads')
-                .select('*')
-                .order('created_at', { ascending: false });
-
+            const { data, error } = await supabase.from('leads').select('*').order('updated_at', { ascending: false });
             if (error) throw error;
-
-            // Calculate stats with safe defaults
             const counts = data.reduce((acc, lead) => {
-                const status = lead.status || 'unknown';
-                acc[status] = (acc[status] || 0) + 1;
+                const s = lead.status || 'unknown';
+                acc[s] = (acc[s] || 0) + 1;
                 return acc;
-            }, { scouted: 0, interest_confirmed: 0, created: 0, published: 0, pitched: 0, completed: 0, unknown: 0 });
+            }, {});
             setStats(counts);
-
-            // Set Recent Leads (top 5)
-            setRecentLeads(data.slice(0, 5));
-
-            // Set Map Leads (top 20 with lat/lng)
-            const mapData = data.filter(l => l.lat && l.lng).slice(0, 20);
-            setMapLeads(mapData);
-
-        } catch (error) {
-            console.error('Error fetching leads:', error);
-        }
+            setTotalLeads(data.length);
+            setRecentLeads(data.filter(l => l.status !== 'invalid').slice(0, 7));
+        } catch (e) { console.error(e); }
     }
 
     async function fetchRecentChats() {
         try {
             const { data, error } = await supabase
                 .from('chat_logs')
-                .select('id, phone, message_in, message_out, translated_message, created_at')
+                .select('id, phone, message_in, message_out, created_at')
                 .order('created_at', { ascending: false })
-                .limit(4);
+                .limit(6);
             if (!error) setRecentChats(data || []);
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function fetchPendingAnswers() {
@@ -135,435 +159,312 @@ export default function Home() {
             const { count, error } = await supabase
                 .from('chat_logs')
                 .select('*', { count: 'exact', head: true })
-                .eq('status', 'pending');
+                .eq('status', 'pending')
+                .not('message_out', 'is', null); // Only count records with an actual AI reply to review
             if (!error) setPendingAnswers(count || 0);
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function fetchRecentLogs() {
         try {
             const { data, error } = await supabase
-                .from('logs')
-                .select('*')
-                .order('created_at', { ascending: false })
-                .limit(4);
+                .from('logs').select('*').order('created_at', { ascending: false }).limit(8);
             if (!error) setRecentLogs(data || []);
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    async function fetchEngagementStats() {
-        try {
-            const { count: warming } = await supabase
-                .from('logs')
-                .select('*', { count: 'exact', head: true })
-                .eq('action', 'warming_sent');
-
-            const { count: promo } = await supabase
-                .from('logs')
-                .select('*', { count: 'exact', head: true })
-                .eq('action', 'promo_sent');
-
-            setEngagementStats({ warming: warming || 0, promo: promo || 0 });
-        } catch (e) {
-            console.error('Error fetching engagement stats:', e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function fetchQueueSizes() {
         try {
-            // Warming Queue: Lead status 'scouted' minus those with 'warming_sent' logs
-            const { count: scoutedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'scouted');
-            const { count: warmingLogs } = await supabase.from('logs').select('*', { count: 'exact', head: true }).eq('action', 'warming_sent');
-
-            // Promotion Queue Breakdown
-            // 1. Awaiting Pitch: leads in 'published' status
-            const { count: publishedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'published');
-            // 2. Awaiting Promo: leads in 'pitched' status minus those with 'promo_sent' logs
-            const { count: pitchedCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pitched');
-            const { count: promoLogs } = await supabase.from('logs').select('*', { count: 'exact', head: true }).eq('action', 'promo_sent');
-
+            const [{ count: scoutedCount }, { count: publishedCount }, { count: pitchedCount }, { count: promoLogs }] = await Promise.all([
+                supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'scouted'),
+                supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+                supabase.from('leads').select('*', { count: 'exact', head: true }).eq('status', 'pitched'),
+                supabase.from('logs').select('*', { count: 'exact', head: true }).eq('action', 'promo_sent'),
+            ]);
             setQueueSizes({
-                warming: Math.max(0, (scoutedCount || 0) - (warmingLogs || 0)),
+                warming: scoutedCount || 0,
                 pitchBacklog: publishedCount || 0,
                 promoBacklog: Math.max(0, (pitchedCount || 0) - (promoLogs || 0)),
-                totalPromotion: Math.max(0, (publishedCount || 0) + (pitchedCount || 0) - (promoLogs || 0))
             });
-        } catch (e) {
-            console.error('Error fetching queue sizes:', e);
-        }
+        } catch (e) { console.error(e); }
     }
 
-    async function fetchRetouchProgress() {
-        try {
-            // Count total leads with website_html
-            const { count: total, error: totalError } = await supabase
-                .from('leads')
-                .select('*', { count: 'exact', head: true })
-                .not('website_html', 'is', null);
+    const activeConversions = (stats['interest_confirmed'] || 0) + (stats['pitched'] || 0);
+    const customers = stats['completed'] || 0;
+    const funnelMax = stats['scouted'] || 1;
 
-            if (totalError) throw totalError;
-
-            // Count retouches completed (recent logs)
-            // Note: Since we don't have a specific column for 'retouched_at', 
-            // we'll count entries in the logs table with action 'retouch_completed'
-            // or simply count leads updated in the last 24h as a proxy if needed.
-            // But let's use the logs approach as it's cleaner.
-            const { count: processed, error: logError } = await supabase
-                .from('logs')
-                .select('*', { count: 'exact', head: true })
-                .eq('action', 'retouch_completed');
-
-            if (logError) throw logError;
-
-            setRetouchProgress({ processed: processed || 0, total: total || 0 });
-        } catch (e) {
-            console.error('Error fetching retouch progress:', e);
-        }
-    }
-
-    async function fetchRetouchActivity() {
-        try {
-            const { data, error } = await supabase
-                .from('logs')
-                .select('*')
-                .eq('agent', 'retoucher')
-                .in('action', ['retouch_started', 'retouch_completed'])
-                .order('created_at', { ascending: false })
-                .limit(10);
-
-            if (error) throw error;
-            setRetouchActivity(data || []);
-        } catch (e) {
-            console.error('Error fetching retouch activity:', e);
-        }
-    }
-
-    // Helper formatting
-    const getStatusColor = (status) => {
-        const colors = {
-            scouted: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-            warmed: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-            created: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-            published: 'bg-sky-500/20 text-sky-400 border-sky-500/30',
-            pitched: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
-            completed: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30',
-            error: 'bg-red-500/20 text-red-400 border-red-500/30',
-        };
-        return colors[status] || 'bg-zinc-800 text-zinc-300 border-zinc-700';
+    const logColor = (status) => {
+        if (status === 'error') return 'text-red-400 bg-red-500/10';
+        if (status === 'success') return 'text-emerald-400 bg-emerald-500/10';
+        if (status === 'warning') return 'text-amber-400 bg-amber-500/10';
+        return 'text-blue-400 bg-blue-500/10';
     };
 
-    const getMarkerColor = (status) => {
-        const colors = { scouted: '#3b82f6', warmed: '#f59e0b', created: '#a855f7', published: '#0ea5e9', pitched: '#10b981', completed: '#6366f1' };
-        return colors[status] || '#71717a';
-    };
-
-    if (loading && Object.values(stats).every(v => v === 0)) {
-        return <div className="text-zinc-400 animate-pulse flex h-full items-center justify-center">Loading comprehensive dashboard...</div>;
+    if (loading && totalLeads === 0) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <div className="text-center space-y-3">
+                    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+                    <p className="text-zinc-500 text-sm">Loading Command Center...</p>
+                </div>
+            </div>
+        );
     }
-
-    // Determine map center
-    const mapCenter = mapLeads.length > 0
-        ? { lat: parseFloat(mapLeads[0].lat), lng: parseFloat(mapLeads[0].lng) }
-        : { lat: 24.7136, lng: 46.6753 }; // Default Riyadh
 
     return (
         <div className="space-y-6 pb-10">
 
-            {/* Top Row: Metric Cards */}
-            {/* Main Engagement Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <StatCard delay={0.1} title="Total Leads Processed" value={stats.scouted + stats.interest_confirmed + stats.created + stats.published + stats.pitched + stats.completed} icon={Users} color="bg-blue-500" />
-                <StatCard delay={0.2} title="Websites Ready" value={stats.published + stats.pitched + stats.completed} icon={Globe2} color="bg-purple-500" />
-                <StatCard delay={0.3} title="Pitches & Promos" value={stats.pitched + stats.completed + engagementStats.promo} icon={CheckCircle} color="bg-emerald-500" />
-                <StatCard delay={0.4} title="Interest Confirmed" value={stats.interest_confirmed} icon={Activity} color="bg-amber-500" />
-                <StatCard 
-                    delay={0.5} 
-                    title="Retouch Audit" 
-                    value={`${retouchProgress.processed} / ${retouchProgress.total}`} 
-                    icon={Globe2} 
-                    color="bg-sky-500" 
+            {/* ── Zone 1: Header ── */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-black text-zinc-100 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse inline-block" />
+                        Command Center
+                    </h1>
+                    <p className="text-zinc-500 text-sm mt-0.5">Real-time view of your entire sales pipeline</p>
+                </div>
+                <div className="text-xs text-zinc-600 font-mono hidden lg:block">
+                    Last updated: {new Date().toLocaleTimeString()}
+                </div>
+            </div>
+
+            {/* ── Zone 1: KPI Bar ── */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <KpiCard
+                    delay={0.05} title="Total Leads" value={totalLeads}
+                    icon={Radio} accent="from-blue-600 to-blue-400"
+                    sub={`${stats['invalid'] || 0} invalid filtered`}
+                    linkTo="/pipeline"
+                />
+                <KpiCard
+                    delay={0.1} title="Active Conversions" value={activeConversions}
+                    icon={TrendingUp} accent="from-emerald-600 to-emerald-400"
+                    sub={`${stats['interest_confirmed'] || 0} confirmed + ${stats['pitched'] || 0} pitched`}
+                    linkTo="/interest-confirmed"
+                />
+                <KpiCard
+                    delay={0.15} title="Paying Customers" value={customers}
+                    icon={CheckCircle} accent="from-indigo-600 to-purple-400"
+                    sub="status: completed"
+                    linkTo="/analytics"
+                />
+                <KpiCard
+                    delay={0.2} title="Pending AI Replies" value={pendingAnswers}
+                    icon={pendingAnswers > 0 ? AlertTriangle : MessageSquare}
+                    accent={pendingAnswers > 0 ? "from-amber-600 to-amber-400" : "from-zinc-600 to-zinc-400"}
+                    sub={pendingAnswers > 0 ? "Action required" : "All caught up"}
+                    linkTo="/answers"
                 />
             </div>
 
-            {/* Pipeline Queues (Backlogs) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <StatCard delay={0.5} title="Warming Queue (Backlog)" value={queueSizes.warming} icon={Clock} color="bg-zinc-500" />
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6, duration: 0.4 }}
-                    className="bg-surface p-6 rounded-2xl border border-zinc-800 flex flex-col justify-center hover:border-zinc-700 transition-colors shadow-lg"
-                >
-                    <div className="flex items-center gap-4 mb-3">
-                        <div className="p-4 rounded-xl bg-zinc-500 bg-opacity-10">
-                            <Clock className="h-6 w-6 text-zinc-500" />
-                        </div>
-                        <div>
-                            <p className="text-sm text-zinc-400 font-medium">Promotion Queue (Backlog)</p>
-                            <h3 className="text-2xl font-bold text-zinc-100 mt-1">{queueSizes.totalPromotion}</h3>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mt-2 pt-4 border-t border-zinc-800/50">
-                        <div>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-1">Awaiting Pitch</p>
-                            <p className="text-lg font-bold text-amber-400">{queueSizes.pitchBacklog}</p>
-                        </div>
-                        <div>
-                            <p className="text-[10px] text-zinc-500 uppercase tracking-wider font-bold mb-1">Awaiting Promo</p>
-                            <p className="text-lg font-bold text-emerald-400">{queueSizes.promoBacklog}</p>
-                        </div>
-                    </div>
-                </motion.div>
-            </div>
+            {/* ── Zone 2: Funnel + Chat Feed ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
-            {/* Bento Grid layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-                {/* Main Col: Pipeline Activity */}
+                {/* Sales Funnel */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-                    className="lg:col-span-2 bg-surface p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col"
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+                    className="lg:col-span-3 bg-surface rounded-2xl border border-zinc-800 p-6 shadow-xl"
                 >
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-blue-500" /> Recent Pipeline Activity
+                        <div>
+                            <h2 className="text-base font-bold text-zinc-100 flex items-center gap-2">
+                                <TrendingUp className="w-4 h-4 text-emerald-500" /> Sales Funnel
+                            </h2>
+                            <p className="text-xs text-zinc-500 mt-0.5">Lead progression across all pipeline stages</p>
+                        </div>
+                        <Link to="/pipeline" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                            Details <ChevronRight className="w-3 h-3" />
+                        </Link>
+                    </div>
+                    <div className="space-y-3">
+                        {FUNNEL_STAGES.map((stage) => (
+                            <FunnelBar
+                                key={stage.key}
+                                label={stage.label}
+                                count={stats[stage.key] || 0}
+                                total={funnelMax}
+                                color={stage.color}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pipeline Queues */}
+                    <div className="mt-6 pt-5 border-t border-zinc-800/50 grid grid-cols-3 gap-3">
+                        {[
+                            { label: 'Warming Queue', value: queueSizes.warming, color: 'text-blue-400', Icon: Radio },
+                            { label: 'Pitch Backlog', value: queueSizes.pitchBacklog, color: 'text-cyan-400', Icon: Globe2 },
+                            { label: 'Promo Backlog', value: queueSizes.promoBacklog, color: 'text-emerald-400', Icon: Zap },
+                        // eslint-disable-next-line no-unused-vars
+                        ].map(({ label, value, color, Icon: QueueIcon }) => (
+                            <div key={label} className="bg-zinc-900/60 rounded-xl p-3 border border-zinc-800/50 text-center">
+                                <QueueIcon className={`h-4 w-4 ${color} mx-auto mb-1`} />
+                                <p className={`text-xl font-black ${color}`}>{value}</p>
+                                <p className="text-[10px] text-zinc-500 font-medium mt-0.5">{label}</p>
+                            </div>
+                        ))}
+                    </div>
+                </motion.div>
+
+                {/* Live Conversation Feed */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                    className="lg:col-span-2 bg-surface rounded-2xl border border-zinc-800 p-5 shadow-xl flex flex-col"
+                >
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-base font-bold text-zinc-100 flex items-center gap-2">
+                            <MessageCircle className="w-4 h-4 text-emerald-500" /> Live Conversations
                         </h2>
-                        <Link to="/pipeline" className="text-sm text-zinc-400 hover:text-white flex items-center gap-1 transition-colors">
-                            View all <ChevronRight className="w-4 h-4" />
+                        <Link to="/whatsapp" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                            Inbox <ChevronRight className="w-3 h-3" />
                         </Link>
                     </div>
 
+                    <div className="flex-1 space-y-2 overflow-hidden">
+                        {recentChats.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-32 text-zinc-600">
+                                <MessageCircle className="h-8 w-8 mb-2 opacity-30" />
+                                <p className="text-xs">No recent messages</p>
+                            </div>
+                        ) : (
+                            recentChats.map(chat => (
+                                <div key={chat.id} className="flex gap-2.5 p-2.5 rounded-xl bg-zinc-900/60 border border-zinc-800/60 hover:border-zinc-700 transition-colors">
+                                    <div className={`w-1.5 h-auto rounded-full shrink-0 ${chat.message_in ? 'bg-emerald-500' : 'bg-blue-500'}`} />
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex justify-between items-baseline mb-0.5">
+                                            <span className="text-xs font-semibold text-zinc-200 truncate">
+                                                {chat.phone?.replace('@c.us', '') || 'Unknown'}
+                                            </span>
+                                            <span className="text-[10px] text-zinc-600 shrink-0 ml-2">
+                                                {new Date(chat.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-zinc-400 truncate leading-relaxed">
+                                            <span className={`font-medium mr-1 ${chat.message_in ? 'text-emerald-500/80' : 'text-blue-400/80'}`}>
+                                                {chat.message_in ? 'In:' : 'Out:'}
+                                            </span>
+                                            {chat.message_in || chat.message_out}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {pendingAnswers > 0 && (
+                        <Link to="/answers" className="mt-4 flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-colors">
+                            <div className="flex items-center gap-2">
+                                <AlertTriangle className="h-4 w-4 text-amber-400" />
+                                <span className="text-xs font-semibold text-amber-300">{pendingAnswers} AI replies need review</span>
+                            </div>
+                            <ChevronRight className="h-3.5 w-3.5 text-amber-400" />
+                        </Link>
+                    )}
+                </motion.div>
+            </div>
+
+            {/* ── Zone 3: Recent Leads + System Logs ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+
+                {/* Recent Leads */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                    className="lg:col-span-3 bg-surface rounded-2xl border border-zinc-800 shadow-xl overflow-hidden"
+                >
+                    <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-800/60">
+                        <h2 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                            <Users className="w-4 h-4 text-blue-500" /> Recent Lead Activity
+                        </h2>
+                        <Link to="/pipeline" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                            View all <ChevronRight className="w-3 h-3" />
+                        </Link>
+                    </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-zinc-500 uppercase bg-zinc-900/50">
-                                <tr>
-                                    <th className="px-4 py-3 rounded-tl-lg">Business Name</th>
-                                    <th className="px-4 py-3">Website</th>
+                            <thead>
+                                <tr className="text-[10px] text-zinc-600 uppercase tracking-wider border-b border-zinc-800/40">
+                                    <th className="px-6 py-3">Business</th>
                                     <th className="px-4 py-3">Status</th>
-                                    <th className="px-4 py-3 rounded-tr-lg text-right">Updated</th>
+                                    <th className="px-4 py-3">Website</th>
+                                    <th className="px-4 py-3 text-right">Updated</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {recentLeads.map((lead) => (
-                                    <tr key={lead.place_id} className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors">
-                                        <td className="px-4 py-3 font-medium text-zinc-200">{lead.name}</td>
-                                        <td className="px-4 py-3">
-                                            {lead.vercel_url ? (
-                                                <a href={lead.vercel_url} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline truncate max-w-[150px] inline-block">
-                                                    {lead.vercel_url.replace('https://', '')}
-                                                </a>
-                                            ) : (
-                                                <span className="text-zinc-600">-</span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className={`px-2.5 py-1 rounded-md text-xs font-medium border ${getStatusColor(lead.status)}`}>
-                                                {lead.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right text-zinc-500 text-xs">
-                                            {new Date(lead.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {recentLeads.length === 0 && <div className="text-center text-zinc-500 py-6">No leads found in pipeline.</div>}
-                    </div>
-
-                    {/* New Section: Recent Retouch Activity */}
-                    <div className="mt-10 pt-10 border-t border-zinc-800/50">
-                        <div className="flex justify-between items-center mb-6">
-                            <h2 className="text-xl font-bold text-zinc-100 flex items-center gap-2">
-                                <Globe2 className="w-5 h-5 text-sky-500" /> Recent Retouch Activity
-                            </h2>
-                        </div>
-
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-zinc-500 uppercase bg-zinc-900/50">
-                                    <tr>
-                                        <th className="px-4 py-3 rounded-tl-lg">Business Name</th>
-                                        <th className="px-4 py-3">Action</th>
-                                        <th className="px-4 py-3">Status</th>
-                                        <th className="px-4 py-3 rounded-tr-lg text-right">Time</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {retouchActivity.map((log) => (
-                                        <tr key={log.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors">
-                                            <td className="px-4 py-3 font-medium text-zinc-200">
-                                                {log.details?.name || "Unknown Business"}
-                                            </td>
+                                {recentLeads.map((lead) => {
+                                    const cfg = statusConfig[lead.status] || { label: lead.status, badge: 'bg-zinc-700 text-zinc-400 border-zinc-600' };
+                                    return (
+                                        <tr key={lead.place_id} className="border-b border-zinc-800/30 hover:bg-zinc-800/20 transition-colors">
+                                            <td className="px-6 py-3 font-medium text-zinc-200 max-w-[180px] truncate">{lead.name}</td>
                                             <td className="px-4 py-3">
-                                                <span className={`text-xs ${log.action === 'retouch_started' ? 'text-amber-400' : 'text-emerald-400'}`}>
-                                                    {log.action === 'retouch_started' ? 'Correction In Progress' : 'Correction Completed'}
+                                                <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold border ${cfg.badge}`}>
+                                                    {cfg.label}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
-                                                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${log.status === 'success' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'}`}>
-                                                    {log.status}
-                                                </span>
+                                                {lead.vercel_url ? (
+                                                    <a href={lead.vercel_url} target="_blank" rel="noreferrer"
+                                                        className="text-xs text-blue-400 hover:underline truncate max-w-[120px] inline-block">
+                                                        {lead.vercel_url.replace('https://', '')}
+                                                    </a>
+                                                ) : <span className="text-zinc-700 text-xs">—</span>}
                                             </td>
-                                            <td className="px-4 py-3 text-right text-zinc-500 text-xs">
-                                                {new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                            <td className="px-4 py-3 text-right text-zinc-600 text-[11px]">
+                                                {new Date(lead.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </td>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            {retouchActivity.length === 0 && <div className="text-center text-zinc-500 py-6">No retouch activity found.</div>}
-                        </div>
+                                    );
+                                })}
+                                {recentLeads.length === 0 && (
+                                    <tr><td colSpan={4} className="px-6 py-8 text-center text-zinc-600 text-xs">No leads found in pipeline.</td></tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 </motion.div>
 
-                {/* Right Col Top: Mini Map */}
+                {/* System Live Log */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-                    className="bg-surface rounded-2xl border border-zinc-800 shadow-xl flex flex-col overflow-hidden relative min-h-[300px]"
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
+                    className="lg:col-span-2 bg-surface rounded-2xl border border-zinc-800 shadow-xl flex flex-col overflow-hidden"
                 >
-                    <div className="absolute top-0 left-0 right-0 p-4 bg-gradient-to-b from-zinc-950/80 to-transparent z-10 flex justify-between items-start pointer-events-none">
-                        <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2 drop-shadow-md">
-                            <MapIcon className="w-5 h-5 text-emerald-500" /> Live Scout Map
+                    <div className="flex justify-between items-center px-5 py-4 border-b border-zinc-800/60">
+                        <h2 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                            <Activity className="w-4 h-4 text-indigo-400" /> System Logs
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         </h2>
-                        <Link to="/map" className="pointer-events-auto bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 hover:bg-zinc-800 text-xs text-white px-2.5 py-1.5 rounded-md transition-colors shadow-lg">
-                            Expand
+                        <Link to="/logs" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                            Full log <ChevronRight className="w-3 h-3" />
                         </Link>
                     </div>
 
-                    {GOOGLE_MAPS_API_KEY ? (
-                        <div className="flex-1">
-                            <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
-                                <GoogleMap
-                                    defaultCenter={mapCenter}
-                                    defaultZoom={11}
-                                    disableDefaultUI={true}
-                                    mapId="drop_mini_map"
-                                    options={{ zoomControl: false, gestureHandling: 'none' }}
-                                >
-                                    {mapLeads.map(lead => (
-                                        <AdvancedMarker key={lead.place_id} position={{ lat: parseFloat(lead.lat), lng: parseFloat(lead.lng) }}>
-                                            <div className="w-3 h-3 rounded-full border border-white/50 shadow-lg shadow-black/50" style={{ backgroundColor: getMarkerColor(lead.status) }} />
-                                        </AdvancedMarker>
-                                    ))}
-                                </GoogleMap>
-                            </APIProvider>
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex items-center justify-center bg-zinc-900/50 p-6 text-center text-sm text-zinc-500">
-                            Google Maps API Key required for preview.
-                        </div>
-                    )}
-                </motion.div>
-
-                {/* Bottom Row Col 1: WhatsApp Snippets */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                    className="bg-surface p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col"
-                >
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                            <MessageCircle className="w-5 h-5 text-emerald-500" /> Recent Chats
-                        </h2>
-                        <Link to="/whatsapp" className="text-zinc-500 hover:text-white transition-colors"><ChevronRight className="w-5 h-5" /></Link>
-                    </div>
-                    <div className="flex-1 flex flex-col gap-3">
-                        {recentChats.length === 0 ? (
-                            <div className="text-center text-zinc-600 text-sm py-4">No recent messages.</div>
-                        ) : (
-                            recentChats.map(chat => (
-                                <div key={chat.id} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <span className="text-xs font-bold text-zinc-300 truncate">{chat.leads?.name || chat.phone.replace('@c.us', '')}</span>
-                                        <span className="text-[10px] text-zinc-500">{new Date(chat.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                    </div>
-                                    <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed flex items-center gap-1.5 overflow-hidden">
-                                        {chat.message_in ? (
-                                            <span className="text-zinc-500 mr-1 shrink-0">Inbox:</span>
-                                        ) : (
-                                            <span className="text-emerald-500/80 mr-1 shrink-0">Out:</span>
-                                        )}
-                                        <span className="truncate flex-1">
-                                            {chat.message_in || chat.message_out}
-                                        </span>
-                                        {chat.message_in && chat.translated_message && chat.translated_message !== chat.message_in && (
-                                            <Languages className="w-3 h-3 text-zinc-600 shrink-0" title={`Translation: ${chat.translated_message}`} />
-                                        )}
-                                    </p>
-                                </div>
-                            ))
-                        )}
-                    </div>
-                </motion.div>
-
-                {/* Bottom Row Col 2: AI Training Alert */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-                    className="bg-surface p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col justify-between relative overflow-hidden group"
-                >
-                    <div className={`absolute inset-0 opacity-10 transition-opacity group-hover:opacity-20 ${pendingAnswers > 0 ? 'bg-amber-500' : 'bg-zinc-500'}`} />
-
-                    <div className="relative z-10 flex justify-between items-start">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${pendingAnswers > 0 ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : 'bg-zinc-800 text-zinc-500 border border-zinc-700'}`}>
-                            <MessageSquare className="w-6 h-6" />
-                        </div>
-                        <Link to="/answers" className="bg-zinc-900 border border-zinc-700 hover:border-zinc-500 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-300 transition-colors">
-                            Manage
-                        </Link>
-                    </div>
-
-                    <div className="relative z-10 mt-6">
-                        <h3 className="text-4xl font-bold text-zinc-100">{pendingAnswers}</h3>
-                        <p className="text-sm font-medium mt-1 text-zinc-400">
-                            {pendingAnswers > 0 ? (
-                                <span className="text-amber-400">AI replies require review</span>
-                            ) : (
-                                "No pending replies to review"
-                            )}
-                        </p>
-                        <p className="text-xs text-zinc-500 mt-2 line-clamp-2">
-                            Approve or correct the AI's autonomous responses so it learns your style.
-                        </p>
-                    </div>
-                </motion.div>
-
-                {/* Bottom Row Col 3: System Health / Logs */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.9 }}
-                    className="bg-surface p-6 rounded-2xl border border-zinc-800 shadow-xl flex flex-col"
-                >
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-lg font-bold text-zinc-100 flex items-center gap-2">
-                            <Activity className="w-5 h-5 text-indigo-500" /> System Logs
-                        </h2>
-                        <Link to="/logs" className="text-zinc-500 hover:text-white transition-colors"><ChevronRight className="w-5 h-5" /></Link>
-                    </div>
-
-                    <div className="flex-1 flex flex-col gap-2 font-mono text-xs overflow-hidden relative">
-                        {/* Fade out text at the bottom */}
-                        <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-surface to-transparent z-10 pointer-events-none" />
-
+                    <div className="flex-1 overflow-hidden px-4 py-3 space-y-2 font-mono text-xs relative">
+                        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-surface to-transparent z-10 pointer-events-none" />
                         {recentLogs.length === 0 ? (
-                            <div className="text-center text-zinc-600 py-4 font-sans">No recent activity.</div>
+                            <div className="text-zinc-600 text-center py-6 font-sans">No recent system activity.</div>
                         ) : (
                             recentLogs.map(log => (
-                                <div key={log.id} className="flex gap-2 text-zinc-400 items-start">
-                                    <span className="text-zinc-600 shrink-0">[{new Date(log.created_at).toLocaleTimeString([], { hour12: false })}]</span>
-                                    <span className={`px-1.5 rounded shrink-0 ${log.status === 'error' ? 'bg-red-500/20 text-red-400' : log.status === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                                <div key={log.id} className="flex gap-2 items-start text-zinc-400 leading-relaxed">
+                                    <span className="text-zinc-700 shrink-0 text-[10px] mt-0.5">
+                                        {new Date(log.created_at).toLocaleTimeString([], { hour12: false })}
+                                    </span>
+                                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0 ${logColor(log.status)}`}>
                                         {log.agent}
                                     </span>
-                                    <span className="truncate">{log.action}</span>
+                                    <span className="truncate text-[11px]">{log.action}</span>
                                 </div>
                             ))
                         )}
                     </div>
-                </motion.div>
 
+                    {/* Status card: Pipeline Timing */}
+                    <div className="px-4 py-3 border-t border-zinc-800/60 bg-zinc-900/40">
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                            <Clock className="h-3.5 w-3.5 text-zinc-600" />
+                            <span>Pipeline runs automatically every 60 min</span>
+                        </div>
+                    </div>
+                </motion.div>
             </div>
+
         </div>
     );
 }

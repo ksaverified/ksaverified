@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 const BUCKET_NAME = 'whatsapp_sessions';
 const SESSION_FILE = 'wwebjs_auth.zip';
 const AUTH_DIR = path.join(__dirname, '.wwebjs_auth');
