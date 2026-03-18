@@ -5,7 +5,7 @@
  */
 class PublisherAgent {
   constructor() {
-    this.baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || 'https://drop-servicing-pipeline.vercel.app';
+    this.baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || 'https://ksaverified.com';
   }
 
   /**
@@ -446,11 +446,11 @@ class PublisherAgent {
    * @param {string} placeId - The unique lead / place ID
    * @returns {string} The dynamic Vercel URL
    */
-  async handlePublish(placeId) {
+  async handlePublish(placeId, slug = null) {
     if (!placeId) return null;
 
-    // Construct the live URL pointing to the new dynamic site route
-    const liveUrl = `${this.baseUrl}/site/${placeId}`;
+    // Use slug if available for the new vanity URLs, fallback to /site/id
+    const liveUrl = slug ? `${this.baseUrl}/${slug}` : `${this.baseUrl}/site/${placeId}`;
     console.log(`[Publisher] Generated dynamic site link: ${liveUrl}`);
     return liveUrl;
   }

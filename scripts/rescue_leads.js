@@ -33,7 +33,7 @@ async function rescueLeads() {
             try {
                 // 2. Publish (deploy to Vercel dynamically)
                 console.log(`[Rescue] Publishing site for ${lead.name}...`);
-                const liveUrl = await publisher.handlePublish(lead.place_id);
+                const liveUrl = await publisher.handlePublish(lead.place_id, lead.slug);
                 console.log(`[Rescue] Site Link Generated: ${liveUrl}`);
 
                 // 3. Update Status

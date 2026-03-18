@@ -101,6 +101,7 @@ class Orchestrator {
           phone: activeDbLead.phone,
           placeId: activeDbLead.place_id,
           address: activeDbLead.address,
+          slug: activeDbLead.slug,
           location: { lat: activeDbLead.lat, lng: activeDbLead.lng },
           photos: activeDbLead.photos || []
         };
@@ -139,7 +140,7 @@ class Orchestrator {
 
           if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
             await this.db.addLog('publisher', 'deployment_started', activeLead.placeId, {}, 'info');
-            vercelUrl = await this.publisher.handlePublish(activeLead.placeId);
+            vercelUrl = await this.publisher.handlePublish(activeLead.placeId, activeLead.slug);
             await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: vercelUrl });
           }
 

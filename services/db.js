@@ -56,11 +56,16 @@ class DatabaseService {
      */
     async upsertLead(lead) {
         return this.withRetry(async () => {
+            let slug = lead.name ? lead.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : null;
+            if (slug && slug.endsWith('-')) slug = slug.slice(0, -1);
+            if (slug && slug.startsWith('-')) slug = slug.slice(1);
+
             const { data, error } = await this.supabase
                 .from('leads')
                 .upsert({
                     place_id: lead.placeId,
                     name: lead.name,
+                    slug: slug,
                     phone: lead.phone,
                     address: lead.address,
                     lat: lead.location?.lat || null,

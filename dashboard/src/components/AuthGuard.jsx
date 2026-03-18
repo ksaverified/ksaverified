@@ -18,7 +18,7 @@ const AuthGuard = ({ children }) => {
 
     if (!user) {
         // Redirect to login but save the current location we were trying to access
-        return <Navigate to="/login" state={{ from: location }} replace />;
+        return <Navigate to="/manage" state={{ from: location }} replace />;
     }
 
     // Mandatory check for the admin email
@@ -36,7 +36,7 @@ const AuthGuard = ({ children }) => {
                     Your account (<strong>{user.email}</strong>) does not have the required permissions.
                 </p>
                 <button
-                    onClick={() => window.location.href = '/login'}
+                    onClick={() => window.location.href = '/manage'}
                     className="mt-8 px-6 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm font-medium transition-colors"
                 >
                     Back to Login

@@ -5,6 +5,13 @@
             "maxDuration": 120
         }
     },
+    "redirects": [
+        {
+            "source": "/login",
+            "destination": "/client-dashboard/login",
+            "permanent": false
+        }
+    ],
     "rewrites": [
         {
             "source": "/api/(.*)",
@@ -19,7 +26,15 @@
             "destination": "/client-dashboard/index.html"
         },
         {
-            "source": "/:path((?!.*\\.).*)",
+            "source": "/(manage|pipeline|websites|map|answers|analytics|settings|whatsapp|interest-confirmed|logs)(.*)",
+            "destination": "/index.html"
+        },
+        {
+            "source": "/:slug((?!.*\\.).*)",
+            "destination": "/api/vanity?slug=$1"
+        },
+        {
+            "source": "/(.*)",
             "destination": "/index.html"
         }
     ]

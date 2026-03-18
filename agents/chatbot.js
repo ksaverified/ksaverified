@@ -134,7 +134,7 @@ We are finalizing your custom AI-powered website now. You will receive a link to
 
             // Fallbacks for unknown numbers
             const businessName = lead ? lead.name : "Valued Business";
-            const previewUrl = lead ? lead.vercel_url : "https://drop-servicing-pipeline.vercel.app/client-dashboard";
+            const previewUrl = lead ? lead.vercel_url : "https://ksaverified.com/login";
             const currentStatus = lead ? lead.status : "new inquiry";
 
             const prompt = `

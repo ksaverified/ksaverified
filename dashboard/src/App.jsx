@@ -20,7 +20,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           {/* Public Route */}
-          <Route path="/login" element={<Login />} />
+          <Route path="/manage" element={<Login />} />
 
           {/* Protected Routes */}
           <Route path="/" element={

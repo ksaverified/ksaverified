@@ -4,7 +4,8 @@ const axios = require('axios');
 const qrImage = require('qr-image');
 const { downloadSession, uploadSession } = require('./supabaseStorage');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+require('dotenv').config();
+const PORT = process.env.PORT || 8080;
 
 const app = express();
 app.use(express.json());
@@ -247,7 +248,13 @@ async function startWhatsApp() {
         }
 
         const img = qrImage.image(qrCodeData, { type: 'png', size: 10 });
-        res.writeHead(200, { 'Content-Type': 'image/png' });
+        res.writeHead(200, { 
+            'Content-Type': 'image/png',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0',
+            'Surrogate-Control': 'no-store'
+        });
         img.pipe(res);
     });
 
