@@ -13,30 +13,6 @@ class ScoutAgent {
     this.baseURL = 'https://places.googleapis.com/v1/places:searchText';
   }
 
-  /**
-   * Formats a Saudi phone number for optimal lookup in Google Places API
-   * @param {string} phone - Input phone number
-   * @returns {string} Formatted phone (e.g., +966 5X XXX XXXX)
-   */
-  formatSaudiPhone(phone) {
-    const digits = phone.replace(/\D/g, '');
-    let core = digits;
-    
-    if (digits.startsWith('966')) {
-      core = digits.substring(3);
-    } else if (digits.startsWith('05')) {
-      core = digits.substring(1);
-    } else if (digits.startsWith('5')) {
-      core = digits;
-    }
-
-    // Standard Saudi mobile: 5X XXX XXXX
-    if (core.length === 9) {
-      return `+966 ${core.substring(0, 2)} ${core.substring(2, 5)} ${core.substring(5)}`;
-    }
-    
-    return phone; // Fallback to original if not a standard mobile format
-  }
 
   /**
    * Finds a place using a phone number
@@ -44,58 +20,71 @@ class ScoutAgent {
    * @returns {Promise<Object|null>} The place details or null if not found
    */
   async findPlaceByPhone(phone) {
-    const formatted = this.formatSaudiPhone(phone);
-    console.log(`[Scout] Searching for place by phone: [${phone}] (formatted: [${formatted}])...`);
-    
-    try {
-      const fieldMask = 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.websiteUri,places.internationalPhoneNumber,places.reviews,places.photos';
-      
-      const response = await axios.post(this.baseURL, {
-        textQuery: formatted
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': this.apiKey,
-          'X-Goog-FieldMask': fieldMask,
-          'Referer': 'https://ksaverified.com'
-        }
-      });
+    const digits = phone.replace(/\D/g, '');
+    let core = digits;
+    if (digits.startsWith('966')) core = digits.substring(3);
+    else if (digits.startsWith('05')) core = digits.substring(1);
+    else if (digits.startsWith('5')) core = digits;
 
-      if (response.data.places && response.data.places.length > 0) {
-        const place = response.data.places[0];
-        console.log(`[Scout] Found place: ${place.displayName.text} (${place.id})`);
+    // Try these formats in order
+    const formats = [
+      `+966${core}`,              // Compact: +9665XXXXXXXX
+      `+966 ${core.substring(0, 2)} ${core.substring(2, 5)} ${core.substring(5)}`, // Spaced: +966 5X XXX XXXX
+      `0${core}`                  // Local: 05XXXXXXXX
+    ];
+
+    for (const f of formats) {
+      console.log(`[Scout] Searching for place by phone: [${phone}] (trying format: [${f}])...`);
+      
+      try {
+        const fieldMask = 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.websiteUri,places.internationalPhoneNumber,places.reviews,places.photos';
         
-        const topReviews = place.reviews
-          ? place.reviews.filter(r => r.rating >= 4).slice(0, 3).map(r => r.text?.text || r.originalText?.text)
-          : [];
+        const response = await axios.post(this.baseURL, {
+          textQuery: f
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': this.apiKey,
+            'X-Goog-FieldMask': fieldMask,
+            'Referer': 'https://ksaverified.com'
+          }
+        });
 
-        const photos = place.photos
-          ? place.photos.slice(0, 5).map(p => `https://places.googleapis.com/v1/${p.name}/media?maxwidth=800&key=${this.apiKey}`)
-          : [];
+        if (response.data.places && response.data.places.length > 0) {
+          const place = response.data.places[0];
+          console.log(`[Scout] Found place: ${place.displayName.text} (${place.id}) for format [${f}]`);
+          
+          const topReviews = place.reviews
+            ? place.reviews.filter(r => r.rating >= 4).slice(0, 3).map(r => r.text?.text || r.originalText?.text)
+            : [];
 
-        return {
-          placeId: place.id,
-          name: place.displayName.text,
-          phone: place.internationalPhoneNumber || phone,
-          address: place.formattedAddress,
-          location: {
-            lat: place.location?.latitude,
-            lng: place.location?.longitude
-          },
-          website: place.websiteUri,
-          types: place.types || [],
-          reviews: topReviews,
-          photos: photos
-        };
+          const photos = place.photos
+            ? place.photos.slice(0, 5).map(p => `https://places.googleapis.com/v1/${p.name}/media?maxwidth=800&key=${this.apiKey}`)
+            : [];
+
+          return {
+            placeId: place.id,
+            name: place.displayName.text,
+            phone: place.internationalPhoneNumber || phone,
+            address: place.formattedAddress,
+            location: {
+              lat: place.location?.latitude,
+              lng: place.location?.longitude
+            },
+            website: place.websiteUri,
+            types: place.types || [],
+            reviews: topReviews,
+            photos: photos
+          };
+        }
+      } catch (error) {
+        console.error(`[Scout] Error in findPlaceByPhone with format [${f}]: ${error.message}`);
+        // Continue to next format
       }
-      
-      console.log(`[Scout] No place found for phone: ${phone}`);
-      return null;
-    } catch (error) {
-      console.error(`[Scout] Error in findPlaceByPhone: ${error.message}`);
-      if (error.response) console.error(`[Scout] API Details: ${JSON.stringify(error.response.data)}`);
-      return null;
     }
+    
+    console.log(`[Scout] No place found for phone: ${phone} after trying all formats.`);
+    return null;
   }
 
   /**
