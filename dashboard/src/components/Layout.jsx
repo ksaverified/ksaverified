@@ -21,33 +21,33 @@ const NAV_SECTIONS = [
         label: 'Awareness',
         color: 'text-blue-400',
         items: [
-            { to: '/pipeline', icon: Radio, label: 'Lead Pipeline' },
-            { to: '/map', icon: MapIcon, label: 'Scout Map' },
-            { to: '/websites', icon: Globe, label: 'Live Sites' },
+            { to: '/admin/pipeline', icon: Radio, label: 'Lead Pipeline' },
+            { to: '/admin/map', icon: MapIcon, label: 'Scout Map' },
+            { to: '/admin/websites', icon: Globe, label: 'Live Sites' },
         ]
     },
     {
         label: 'Conversion',
         color: 'text-emerald-400',
         items: [
-            { to: '/whatsapp', icon: MessageCircle, label: 'WhatsApp Inbox' },
-            { to: '/interest-confirmed', icon: UserCheck, label: 'Hot Leads' },
-            { to: '/answers', icon: MessageSquare, label: 'AI Reply Review' },
+            { to: '/admin/whatsapp', icon: MessageCircle, label: 'WhatsApp Inbox' },
+            { to: '/admin/interest-confirmed', icon: UserCheck, label: 'Hot Leads' },
+            { to: '/admin/answers', icon: MessageSquare, label: 'AI Reply Review' },
         ]
     },
     {
         label: 'Retention',
         color: 'text-purple-400',
         items: [
-            { to: '/analytics', icon: BarChart3, label: 'Performance' },
+            { to: '/admin/analytics', icon: BarChart3, label: 'Performance' },
         ]
     },
     {
         label: 'System',
         color: 'text-zinc-500',
         items: [
-            { to: '/logs', icon: Activity, label: 'Live Logs' },
-            { to: '/settings', icon: Settings, label: 'Settings' },
+            { to: '/admin/logs', icon: Activity, label: 'Live Logs' },
+            { to: '/admin/settings', icon: Settings, label: 'Settings' },
         ]
     },
 ];

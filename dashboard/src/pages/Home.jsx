@@ -234,26 +234,26 @@ export default function Home() {
                     delay={0.05} title="Total Leads" value={totalLeads}
                     icon={Radio} accent="from-blue-600 to-blue-400"
                     sub={`${stats['invalid'] || 0} invalid filtered`}
-                    linkTo="/pipeline"
+                    linkTo="/admin/pipeline"
                 />
                 <KpiCard
                     delay={0.1} title="Active Conversions" value={activeConversions}
                     icon={TrendingUp} accent="from-emerald-600 to-emerald-400"
                     sub={`${stats['interest_confirmed'] || 0} confirmed + ${stats['pitched'] || 0} pitched`}
-                    linkTo="/interest-confirmed"
+                    linkTo="/admin/interest-confirmed"
                 />
                 <KpiCard
                     delay={0.15} title="Paying Customers" value={customers}
                     icon={CheckCircle} accent="from-indigo-600 to-purple-400"
                     sub="status: completed"
-                    linkTo="/analytics"
+                    linkTo="/admin/analytics"
                 />
                 <KpiCard
                     delay={0.2} title="Pending AI Replies" value={pendingAnswers}
                     icon={pendingAnswers > 0 ? AlertTriangle : MessageSquare}
                     accent={pendingAnswers > 0 ? "from-amber-600 to-amber-400" : "from-zinc-600 to-zinc-400"}
                     sub={pendingAnswers > 0 ? "Action required" : "All caught up"}
-                    linkTo="/answers"
+                    linkTo="/admin/answers"
                 />
             </div>
 
@@ -272,7 +272,7 @@ export default function Home() {
                             </h2>
                             <p className="text-xs text-zinc-500 mt-0.5">Lead progression across all pipeline stages</p>
                         </div>
-                        <Link to="/pipeline" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                        <Link to="/admin/pipeline" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
                             Details <ChevronRight className="w-3 h-3" />
                         </Link>
                     </div>
@@ -314,7 +314,7 @@ export default function Home() {
                         <h2 className="text-base font-bold text-zinc-100 flex items-center gap-2">
                             <MessageCircle className="w-4 h-4 text-emerald-500" /> Live Conversations
                         </h2>
-                        <Link to="/whatsapp" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                        <Link to="/admin/whatsapp" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
                             Inbox <ChevronRight className="w-3 h-3" />
                         </Link>
                     </div>
@@ -351,7 +351,7 @@ export default function Home() {
                     </div>
 
                     {pendingAnswers > 0 && (
-                        <Link to="/answers" className="mt-4 flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-colors">
+                        <Link to="/admin/answers" className="mt-4 flex items-center justify-between p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-colors">
                             <div className="flex items-center gap-2">
                                 <AlertTriangle className="h-4 w-4 text-amber-400" />
                                 <span className="text-xs font-semibold text-amber-300">{pendingAnswers} AI replies need review</span>
@@ -374,7 +374,7 @@ export default function Home() {
                         <h2 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
                             <Users className="w-4 h-4 text-blue-500" /> Recent Lead Activity
                         </h2>
-                        <Link to="/pipeline" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                        <Link to="/admin/pipeline" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
                             View all <ChevronRight className="w-3 h-3" />
                         </Link>
                     </div>
@@ -431,7 +431,7 @@ export default function Home() {
                             <Activity className="w-4 h-4 text-indigo-400" /> System Logs
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                         </h2>
-                        <Link to="/logs" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
+                        <Link to="/admin/logs" className="text-xs text-zinc-500 hover:text-white flex items-center gap-1 transition-colors">
                             Full log <ChevronRight className="w-3 h-3" />
                         </Link>
                     </div>
