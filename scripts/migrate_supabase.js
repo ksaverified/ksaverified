@@ -137,7 +137,7 @@ async function migrateUsers() {
             } else {
                 // Attempt to recreate user
                 const userData = {
-                    email: user.email.replace('alatlas.local', 'ksaverified.com'),
+                    email: user.email.replace('ksaverified.local', 'ksaverified.com'),
                     email_confirm: true,
                     phone: user.phone,
                     phone_confirm: !!user.phone_confirmed_at,
