@@ -64,7 +64,7 @@ const SalesmanOnboarding = () => {
     const handleRegister = async () => {
         setLoading(true);
         try {
-            const resp = await fetch('/api/join-sales', {
+            const resp = await fetch('/api/sfa?action=join', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

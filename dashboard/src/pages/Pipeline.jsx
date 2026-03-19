@@ -56,7 +56,7 @@ export default function Pipeline() {
         }
 
         try {
-            const res = await fetch('/api/unlock', {
+            const res = await fetch('/api/portal?action=unlock', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

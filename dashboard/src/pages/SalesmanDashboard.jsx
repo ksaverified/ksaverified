@@ -23,7 +23,7 @@ const SalesmanDashboard = () => {
     const fetchLeads = async () => {
         setLoading(true);
         try {
-            const resp = await fetch('/api/get-sales-leads');
+            const resp = await fetch('/api/sfa?action=get-leads');
             const data = await resp.json();
             if (data.success) {
                 setLeads(data.leads || []);
@@ -37,7 +37,7 @@ const SalesmanDashboard = () => {
 
     const handleClaim = async (lead) => {
         try {
-            const resp = await fetch('/api/claim-lead', {
+            const resp = await fetch('/api/sfa?action=claim', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
@@ -59,7 +59,7 @@ const SalesmanDashboard = () => {
 
     const handleReport = async (result) => {
         try {
-            const resp = await fetch('/api/log-visit', {
+            const resp = await fetch('/api/sfa?action=log-visit', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

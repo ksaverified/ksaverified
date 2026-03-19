@@ -40,7 +40,7 @@ export default function Login() {
             if (signInError) throw signInError;
 
             // Record login event
-            await fetch('/api/record-login', {
+            await fetch('/api/portal?action=record-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone }),
@@ -61,7 +61,7 @@ export default function Login() {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch('/api/request-client-password', {
+            const response = await fetch('/api/portal?action=request-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ phone }),
