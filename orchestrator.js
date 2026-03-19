@@ -7,6 +7,7 @@ const CloserAgent = require('./agents/closer');
 const BillerAgent = require('./agents/biller');
 const DatabaseService = require('./services/db');
 const ScoutAgent = require('./agents/scout');
+const AuditorAgent = require('./agents/auditor');
 
 class Orchestrator {
   constructor() {
@@ -16,6 +17,7 @@ class Orchestrator {
     this.publisher = new PublisherAgent();
     this.closer = new CloserAgent();
     this.biller = new BillerAgent();
+    this.auditor = new AuditorAgent();
     this.db = new DatabaseService();
     this.isRunning = false;
     this.axios = require('axios');
@@ -30,12 +32,9 @@ class Orchestrator {
    */
   async isSupabaseHealthy() {
     try {
-      const url = `${process.env.SUPABASE_URL}/rest/v1/`;
-      const response = await this.axios.get(url, {
-        headers: { apikey: process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY },
-        timeout: 8000,
-        validateStatus: (s) => s < 500 // 4xx are fine (auth etc), 5xx/521 means DB is down
-      });
+      // Use the client to perform a small query instead of raw axios to ensure headers match
+      const { data, error } = await this.db.supabase.from('settings').select('key').limit(1);
+      if (error) throw error;
       return true;
     } catch (err) {
       console.warn('[Orchestrator] 🔴 Supabase health check failed:', err.message);
@@ -63,6 +62,7 @@ class Orchestrator {
     console.log(`[Orchestrator] Starting cycle (Promotion Mode: ${promotionMode})`);
     console.log('======================================================');
     await this.db.addLog('orchestrator', 'cycle_start', null, { promotionMode }, 'info');
+    await this.db.cleanupOldLogs(14); // Keep DB size in check
 
     try {
       // Step 0: Check Subscriptions
@@ -76,14 +76,19 @@ class Orchestrator {
         } catch (e) {
           queries = ['restaurant in Riyadh', 'barbershop in Riyadh'];
         }
-        const query = queries[Math.floor(Math.random() * queries.length)];
-        console.log(`[Orchestrator] Scouting for leads matching "${query}"`);
-        await this.db.addLog('scout', 'search_started', null, { query }, 'info');
-        const leads = await this.scout.findLeads(query);
-        for (const lead of leads) {
-          await this.db.upsertLead(lead);
+        try {
+          const query = queries[Math.floor(Math.random() * queries.length)];
+          console.log(`[Orchestrator] Scouting for leads matching "${query}"`);
+          await this.db.addLog('scout', 'search_started', null, { query }, 'info');
+          const leads = await this.scout.findLeads(query);
+          for (const lead of leads) {
+            await this.db.upsertLead(lead);
+          }
+          await this.db.addLog('scout', 'search_completed', null, { found: leads.length, query }, 'success');
+        } catch (scoutError) {
+          console.error(`[Orchestrator] Scouting failed (possibly API key issue): ${scoutError.message}`);
+          await this.db.addLog('scout', 'search_failed', null, { error: scoutError.message }, 'warning');
         }
-        await this.db.addLog('scout', 'search_completed', null, { found: leads.length, query }, 'success');
       } else {
         console.log('[Orchestrator] Scouting DISABLED in Promotion Mode (Cost Shield ACTIVE 🛡️)');
         // Prioritize already-pitched leads (who have a website) to use the 1 week free trial
@@ -142,7 +147,7 @@ class Orchestrator {
             activeDbLead = await this.db.getPendingLead();
             continue;
           }
-
+          // 3. Health Check
           if (activeDbLead.status !== 'pitched') {
             const health = await this.axios.get('http://localhost:8081/health');
             if (!health.data.ready) throw new Error('WhatsApp not ready');
@@ -152,15 +157,26 @@ class Orchestrator {
           let vercelUrl = activeDbLead.vercel_url || '';
 
           if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed') {
-            await this.db.addLog('creator', 'generation_started', activeLead.placeId, { name: activeLead.name }, 'info');
+            await this.db.addLog('creator', 'generation_started', activeLead.place_id, { name: activeLead.name }, 'info');
             currentHtml = await this.creator.createWebsite(activeLead, this.db);
-            await this.db.updateLeadStatus(activeLead.placeId, 'created', { website_html: currentHtml });
+            await this.db.updateLeadStatus(activeLead.place_id, 'created', { website_html: currentHtml });
           }
 
           if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created') {
-            await this.db.addLog('retoucher', 'audit_started', activeLead.placeId, { name: activeLead.name }, 'info');
+            await this.db.addLog('retoucher', 'audit_started', activeLead.place_id, { name: activeLead.name }, 'info');
             currentHtml = await this.retoucher.retouchWebsite(currentHtml, activeLead);
-            await this.db.updateLeadStatus(activeLead.placeId, 'retouched', { website_html: currentHtml });
+            await this.db.updateLeadStatus(activeLead.place_id, 'retouched', { website_html: currentHtml });
+          }
+          
+          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
+            await this.db.addLog('auditor', 'visual_audit_started', activeLead.place_id, { name: activeLead.name }, 'info');
+            const auditReport = await this.auditor.audit(currentHtml, activeLead.slug);
+            await this.db.addLog('auditor', 'visual_audit_completed', activeLead.place_id, auditReport, 'info');
+            
+            if (auditReport.brokenImages.length > 0) {
+              console.log(`[Orchestrator] Auditor found ${auditReport.brokenImages.length} broken images. Requiring additional retouching...`);
+              // Mark for more retouching if needed, but for now we just log it.
+            }
           }
 
           if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
@@ -179,9 +195,10 @@ class Orchestrator {
 
           await this.db.addLog('orchestrator', 'cycle_success', activeLead.placeId, { name: activeLead.name }, 'success');
         } catch (innerError) {
-          console.error(`[Orchestrator] Failed lead ${activeLead.name}:`, innerError.message);
+          const detail = innerError.response ? JSON.stringify(innerError.response.data) : innerError.message;
+          console.error(`[Orchestrator] Failed lead ${activeLead.name}:`, detail);
           
-          if (innerError.message.includes('Number not on WhatsApp')) {
+          if (detail.includes('Number not on WhatsApp')) {
             console.log(`[Orchestrator] Marking ${activeLead.name} as invalid permanently: Number not on WhatsApp.`);
             await this.db.updateLeadStatus(activeLead.placeId, 'invalid', { last_error: 'Number not on WhatsApp' });
             await this.db.addLog('orchestrator', 'lead_invalidated', activeLead.placeId, { reason: 'Number not on WhatsApp' }, 'warning');
@@ -196,7 +213,7 @@ class Orchestrator {
 
       console.log('[Orchestrator] Cycle finished.');
     } catch (error) {
-      console.error(`[Orchestrator] Cycle Aborted:`, error.message);
+      console.error(`[Orchestrator] Cycle Aborted:`, error.stack || error.message);
       await this.db.addLog('orchestrator', 'cycle_error', null, { message: error.message }, 'error');
     } finally {
       this.isRunning = false;

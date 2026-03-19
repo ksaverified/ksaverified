@@ -38,6 +38,13 @@ export default function Login() {
             });
 
             if (signInError) throw signInError;
+
+            // Record login event
+            await fetch('/api/record-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone }),
+            }).catch(err => console.error('Failed to record login event:', err));
         } catch (err) {
             setError(t('login.loginFailed'));
             console.error(err);

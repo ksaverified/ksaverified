@@ -56,9 +56,13 @@ class DatabaseService {
      */
     async upsertLead(lead) {
         return this.withRetry(async () => {
-            let slug = lead.name ? lead.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : null;
-            if (slug && slug.endsWith('-')) slug = slug.slice(0, -1);
-            if (slug && slug.startsWith('-')) slug = slug.slice(1);
+            let slug = lead.name ? lead.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'business';
+            if (slug.endsWith('-')) slug = slug.slice(0, -1);
+            if (slug.startsWith('-')) slug = slug.slice(1);
+            
+            // Append short Place ID to ensure uniqueness for common names
+            const shortId = lead.placeId ? lead.placeId.slice(-6) : Math.random().toString(36).substring(7);
+            slug = `${slug}-${shortId}`;
 
             const { data, error } = await this.supabase
                 .from('leads')
@@ -113,8 +117,9 @@ class DatabaseService {
             const { data, error } = await this.supabase
                 .from('leads')
                 .select('place_id, name, phone, address, lat, lng, photos, website_html, vercel_url, status, retry_count, updated_at')
-                .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched', 'published'])
+                .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched'])
                 .or('retry_count.lt.3,retry_count.is.null')
+                .order('status', { ascending: true }) // 'interest_confirmed' comes before 'scouted' alphabetically/logically
                 .order('updated_at', { ascending: true })
                 .limit(1)
                 .single();
@@ -202,6 +207,28 @@ class DatabaseService {
                 // Optionally throw or just fail silently to not block the pipeline
             }
         }).catch(() => {}); // Log errors shouldn't crash the app
+    }
+
+    /**
+     * Deletes logs older than a specified number of days to prevent
+     * the Supabase table from bloating and hitting the 500MB free tier limit.
+     */
+    async cleanupOldLogs(days = 14) {
+        return this.withRetry(async () => {
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() - days);
+            
+            const { error } = await this.supabase
+                .from('logs')
+                .delete()
+                .lt('created_at', targetDate.toISOString());
+
+            if (error) {
+                console.error(`[DB] Failed to clean up active logs:`, error.message);
+            } else {
+                console.log(`[DB] Successfully pruned logs older than ${days} days.`);
+            }
+        });
     }
 
     /**
@@ -413,6 +440,40 @@ class DatabaseService {
             return this._getScoutedLeadsFallback(limit);
         }
         return data || [];
+    }
+
+    /**
+     * Record a login event for a lead by phone number
+     */
+    async recordLogin(phone) {
+        // First get the current counts
+        const { data: lead, error: fetchError } = await this.supabase
+            .from('leads')
+            .select('login_count')
+            .eq('phone', phone)
+            .single();
+
+        if (fetchError) {
+            console.error('[DB] Error fetching lead for login record:', fetchError.message);
+            return;
+        }
+
+        const newCount = (lead.login_count || 0) + 1;
+
+        const { error: updateError } = await this.supabase
+            .from('leads')
+            .update({
+                login_count: newCount,
+                last_login_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            })
+            .eq('phone', phone);
+
+        if (updateError) {
+            console.error('[DB] Error recording login for lead:', updateError.message);
+        } else {
+            console.log(`[DB] Recorded login for ${phone}. Total: ${newCount}`);
+        }
     }
 
     /** Fallback N+1 approach (used only if RPC isn't deployed yet) */

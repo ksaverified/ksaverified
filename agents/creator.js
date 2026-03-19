@@ -85,16 +85,13 @@ class CreatorAgent {
             });
 
             const response = await Promise.race([
-                this.ai.models.generateContent({
-                    model: 'gemini-2.5-flash',
-                    contents: prompt,
-                }),
+                this.ai.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent(prompt),
                 timeoutPromise
             ]);
 
             clearTimeout(timeoutId);
 
-            let htmlContent = response.text || '';
+            let htmlContent = response.response?.text() || '';
 
             if (!htmlContent) {
                 throw new Error("Gemini returned an empty response. This may be due to safety filters or a model failure.");

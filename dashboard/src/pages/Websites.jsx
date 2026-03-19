@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { ExternalLink, Code, Search, X } from 'lucide-react';
+import { ExternalLink, Code, Search, X, Activity } from 'lucide-react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -130,6 +130,13 @@ export default function Websites() {
                                                 : 'bg-purple-500/10 text-purple-400'}`}>
                                         {lead.status}
                                     </span>
+
+                                    {lead.login_count > 0 && (
+                                        <div className="mt-2 text-[10px] text-emerald-400 font-medium flex items-center justify-center gap-1 bg-emerald-400/10 px-2 py-0.5 rounded-full inline-flex">
+                                            <Activity className="h-3 w-3" />
+                                            {lead.login_count} Logins • Last: {new Date(lead.last_login_at).toLocaleDateString()}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
