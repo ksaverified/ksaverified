@@ -131,16 +131,34 @@ export default function Home() {
     async function fetchLeads() {
         try {
             const { data, error } = await supabase.from('leads').select('*').order('updated_at', { ascending: false });
-            if (error) throw error;
-            const counts = data.reduce((acc, lead) => {
-                const s = lead.status || 'unknown';
-                acc[s] = (acc[s] || 0) + 1;
-                return acc;
-            }, {});
-            setStats(counts);
+            if (error) {
+                console.error('Fetch leads error:', error);
+                // Fallback attempt without specific ordering if updated_at is missing
+                if (error.code === 'PGRST204' || error.message.includes('updated_at')) {
+                    const { data: fallbackData, error: fe } = await supabase.from('leads').select('*').limit(100);
+                    if (!fe) {
+                        setStats(calculateStats(fallbackData));
+                        setTotalLeads(fallbackData.length);
+                        setRecentLeads(fallbackData.filter(l => l.status !== 'invalid').slice(0, 7));
+                        return;
+                    }
+                }
+                throw error;
+            }
+            setStats(calculateStats(data));
             setTotalLeads(data.length);
             setRecentLeads(data.filter(l => l.status !== 'invalid').slice(0, 7));
-        } catch (e) { console.error(e); }
+        } catch (e) {
+            console.error('Home fetchLeads exception:', e);
+        }
+    }
+
+    function calculateStats(data) {
+        return data.reduce((acc, lead) => {
+            const s = lead.status || 'unknown';
+            acc[s] = (acc[s] || 0) + 1;
+            return acc;
+        }, {});
     }
 
     async function fetchRecentChats() {

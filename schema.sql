@@ -50,7 +50,7 @@ CREATE TABLE logs (
 -- 3. Create CHAT_LOGS table (Used for Dashboard AI training)
 CREATE TABLE chat_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    place_id TEXT,
+    place_id TEXT REFERENCES leads(place_id) ON DELETE CASCADE,
     phone TEXT,
     message_in TEXT,
     message_out TEXT,

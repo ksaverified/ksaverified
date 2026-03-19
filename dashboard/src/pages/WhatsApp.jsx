@@ -71,45 +71,48 @@ export default function WhatsApp() {
 
     async function fetchThreads() {
         try {
-            // Get all chat logs sorted by newest first
+            // Primary Attempt: Join with leads
             const { data, error } = await supabase
                 .from('chat_logs')
-                .select(`
-                    id, 
-                    phone, 
-                    message_in, 
-                    message_out, 
-                    translated_message,
-                    created_at,
-                    leads ( name )
-                `)
+                .select('id, phone, message_in, message_out, translated_message, created_at, leads ( name )')
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-
-            // Group by phone number to create unique threads
-            const uniqueThreads = [];
-            const seenPhones = new Set();
-
-            data.forEach(log => {
-                if (!seenPhones.has(log.phone)) {
-                    seenPhones.add(log.phone);
-                    uniqueThreads.push({
-                        phone: log.phone,
-                        name: log.leads?.name || 'Unknown Lead',
-                        lastMessage: log.message_in || log.message_out || 'Interaction recorded',
-                        lastTime: log.created_at,
-                        isLastInbound: !!log.message_in
-                    });
-                }
-            });
-
-            setThreads(uniqueThreads);
+            if (error) {
+                console.error('fetchThreads (primary) error:', error);
+                // Secondary Fallback: No join (if relation is missing)
+                const { data: fallbackData, error: fe } = await supabase
+                    .from('chat_logs')
+                    .select('id, phone, message_in, message_out, translated_message, created_at')
+                    .order('created_at', { ascending: false });
+                
+                if (fe) throw fe;
+                processThreads(fallbackData);
+            } else {
+                processThreads(data);
+            }
         } catch (e) {
-            console.error('Error fetching WhatsApp threads:', e);
+            console.error('Error in WhatsApp inbox:', e);
         } finally {
             setLoading(false);
         }
+    }
+
+    function processThreads(data) {
+        const uniqueThreads = [];
+        const seenPhones = new Set();
+        data.forEach(log => {
+            if (!seenPhones.has(log.phone)) {
+                seenPhones.add(log.phone);
+                uniqueThreads.push({
+                    phone: log.phone,
+                    name: log.leads?.name || 'Unknown Lead',
+                    lastMessage: log.message_in || log.message_out || 'Interaction recorded',
+                    lastTime: log.created_at,
+                    isLastInbound: !!log.message_in
+                });
+            }
+        });
+        setThreads(uniqueThreads);
     }
 
     async function fetchMessages(phone) {
