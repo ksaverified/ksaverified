@@ -12,6 +12,8 @@ import WhatsApp from './pages/WhatsApp';
 import InterestConfirmed from './pages/InterestConfirmed';
 import Login from './pages/Login';
 import LandingPage from './pages/LandingPage';
+import SalesmanOnboarding from './pages/SalesmanOnboarding';
+import SalesmanDashboard from './pages/SalesmanDashboard';
 import { AuthProvider } from './components/AuthContext';
 import AuthGuard from './components/AuthGuard';
 
@@ -41,6 +43,14 @@ function App() {
             <Route path="interest-confirmed" element={<InterestConfirmed />} />
             <Route path="logs" element={<Logs />} />
           </Route>
+
+          {/* Sales Force Routes */}
+          <Route path="/join" element={<SalesmanOnboarding />} />
+          <Route path="/sales" element={
+            <AuthGuard>
+              <SalesmanDashboard />
+            </AuthGuard>
+          } />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

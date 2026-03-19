@@ -26,6 +26,8 @@ CREATE TABLE leads (
     reminded_1d_before BOOLEAN DEFAULT false,
     retry_count INTEGER DEFAULT 0,
     last_error TEXT,
+    claimed_by UUID, -- Reference to salesmen table
+    claimed_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -76,4 +78,35 @@ INSERT INTO settings (key, value, description) VALUES (
     'search_queries', 
     '["restaurant in Riyadh", "cafe in Riyadh", "barbershop in Riyadh", "gym in Riyadh", "salon in Riyadh"]'::jsonb, 
     'Google Maps Search Queries for leads'
+);
+
+-- 5. Create SALESMEN table
+CREATE TABLE IF NOT EXISTS salesmen (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    phone TEXT UNIQUE NOT NULL,
+    email TEXT UNIQUE,
+    status TEXT DEFAULT 'active'::text,
+    rating NUMERIC DEFAULT 5.0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Create VISITS table
+CREATE TABLE IF NOT EXISTS visits (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    lead_id TEXT REFERENCES leads(place_id),
+    salesman_id UUID REFERENCES salesmen(id),
+    photo_url TEXT,
+    result TEXT,
+    notes TEXT,
+    lat NUMERIC,
+    lng NUMERIC,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO settings (key, value, description) VALUES (
+    'commission_rates', 
+    '{"trial_conversion_sar": 10, "subscription_conversion_sar": 50}'::jsonb, 
+    'Commission structure for sales agents'
 );
