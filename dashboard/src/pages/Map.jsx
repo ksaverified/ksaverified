@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
-import { ExternalLink, Users } from 'lucide-react';
+import { ExternalLink, Users, Eye, MousePointer2, Filter } from 'lucide-react';
 
 // Using the same Google Places API key from the backend environment
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
@@ -42,6 +42,7 @@ export default function MapView() {
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedLead, setSelectedLead] = useState(null);
+    const [filter, setFilter] = useState('all'); // all, viewed, engaged
 
     // Default center to Riyadh, Saudi Arabia
     const defaultCenter = { lat: 24.7136, lng: 46.6753 };
@@ -106,21 +107,42 @@ export default function MapView() {
                     <h1 className="text-3xl font-bold text-zinc-100">Global Pipeline</h1>
                     <p className="text-zinc-400 mt-1">Geographic overview of all scaffolded leads.</p>
                 </div>
-                <div className="flex bg-surface border border-zinc-800 rounded-lg p-2 gap-4 text-xs font-medium">
-                    <div className="flex items-center gap-2 text-zinc-300">
-                        <div className="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div> Scouted
+                
+                <div className="flex flex-col items-end gap-3">
+                    <div className="flex bg-zinc-900/50 border border-zinc-800 rounded-xl p-1 shadow-inner">
+                        <button 
+                            onClick={() => setFilter('all')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${filter === 'all' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <Filter className="w-3.5 h-3.5" /> All
+                        </button>
+                        <button 
+                            onClick={() => setFilter('viewed')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${filter === 'viewed' ? 'bg-blue-500/20 text-blue-400 shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <Eye className="w-3.5 h-3.5" /> Viewed
+                        </button>
+                        <button 
+                            onClick={() => setFilter('engaged')}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${filter === 'engaged' ? 'bg-emerald-500/20 text-emerald-400 shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+                        >
+                            <MousePointer2 className="w-3.5 h-3.5" /> Engaged
+                        </button>
                     </div>
-                    <div className="flex items-center gap-2 text-zinc-300">
-                        <div className="w-3 h-3 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div> Created
-                    </div>
-                    <div className="flex items-center gap-2 text-zinc-300">
-                        <div className="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]"></div> Published
-                    </div>
-                    <div className="flex items-center gap-2 text-zinc-300">
-                        <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div> Pitched
-                    </div>
-                    <div className="flex items-center gap-2 text-zinc-300">
-                        <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"></div> Completed
+
+                    <div className="flex bg-surface border border-zinc-800 rounded-lg p-2 gap-4 text-[10px] font-medium uppercase tracking-tighter">
+                        <div className="flex items-center gap-2 text-zinc-400">
+                            <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></div> Scouted
+                        </div>
+                        <div className="flex items-center gap-2 text-zinc-400">
+                            <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.5)]"></div> Created
+                        </div>
+                        <div className="flex items-center gap-2 text-zinc-400">
+                            <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></div> Published
+                        </div>
+                        <div className="flex items-center gap-2 text-zinc-400">
+                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div> Pitched
+                        </div>
                     </div>
                 </div>
             </header>
@@ -169,29 +191,39 @@ export default function MapView() {
                             ]
                         }}
                     >
-                        <MapUpdater leads={leads} />
+                        <MapUpdater leads={leads.filter(l => {
+                            if (filter === 'viewed') return (l.views || 0) > 0;
+                            if (filter === 'engaged') return (l.login_count || 0) > 0;
+                            return true;
+                        })} />
 
-                        {leads.map(lead => {
-                            const lat = parseFloat(lead.lat);
-                            const lng = parseFloat(lead.lng);
-                            if (isNaN(lat) || isNaN(lng)) return null;
+                        {leads
+                            .filter(lead => {
+                                if (filter === 'viewed') return (lead.views || 0) > 0;
+                                if (filter === 'engaged') return (lead.login_count || 0) > 0;
+                                return true;
+                            })
+                            .map(lead => {
+                                const lat = parseFloat(lead.lat);
+                                const lng = parseFloat(lead.lng);
+                                if (isNaN(lat) || isNaN(lng)) return null;
 
-                            return (
-                                <AdvancedMarker
-                                    key={lead.place_id}
-                                    position={{ lat, lng }}
-                                    onClick={() => setSelectedLead(lead)}
-                                >
-                                    <div
-                                        className="w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform"
-                                        style={{
-                                            backgroundColor: getMarkerColor(lead.status),
-                                            boxShadow: `0 0 10px ${getMarkerColor(lead.status)}80`
-                                        }}
-                                    />
-                                </AdvancedMarker>
-                            );
-                        })}
+                                return (
+                                    <AdvancedMarker
+                                        key={lead.place_id}
+                                        position={{ lat, lng }}
+                                        onClick={() => setSelectedLead(lead)}
+                                    >
+                                        <div
+                                            className="w-4 h-4 rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-125 transition-transform"
+                                            style={{
+                                                backgroundColor: getMarkerColor(lead.status),
+                                                boxShadow: `0 0 10px ${getMarkerColor(lead.status)}80`
+                                            }}
+                                        />
+                                    </AdvancedMarker>
+                                );
+                            })}
 
                         {selectedLead && (
                             <InfoWindow
@@ -203,9 +235,21 @@ export default function MapView() {
                                     <h3 className="font-bold text-lg mb-1">{selectedLead.name}</h3>
                                     <div className="text-xs text-zinc-400 mb-2 truncate max-w-[250px]">{selectedLead.address}</div>
 
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <span className={`inline-block w-2 h-2 rounded-full`} style={{ backgroundColor: getMarkerColor(selectedLead.status) }}></span>
-                                        <span className="text-xs font-medium uppercase tracking-wider text-zinc-300">{selectedLead.status}</span>
+                                    <div className="flex items-center gap-4 mb-4 bg-zinc-900/50 p-2 rounded-lg border border-zinc-800/50">
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Views</span>
+                                            <span className="text-sm font-black text-blue-400">{selectedLead.views || 0}</span>
+                                        </div>
+                                        <div className="w-px h-6 bg-zinc-800"></div>
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Logins</span>
+                                            <span className="text-sm font-black text-emerald-400">{selectedLead.login_count || 0}</span>
+                                        </div>
+                                        <div className="w-px h-6 bg-zinc-800"></div>
+                                        <div className="flex flex-col items-center">
+                                            <span className="text-[10px] text-zinc-500 uppercase font-bold">Status</span>
+                                            <span className="text-[10px] font-bold text-zinc-300 uppercase px-1.5 py-0.5 rounded bg-zinc-800">{selectedLead.status}</span>
+                                        </div>
                                     </div>
 
                                     {selectedLead.vercel_url && (
