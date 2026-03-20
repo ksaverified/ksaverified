@@ -203,6 +203,16 @@ class RetoucherAgent {
 
         const mobileScript = `
         <script>
+            window.toggleLanguage = function() {
+                const html = document.documentElement;
+                if (html.lang === 'en') {
+                    html.lang = 'ar';
+                    html.dir = 'rtl';
+                } else {
+                    html.lang = 'en';
+                    html.dir = 'ltr';
+                }
+            };
             document.addEventListener('DOMContentLoaded', () => {
                 const menuBtn = document.getElementById('mobile-menu-btn');
                 const menu = document.getElementById('mobile-menu');
@@ -228,8 +238,8 @@ class RetoucherAgent {
 
         // Inject CSS (Cleanup old versions first to allow updates)
         // Match both the new multi-line version and the old single-line version
-        cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle [\s\S]*?#mobile-menu-btn \{[^\}]*\}[\s\S]*?\n/g, '');
-        cleanedHtml = cleanedHtml.replace(/\.mobile-menu-active \{ display: flex !important; flex-direction: column;[\s\S]*? \}\s*\n/g, '');
+        cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle [\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
+        cleanedHtml = cleanedHtml.replace(/\.mobile-menu-active \{ display: flex !important; flex-direction: column;[\s\S]*? \}(?:\s*)?/g, '');
         cleanedHtml = cleanedHtml.replace('</style>', `${mobileStyles}\n    </style>`);
 
         // Inject JS (Cleanup old versions first)
@@ -291,6 +301,7 @@ class RetoucherAgent {
         `;
 
         // Strip ALL existing headers and mobile nav controls robustly
+        cleanedHtml = cleanedHtml.replace(/<!-- Header -->\s*<header[^>]*>[\s\S]*?<\/header>/gi, '');
         cleanedHtml = cleanedHtml.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
         cleanedHtml = cleanedHtml.replace(/<div class="mobile-nav-menu[\s\S]*?<\/div>\s*<\/div>/gi, '');
         cleanedHtml = cleanedHtml.replace(/<button id="mobile-menu-btn"[\s\S]*?<\/button>/gi, '');
