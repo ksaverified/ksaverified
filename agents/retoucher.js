@@ -30,12 +30,16 @@ class RetoucherAgent {
         
         try {
             console.log(`[Retoucher] Fetching Pexels photos for: ${query}...`);
-            const res = await axios.get(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=12&orientation=landscape`, {
+            // Increased to 40 for much better variety and to avoid duplicates on large pages
+            const res = await axios.get(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=40&orientation=landscape`, {
                 headers: { Authorization: this.pexelsKey }
             });
             
             if (res.data && res.data.photos) {
-                return res.data.photos.map(p => p.src.large2x || p.src.large);
+                // Shuffle the photos to ensure different sites for the same category look unique
+                return res.data.photos
+                    .map(p => p.src.large2x || p.src.large)
+                    .sort(() => Math.random() - 0.5);
             }
             return [];
         } catch (e) {
@@ -63,29 +67,29 @@ class RetoucherAgent {
         const businessTypesStr = ((business.types || []).join(' ') + ' ' + (business.name || '')).toLowerCase();
         let searchQuery = 'local business';
 
-        if (businessTypesStr.includes('hair') || businessTypesStr.includes('barber') || businessTypesStr.includes('salon') || businessTypesStr.includes('حلاقة')) {
-            searchQuery = 'barbershop hair salon';
+        if (businessTypesStr.includes('hair') || businessTypesStr.includes('barber') || businessTypesStr.includes('salon') || businessTypesStr.includes('حلاقة') || businessTypesStr.includes('صالون') || businessTypesStr.includes('تجميل')) {
+            searchQuery = 'barbershop beauty hair salon';
         } else if (businessTypesStr.includes('repair') || businessTypesStr.includes('electronics') || businessTypesStr.includes('computer')) {
             searchQuery = 'electronics repair computer tech';
-        } else if (businessTypesStr.includes('restaurant') || businessTypesStr.includes('cafe') || businessTypesStr.includes('food') || businessTypesStr.includes('مطعم')) {
+        } else if (businessTypesStr.includes('restaurant') || businessTypesStr.includes('cafe') || businessTypesStr.includes('food') || businessTypesStr.includes('مطعم') || businessTypesStr.includes('مقهى') || businessTypesStr.includes('مخبز')) {
             searchQuery = 'restaurant cafe food dining';
-        } else if (businessTypesStr.includes('boutique') || businessTypesStr.includes('fashion') || businessTypesStr.includes('clothes') || businessTypesStr.includes('ملابس')) {
+        } else if (businessTypesStr.includes('boutique') || businessTypesStr.includes('fashion') || businessTypesStr.includes('clothes') || businessTypesStr.includes('ملابس') || businessTypesStr.includes('ازياء')) {
             searchQuery = 'fashion boutique clothing store';
-        } else if (businessTypesStr.includes('clinic') || businessTypesStr.includes('medical') || businessTypesStr.includes('عيادة')) {
+        } else if (businessTypesStr.includes('clinic') || businessTypesStr.includes('medical') || businessTypesStr.includes('doctor') || businessTypesStr.includes('عيادة') || businessTypesStr.includes('طبيب')) {
             searchQuery = 'medical clinic doctor hospital';
-        } else if (businessTypesStr.includes('supermarket') || businessTypesStr.includes('grocery') || businessTypesStr.includes('بقالة')) {
+        } else if (businessTypesStr.includes('supermarket') || businessTypesStr.includes('grocery') || businessTypesStr.includes('بقالة') || businessTypesStr.includes('تموينات')) {
             searchQuery = 'grocery store supermarket market';
-        } else if (businessTypesStr.includes('carwash') || businessTypesStr.includes('car wash') || businessTypesStr.includes('غسيل')) {
+        } else if (businessTypesStr.includes('carwash') || businessTypesStr.includes('car wash') || businessTypesStr.includes('غسيل') || businessTypesStr.includes('تلميع')) {
             searchQuery = 'car wash detailing';
-        } else if (businessTypesStr.includes('spa') || businessTypesStr.includes('massage') || businessTypesStr.includes('سبا')) {
+        } else if (businessTypesStr.includes('spa') || businessTypesStr.includes('massage') || businessTypesStr.includes('سبا') || businessTypesStr.includes('مساج')) {
             searchQuery = 'spa massage wellness';
-        } else if (businessTypesStr.includes('gym') || businessTypesStr.includes('fitness') || businessTypesStr.includes('رياضة')) {
+        } else if (businessTypesStr.includes('gym') || businessTypesStr.includes('fitness') || businessTypesStr.includes('رياضة') || businessTypesStr.includes('لياقة')) {
             searchQuery = 'gym fitness workout';
-        } else if (businessTypesStr.includes('flower') || businessTypesStr.includes('gift') || businessTypesStr.includes('ورد')) {
+        } else if (businessTypesStr.includes('flower') || businessTypesStr.includes('gift') || businessTypesStr.includes('ورد') || businessTypesStr.includes('هدايا')) {
             searchQuery = 'flower shop gift bouquet';
-        } else if (businessTypesStr.includes('construct') || businessTypesStr.includes('contractor') || businessTypesStr.includes('بناء')) {
+        } else if (businessTypesStr.includes('construct') || businessTypesStr.includes('contractor') || businessTypesStr.includes('بناء') || businessTypesStr.includes('مقاولات')) {
             searchQuery = 'construction building architecture';
-        } else if (businessTypesStr.includes('optical') || businessTypesStr.includes('eye') || businessTypesStr.includes('بصريات')) {
+        } else if (businessTypesStr.includes('optical') || businessTypesStr.includes('eye') || businessTypesStr.includes('بصريات') || businessTypesStr.includes('نظارات')) {
             searchQuery = 'optician eye glasses store';
         }
 

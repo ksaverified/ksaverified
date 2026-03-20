@@ -1,4 +1,4 @@
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 /**
  * Creator Agent
@@ -10,7 +10,7 @@ class CreatorAgent {
         if (!this.apiKey) {
             throw new Error('GEMINI_API_KEY is not defined in environment variables.');
         }
-        this.ai = new GoogleGenAI({ apiKey: this.apiKey });
+        this.ai = new GoogleGenerativeAI(this.apiKey);
     }
 
     /**
@@ -85,7 +85,7 @@ class CreatorAgent {
             });
 
             const response = await Promise.race([
-                this.ai.getGenerativeModel({ model: 'gemini-2.0-flash' }).generateContent(prompt),
+                this.ai.getGenerativeModel({ model: 'gemini-1.5-flash' }).generateContent(prompt),
                 timeoutPromise
             ]);
 

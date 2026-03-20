@@ -201,7 +201,7 @@ export default function Logs() {
                 </div>
 
                 {/* Terminal Body */}
-                <div className="p-4 overflow-y-auto flex-1 flex flex-col-reverse space-y-reverse space-y-1">
+                <div className="p-4 overflow-y-auto flex-1 flex flex-col space-y-1">
                     {loading ? (
                         <div className="text-zinc-500 animate-pulse">Connecting to log stream...</div>
                     ) : filteredLogs.length === 0 ? (

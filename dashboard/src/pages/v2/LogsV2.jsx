@@ -140,7 +140,7 @@ export default function LogsV2() {
                     </div>
 
                     {/* Log entries */}
-                    <div className="p-4 overflow-y-auto flex-1 flex flex-col-reverse gap-0.5">
+                    <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-0.5">
                         {loading ? (
                             <div className="text-zinc-600 animate-pulse">Connecting to log stream...</div>
                         ) : filteredLogs.length === 0 ? (
