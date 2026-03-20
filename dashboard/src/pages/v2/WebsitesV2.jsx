@@ -6,9 +6,13 @@ import V2Shell from './V2Shell';
 const STATUSES = ['all', 'scouted', 'published', 'pitched', 'warmed', 'interest_confirmed', 'completed', 'invalid'];
 
 const GENERIC_IDS = [
-    '1497366216548-37526070297c', // Hero
-    '1522071820081-009f0129c71c', // About
-    '1556761175-4b46a572b786', // Services
+    '1497366216548-37526070297c', // Hero original
+    '1522071820081-009f0129c71c', // About original
+    '1556761175-4b46a572b786', // Services original
+    '1454165804606-c3d57bc86b40', // Common hero secondary
+    '1507136566006-bb7aef5537d8', // Common about secondary 
+    '1559339352-11d035aa65de', // Common service secondary
+    '1511707171634-5f897ff02aa9', // Common alternate secondary
 ];
 
 export default function WebsitesV2() {
@@ -66,11 +70,12 @@ export default function WebsitesV2() {
             }
 
             GENERIC_IDS.forEach((id) => {
-                const regex = new RegExp(`https://images\\.unsplash\\.com/photo-${id}[^"']*`, 'g');
+                // Match both images.unsplash.com and source.unsplash.com variants
+                const regex = new RegExp(`https?://(?:images\\.unsplash\\.com/photo-|source\\.unsplash\\.com/)${id}[^"']*`, 'g');
                 if (html.includes(id)) {
                     // 1. Try valid Google photos first
                     // 2. Try Pexels search results
-                    // 3. Fallback to random Unsplash placeholder
+                    // 3. Fallback to reliable random placeholder
                     
                     let replacementUrl = '';
                     if (photoIndex < validPhotos.length) {
@@ -79,11 +84,12 @@ export default function WebsitesV2() {
                     } else if (externalPhotos.length > 0) {
                         replacementUrl = externalPhotos.pop(); 
                     } else {
-                        replacementUrl = `https://images.unsplash.com/photo-${Math.floor(Math.random()*1000000000000)}?q=80&w=1000&auto=format&fit=crop&sig=${Math.random()}`;
+                        // Use a guaranteed random placeholder from Picsum if Pexels fails
+                        replacementUrl = `https://picsum.photos/seed/${Math.floor(Math.random()*10000)}/1000/800`;
                     }
                     
                     // Add some query params for caching/resizing if it's not a generic fallback
-                    if (!replacementUrl.includes('unsplash.com')) {
+                    if (!replacementUrl.includes('picsum.photos')) {
                         // Ensure https if somehow missing
                         if (replacementUrl.startsWith('//')) replacementUrl = 'https:' + replacementUrl;
                     }
