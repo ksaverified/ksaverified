@@ -76,7 +76,7 @@ function getNewMatches(nameStr) {
             "https://images.unsplash.com/photo-1485231183945-80f6880da6d8?q=80&w=1000&auto=format&fit=crop",
             "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1000&auto=format&fit=crop"
         ]};
-    } else if (nameStr.includes('clinic') || nameStr.includes('medical') || nameStr.includes('doctor') || nameStr.includes('health') || nameStr.includes('عيادة') || nameStr.includes('طبي') || nameStr.includes('dental') || nameStr.includes('dentist') || nameStr.includes('hospital')) {
+    } else if (nameStr.includes('clinic') || nameStr.includes('medical') || nameStr.includes('doctor') || nameStr.includes('health') || nameStr.includes('عيادة') || nameStr.includes('طبي') || nameStr.includes('dental') || nameStr.includes('dentist') || nameStr.includes('hospital') || nameStr.includes('optical') || nameStr.includes('optics') || nameStr.includes('glasses') || nameStr.includes('eye') || nameStr.includes('optometrist') || nameStr.includes('بصريات') || nameStr.includes('نظارات')) {
         return { category: "clinic", images: [
             "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=1000&auto=format&fit=crop",
             "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=1000&auto=format&fit=crop",

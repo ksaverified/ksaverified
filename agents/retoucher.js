@@ -78,7 +78,7 @@ class RetoucherAgent {
                 "https://images.unsplash.com/photo-1485231183945-80f6880da6d8?q=80&w=1000&auto=format&fit=crop", // Boutique interior
                 "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1000&auto=format&fit=crop"  // Retail experience
             ];
-        } else if (businessTypesStr.includes('clinic') || businessTypesStr.includes('medical') || businessTypesStr.includes('doctor') || businessTypesStr.includes('health') || businessTypesStr.includes('عيادة') || businessTypesStr.includes('طبي') || businessTypesStr.includes('dental') || businessTypesStr.includes('dentist') || businessTypesStr.includes('hospital')) {
+        } else if (businessTypesStr.includes('clinic') || businessTypesStr.includes('medical') || businessTypesStr.includes('doctor') || businessTypesStr.includes('health') || businessTypesStr.includes('عيادة') || businessTypesStr.includes('طبي') || businessTypesStr.includes('dental') || businessTypesStr.includes('dentist') || businessTypesStr.includes('hospital') || businessTypesStr.includes('optical') || businessTypesStr.includes('optics') || businessTypesStr.includes('glasses') || businessTypesStr.includes('eye') || businessTypesStr.includes('optometrist') || businessTypesStr.includes('بصريات') || businessTypesStr.includes('نظارات')) {
             businessImages = [
                 "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=1000&auto=format&fit=crop", // Modern clinic
                 "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=1000&auto=format&fit=crop", // Doctor
