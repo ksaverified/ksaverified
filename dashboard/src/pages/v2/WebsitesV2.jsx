@@ -15,11 +15,44 @@ const GENERIC_IDS = [
     '1511707171634-5f897ff02aa9', // Common alternate secondary
 ];
 
+const CATEGORIES = [
+    'all',
+    'Salon & Barber',
+    'Repair & Electronics',
+    'Food & Restaurant',
+    'Fashion & Boutique',
+    'Medical & Clinic',
+    'Supermarket & Retail',
+    'Carwash & Auto',
+    'Spa & Care',
+    'Gym & Fitness',
+    'Flowers & Gifts',
+    'Construction',
+    'Default / Generic'
+];
+
+function getCategory(lead) {
+    const str = ((lead.types || []).join(' ') + ' ' + (lead.name || '')).toLowerCase();
+    if (str.includes('hair') || str.includes('barber') || str.includes('salon') || str.includes('saloon') || str.includes('grooming') || str.includes('حلاقة') || str.includes('صالون')) return 'Salon & Barber';
+    if (str.includes('repair') || str.includes('electronics') || str.includes('computer')) return 'Repair & Electronics';
+    if (str.includes('restaurant') || str.includes('cafe') || str.includes('food') || str.includes('hot pot') || str.includes('hotpot') || str.includes('kitchen') || str.includes('dining') || str.includes('grill') || str.includes('bakery') || str.includes('pizza') || str.includes('burger') || str.includes('sushi') || str.includes('diner') || str.includes('eatery') || str.includes('sweets') || str.includes('مطعم') || str.includes('مقهى') || str.includes('مخبز')) return 'Food & Restaurant';
+    if (str.includes('boutique') || str.includes('fashion') || str.includes('dress') || str.includes('clothes') || str.includes('ملابس') || str.includes('ازياء')) return 'Fashion & Boutique';
+    if (str.includes('clinic') || str.includes('medical') || str.includes('doctor') || str.includes('health') || str.includes('عيادة') || str.includes('طبي') || str.includes('dental') || str.includes('dentist') || str.includes('hospital') || str.includes('optical') || str.includes('optics') || str.includes('glasses') || str.includes('eye') || str.includes('optometrist') || str.includes('بصريات') || str.includes('نظارات')) return 'Medical & Clinic';
+    if (str.includes('supermarket') || str.includes('grocery') || str.includes('store') || str.includes('market') || str.includes('بقالة') || str.includes('سوبر')) return 'Supermarket & Retail';
+    if (str.includes('carwash') || str.includes('car wash') || str.includes('detailing') || str.includes('غسيل')) return 'Carwash & Auto';
+    if (str.includes('spa') || str.includes('massage') || str.includes('beauty parlor') || str.includes('سبا')) return 'Spa & Care';
+    if (str.includes('sport') || str.includes('gym') || str.includes('fitness') || str.includes('رياضة')) return 'Gym & Fitness';
+    if (str.includes('flower') || str.includes('gift') || str.includes('ورد') || str.includes('هدايا')) return 'Flowers & Gifts';
+    if (str.includes('construct') || str.includes('contractor') || str.includes('build') || str.includes('مقاول') || str.includes('بناء')) return 'Construction';
+    return 'Default / Generic';
+}
+
 export default function WebsitesV2() {
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [categoryFilter, setCategoryFilter] = useState('all');
     const [previewHtml, setPreviewHtml] = useState(null);
     const [previewName, setPreviewName] = useState('');
     const [shuffling, setShuffling] = useState(null);
@@ -32,7 +65,7 @@ export default function WebsitesV2() {
         try {
             const { data } = await supabase
                 .from('leads')
-                .select('place_id, name, status, vercel_url, website_html, photos, updated_at')
+                .select('place_id, name, types, status, vercel_url, website_html, photos, updated_at')
                 .not('vercel_url', 'is', null)
                 .order('updated_at', { ascending: false });
             if (data) setLeads(data);
@@ -121,7 +154,8 @@ export default function WebsitesV2() {
     const filtered = leads.filter(l => {
         const matchSearch = !search || l.name?.toLowerCase().includes(search.toLowerCase());
         const matchStatus = statusFilter === 'all' || l.status === statusFilter;
-        return matchSearch && matchStatus;
+        const matchCat = categoryFilter === 'all' || getCategory(l) === categoryFilter;
+        return matchSearch && matchStatus && matchCat;
     });
 
     const statusStyle = (status) => {
@@ -140,14 +174,14 @@ export default function WebsitesV2() {
     return (
         <V2Shell>
             <div className="p-6 space-y-5">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-white flex items-center gap-2">
                             <Globe className="w-6 h-6 text-indigo-400" /> Generated Websites
                         </h1>
                         <p className="text-sm text-zinc-500 mt-0.5">{leads.length} sites published via Vercel</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-3">
                         {leads.some(l => GENERIC_IDS.some(id => l.website_html?.includes(id))) && (
                             <button onClick={repairAll}
                                 className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg text-xs font-bold text-amber-400 transition-all">
@@ -160,6 +194,11 @@ export default function WebsitesV2() {
                                 className="pl-9 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 w-48" />
                         </div>
                         <div className="flex gap-1.5">
+                            <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
+                                className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 focus:outline-none focus:border-zinc-600 max-w-[150px] truncate">
+                                <option value="all">All Categories</option>
+                                {CATEGORIES.filter(c => c !== 'all').map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
                             <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
                                 className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 focus:outline-none focus:border-zinc-600">
                                 <option value="all">All Statuses</option>

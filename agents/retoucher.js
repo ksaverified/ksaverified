@@ -174,12 +174,16 @@ class RetoucherAgent {
 
         // 0. Inject Mobile Logic Styles & Scripts
         const mobileStyles = `
+        /* Global language toggle visibility */
+        html[lang="ar"] .lang-en, html[lang="ar"] [data-lang="en"] { display: none !important; }
+        html[lang="en"] .lang-ar, html[lang="en"] [data-lang="ar"] { display: none !important; }
+
         /* Mobile-only language toggle: show only the other language */
         @media (max-width: 768px) {
             html[lang="en"] .lang-en-btn { display: none !important; }
             html[lang="ar"] .lang-ar-btn { display: none !important; }
         }
-        .mobile-menu-active { 
+        .mobile-menu-active {  
             display: flex !important; 
             flex-direction: column !important; 
             align-items: center !important; 
@@ -238,7 +242,8 @@ class RetoucherAgent {
 
         // Inject CSS (Cleanup old versions first to allow updates)
         // Match both the new multi-line version and the old single-line version
-        cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle [\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
+        cleanedHtml = cleanedHtml.replace(/\/\* Global language toggle visibility \*\/[\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
+        cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle[\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
         cleanedHtml = cleanedHtml.replace(/\.mobile-menu-active \{ display: flex !important; flex-direction: column;[\s\S]*? \}(?:\s*)?/g, '');
         cleanedHtml = cleanedHtml.replace('</style>', `${mobileStyles}\n    </style>`);
 

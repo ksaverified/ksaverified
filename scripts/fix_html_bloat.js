@@ -20,6 +20,10 @@ async function run() {
     let updatableLeads = [];
 
     const mobileStyles = `
+        /* Global language toggle visibility */
+        html[lang="ar"] .lang-en, html[lang="ar"] [data-lang="en"] { display: none !important; }
+        html[lang="en"] .lang-ar, html[lang="en"] [data-lang="ar"] { display: none !important; }
+
         /* Mobile-only language toggle: show only the other language */
         @media (max-width: 768px) {
             html[lang="en"] .lang-en-btn { display: none !important; }
@@ -87,7 +91,8 @@ async function run() {
         let originalHtml = cleanedHtml;
 
         // Clean CSS
-        cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle [\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
+        cleanedHtml = cleanedHtml.replace(/\/\* Global language toggle visibility \*\/[\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
+        cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle[\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
         cleanedHtml = cleanedHtml.replace(/\.mobile-menu-active \{ display: flex !important; flex-direction: column;[\s\S]*? \}(?:\s*)?/g, '');
         
         // Ensure one clean CSS block
