@@ -12,7 +12,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: 'sb-ozkmsuodpghtsqcmpsmk-auth-token', // Explicitly set storage key to help with lock contention
+        storageKey: 'sb-hopuephsxsmegznvrzgv-auth-token', // Updated to new project
         storage: window.localStorage
     },
     global: {

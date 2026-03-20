@@ -28,9 +28,13 @@ CREATE TABLE leads (
     last_error TEXT,
     claimed_by UUID, -- Reference to salesmen table
     claimed_at TIMESTAMP WITH TIME ZONE,
+    slug TEXT, -- SEO friendly URL name
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS idx_leads_slug ON leads(slug);
+
 
 -- Note: In a production environment with sensitive data, you would enable RLS here.
 -- For a local script driven pipeline, it's often disabled or bypassed via Service Role Key.

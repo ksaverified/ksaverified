@@ -41,11 +41,11 @@ const TABLE_COLUMNS = {
     logs: ['id', 'agent', 'action', 'place_id', 'details', 'status', 'created_at']
 };
 
-async function migrateTable(tableName, orderByCol = 'created_at') {
-    console.log(`\n--- Migrating table: ${tableName} ---`);
+async function migrateTable(tableName, orderByCol = 'created_at', limit = 100) {
+    console.log(`\n>>> STARTING migrateTable: ${tableName} (Batch size: ${limit})`);
     let hasMore = true;
     let start = 0;
-    const limit = 500;
+
     let totalMigrated = 0;
 
     while (hasMore) {
@@ -224,15 +224,18 @@ async function runMigration() {
         
         // 1. Tables migration
         const tables = [
-            { name: 'settings', id: 'key' },
-            { name: 'leads', id: 'created_at' },
-            { name: 'logs', id: 'created_at' },
-            { name: 'chat_logs', id: 'created_at' }
+            { name: 'settings', id: 'key', limit: 100 },
+            { name: 'leads', id: 'created_at', limit: 30 },
+            { name: 'logs', id: 'created_at', limit: 100 },
+            { name: 'chat_logs', id: 'created_at', limit: 50 }
         ];
 
         for (const table of tables) {
-            await migrateTable(table.name, table.id);
-            await sleep(BATCH_DELAY_MS * 2); // Extra rest between tables
+            console.log(`Looping for table: ${table.name}`);
+            await migrateTable(table.name, table.id, table.limit);
+            console.log(`Finished migrateTable for ${table.name}. Waiting...`);
+            await sleep(BATCH_DELAY_MS * 2); 
+            console.log(`Done waiting for ${table.name}`);
         }
 
         // 2. Storage migration
