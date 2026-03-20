@@ -1,16 +1,16 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const axios = require('axios');
 
 /**
  * Creator Agent
- * Generates a complete, single-file HTML website for a given business using Gemini 2.5 Pro.
+ * Generates a complete, single-file HTML website for a given business using Gemini 2.0 Flash via OpenRouter.
  */
 class CreatorAgent {
     constructor() {
-        this.apiKey = process.env.GEMINI_API_KEY;
+        this.apiKey = process.env.OPENROUTER_API_KEY;
+        this.model = process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
         if (!this.apiKey) {
-            throw new Error('GEMINI_API_KEY is not defined in environment variables.');
+            throw new Error('OPENROUTER_API_KEY is not defined in environment variables.');
         }
-        this.ai = new GoogleGenerativeAI(this.apiKey);
     }
 
     /**
@@ -78,23 +78,34 @@ class CreatorAgent {
     `;
 
         try {
-            // Implement a 2-minute timeout to prevent the orchestrator from hanging indefinitely
-            let timeoutId;
-            const timeoutPromise = new Promise((_, reject) => {
-                timeoutId = setTimeout(() => reject(new Error('Gemini API request timed out after 2 minutes')), 120000);
-            });
+            const response = await axios.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                {
+                    model: this.model,
+                    messages: [
+                        {
+                            role: "user",
+                            content: prompt
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 8192
+                },
+                {
+                    headers: {
+                        "Authorization": `Bearer ${this.apiKey}`,
+                        "HTTP-Referer": "https://ksaverified.com", // Optional, for OpenRouter rankings
+                        "X-Title": "KSA Verified Orchestrator", // Optional, for OpenRouter rankings
+                        "Content-Type": "application/json"
+                    },
+                    timeout: 120000 // 2 minute timeout
+                }
+            );
 
-            const response = await Promise.race([
-                this.ai.getGenerativeModel({ model: 'gemini-1.5-flash' }).generateContent(prompt),
-                timeoutPromise
-            ]);
-
-            clearTimeout(timeoutId);
-
-            let htmlContent = response.response?.text() || '';
+            let htmlContent = response.data.choices[0].message.content || '';
 
             if (!htmlContent) {
-                throw new Error("Gemini returned an empty response. This may be due to safety filters or a model failure.");
+                throw new Error("OpenRouter returned an empty response. This may be due to safety filters or a model failure.");
             }
 
             // Clean up markdown block if the model included it despite the instruction
@@ -104,11 +115,12 @@ class CreatorAgent {
                 htmlContent = htmlContent.replace(/^```\n/, '').replace(/\n```$/, '');
             }
 
-            console.log(`[Creator] Website successfully generated for ${business.name}.`);
+            console.log(`[Creator] Website successfully generated for ${business.name} using OpenRouter.`);
             return htmlContent.trim();
         } catch (error) {
-            console.error(`[Creator] Error generating website: ${error.message}`);
-            throw error;
+            const errorMsg = error.response?.data?.error?.message || error.message;
+            console.error(`[Creator] Error generating website via OpenRouter: ${errorMsg}`);
+            throw new Error(`OpenRouter Error: ${errorMsg}`);
         }
     }
 }
