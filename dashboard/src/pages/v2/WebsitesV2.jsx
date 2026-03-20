@@ -1,9 +1,15 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Globe, ExternalLink, Code, Search, Eye, X, Activity } from 'lucide-react';
+import { Globe, ExternalLink, Code, Search, Eye, X, RefreshCcw, Sparkles } from 'lucide-react';
 import V2Shell from './V2Shell';
 
-const STATUSES = ['all', 'website_created', 'pitched', 'replied', 'interested', 'closed'];
+const STATUSES = ['all', 'scouted', 'published', 'pitched', 'warmed', 'interest_confirmed', 'completed', 'invalid'];
+
+const GENERIC_IDS = [
+    '1497366216548-37526070297c', // Hero
+    '1522071820081-009f0129c71c', // About
+    '1556761175-4b46a572b786', // Services
+];
 
 export default function WebsitesV2() {
     const [leads, setLeads] = useState([]);
@@ -12,6 +18,7 @@ export default function WebsitesV2() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [previewHtml, setPreviewHtml] = useState(null);
     const [previewName, setPreviewName] = useState('');
+    const [shuffling, setShuffling] = useState(null);
 
     useEffect(() => {
         fetchWebsites();
@@ -21,11 +28,88 @@ export default function WebsitesV2() {
         try {
             const { data } = await supabase
                 .from('leads')
-                .select('place_id, name, status, vercel_url, website_html, login_count, last_login_at, updated_at')
+                .select('place_id, name, status, vercel_url, website_html, photos, updated_at')
                 .not('vercel_url', 'is', null)
                 .order('updated_at', { ascending: false });
             if (data) setLeads(data);
         } catch (e) { console.error(e); } finally { setLoading(false); }
+    }
+
+    async function shuffleImages(lead) {
+        if (!lead.website_html) return;
+        setShuffling(lead.place_id);
+        
+        try {
+            let html = lead.website_html;
+            const validPhotos = (lead.photos || []).filter(p => !p.includes('maps/vt/icon') && !p.includes('streetview')); // filter out map icons
+            let photoIndex = 0;
+            let externalPhotos = [];
+            
+            // Check if we need more photos from Pexels
+            const genericMatches = GENERIC_IDS.filter(id => html.includes(id));
+            if (genericMatches.length > validPhotos.length) {
+                try {
+                    const query = encodeURIComponent(lead.name.split(' ').slice(0, 2).join(' ') || 'business'); // Simplify query
+                    const pexelsRes = await fetch(`https://api.pexels.com/v1/search?query=${query}&per_page=3&orientation=landscape`, {
+                        headers: {
+                            Authorization: import.meta.env.VITE_PEXELS_API_KEY
+                        }
+                    });
+                    
+                    if (pexelsRes.ok) {
+                        const data = await pexelsRes.json();
+                        externalPhotos = data.photos.map(p => p.src.large2x || p.src.large);
+                    }
+                } catch (err) {
+                    console.error("Pexels fetch failed:", err);
+                }
+            }
+
+            GENERIC_IDS.forEach((id) => {
+                const regex = new RegExp(`https://images\\.unsplash\\.com/photo-${id}[^"']*`, 'g');
+                if (html.includes(id)) {
+                    // 1. Try valid Google photos first
+                    // 2. Try Pexels search results
+                    // 3. Fallback to random Unsplash placeholder
+                    
+                    let replacementUrl = '';
+                    if (photoIndex < validPhotos.length) {
+                        replacementUrl = validPhotos[photoIndex];
+                        photoIndex++;
+                    } else if (externalPhotos.length > 0) {
+                        replacementUrl = externalPhotos.pop(); 
+                    } else {
+                        replacementUrl = `https://images.unsplash.com/photo-${Math.floor(Math.random()*1000000000000)}?q=80&w=1000&auto=format&fit=crop&sig=${Math.random()}`;
+                    }
+                    
+                    // Add some query params for caching/resizing if it's not a generic fallback
+                    if (!replacementUrl.includes('unsplash.com')) {
+                        // Ensure https if somehow missing
+                        if (replacementUrl.startsWith('//')) replacementUrl = 'https:' + replacementUrl;
+                    }
+                    
+                    html = html.replace(regex, replacementUrl);
+                }
+            });
+
+            const { error } = await supabase
+                .from('leads')
+                .update({ website_html: html })
+                .eq('place_id', lead.place_id);
+
+            if (!error) {
+                setLeads(prev => prev.map(l => l.place_id === lead.place_id ? { ...l, website_html: html } : l));
+            }
+        } catch (e) { console.error(e); } finally { setShuffling(null); }
+    }
+
+    async function repairAll() {
+        const toFix = leads.filter(l => GENERIC_IDS.some(id => l.website_html?.includes(id)));
+        if (!confirm(`Repair ${toFix.length} sites by replacing generic images?`)) return;
+        setLoading(true);
+        for (const lead of toFix) await shuffleImages(lead);
+        setLoading(false);
+        alert('Repair complete!');
     }
 
     const filtered = leads.filter(l => {
@@ -36,11 +120,13 @@ export default function WebsitesV2() {
 
     const statusStyle = (status) => {
         const map = {
-            website_created: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+            scouted: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+            published: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
             pitched: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-            replied: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-            interested: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-            closed: 'bg-green-500/10 text-green-400 border-green-500/20',
+            warmed: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+            interest_confirmed: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+            completed: 'bg-green-500/10 text-green-400 border-green-500/20',
+            invalid: 'bg-red-500/10 text-red-400 border-red-500/20',
         };
         return map[status] || 'bg-zinc-800 text-zinc-400 border-zinc-700';
     };
@@ -56,19 +142,23 @@ export default function WebsitesV2() {
                         <p className="text-sm text-zinc-500 mt-0.5">{leads.length} sites published via Vercel</p>
                     </div>
                     <div className="flex items-center gap-3">
+                        {leads.some(l => GENERIC_IDS.some(id => l.website_html?.includes(id))) && (
+                            <button onClick={repairAll}
+                                className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 rounded-lg text-xs font-bold text-amber-400 transition-all">
+                                <Sparkles className="w-3.5 h-3.5" /> Repair {leads.filter(l => GENERIC_IDS.some(id => l.website_html?.includes(id))).length} Similar Sites
+                            </button>
+                        )}
                         <div className="relative">
                             <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
                             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search..."
                                 className="pl-9 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 w-48" />
                         </div>
                         <div className="flex gap-1.5">
-                            {STATUSES.map(s => (
-                                <button key={s} onClick={() => setStatusFilter(s)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all
-                                        ${statusFilter === s ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}>
-                                    {s === 'website_created' ? 'created' : s}
-                                </button>
-                            ))}
+                            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+                                className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 focus:outline-none focus:border-zinc-600">
+                                <option value="all">All Statuses</option>
+                                {STATUSES.filter(s => s !== 'all').map(s => <option key={s} value={s}>{s}</option>)}
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -97,6 +187,10 @@ export default function WebsitesV2() {
                                     <div className="flex-1 text-[10px] text-zinc-600 font-mono truncate text-center pr-6">
                                         {lead.vercel_url?.replace('https://', '')}
                                     </div>
+                                    <button onClick={() => shuffleImages(lead)} disabled={shuffling === lead.place_id}
+                                        className={`p-1 rounded hover:bg-zinc-800 transition-colors ${shuffling === lead.place_id ? 'animate-spin text-amber-500' : 'text-zinc-600'}`}>
+                                        <RefreshCcw className="w-3 h-3" />
+                                    </button>
                                 </div>
                                 {/* Card body */}
                                 <div className="p-4 flex-1 flex flex-col">
@@ -105,12 +199,6 @@ export default function WebsitesV2() {
                                         <span className={`inline-flex items-center mt-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${statusStyle(lead.status)}`}>
                                             {lead.status}
                                         </span>
-                                        {lead.login_count > 0 && (
-                                            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-emerald-400">
-                                                <Activity className="w-3 h-3" />
-                                                {lead.login_count} client logins · {new Date(lead.last_login_at).toLocaleDateString('en-SA')}
-                                            </div>
-                                        )}
                                     </div>
                                     <div className="flex gap-2 mt-4">
                                         {lead.website_html && (
