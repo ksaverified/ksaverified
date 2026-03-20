@@ -65,7 +65,7 @@ export default function WebsitesV2() {
         try {
             const { data } = await supabase
                 .from('leads')
-                .select('place_id, name, types, status, vercel_url, website_html, photos, updated_at')
+                .select('place_id, name, status, vercel_url, website_html, photos, updated_at')
                 .not('vercel_url', 'is', null)
                 .order('updated_at', { ascending: false });
             if (data) setLeads(data);
