@@ -39,12 +39,12 @@ const AGENTS = [
 ];
 
 const PIPELINE_STAGES = [
-    { key: 'created', label: 'Scouted', color: '#6366f1' },
-    { key: 'website_created', label: 'Site Created', color: '#8b5cf6' },
+    { key: 'scouted', label: 'Scouted', color: '#6366f1' },
+    { key: 'published', label: 'Published', color: '#8b5cf6' },
     { key: 'pitched', label: 'Pitched', color: '#f59e0b' },
-    { key: 'replied', label: 'Replied', color: '#3b82f6' },
-    { key: 'interested', label: 'Interested', color: '#10b981' },
-    { key: 'closed', label: 'Closed', color: '#22c55e' },
+    { key: 'warmed', label: 'Warmed', color: '#3b82f6' },
+    { key: 'interest_confirmed', label: 'Interested', color: '#10b981' },
+    { key: 'completed', label: 'Closed', color: '#22c55e' },
 ];
 
 // ─── Agent Pill ───────────────────────────────────────────────────────────────
@@ -211,8 +211,8 @@ export default function OrchestratorDashboard() {
                 totalLeads,
                 websiteCount,
                 chatCount,
-                hotLeads: leadsData?.filter(l => l.status === 'interested').length || 0,
-                closedLeads: leadsData?.filter(l => l.status === 'closed').length || 0,
+                hotLeads: leadsData?.filter(l => l.status === 'interest_confirmed').length || 0,
+                closedLeads: leadsData?.filter(l => l.status === 'completed').length || 0,
             });
 
         } catch (e) {

@@ -14,9 +14,11 @@
     "@vis.gl/react-google-maps": "^1.7.1",
     "framer-motion": "^12.34.4",
     "lucide-react": "^0.576.0",
+    "node-fetch": "^3.3.2",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-router-dom": "^6.30.3"
+    "react-router-dom": "^6.30.3",
+    "unsplash-js": "^7.0.20"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

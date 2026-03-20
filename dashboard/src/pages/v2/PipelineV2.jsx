@@ -4,12 +4,12 @@ import { Users, Phone, MapPin, Eye, CheckCircle, X, Search, ArrowRight } from 'l
 import V2Shell from './V2Shell';
 
 const STAGES = [
-    { key: 'created', label: 'Scouted', color: '#6366f1', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400' },
-    { key: 'website_created', label: 'Site Created', color: '#8b5cf6', bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
+    { key: 'scouted', label: 'Scouted', color: '#6366f1', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400' },
+    { key: 'published', label: 'Published', color: '#8b5cf6', bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400' },
     { key: 'pitched', label: 'Pitched', color: '#f59e0b', bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-    { key: 'replied', label: 'Replied', color: '#3b82f6', bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400' },
-    { key: 'interested', label: 'Interested', color: '#10b981', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
-    { key: 'closed', label: 'Closed', color: '#22c55e', bg: 'bg-green-500/10', border: 'border-green-500/20', text: 'text-green-400' },
+    { key: 'warmed', label: 'Warmed', color: '#3b82f6', bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400' },
+    { key: 'interest_confirmed', label: 'Interested', color: '#10b981', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', text: 'text-emerald-400' },
+    { key: 'completed', label: 'Closed', color: '#22c55e', bg: 'bg-green-500/10', border: 'border-green-500/20', text: 'text-green-400' },
 ];
 
 const ALL_STATUSES = STAGES.map(s => s.key);

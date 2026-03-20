@@ -34,7 +34,7 @@ class RetoucherAgent {
         const businessTypesStr = ((business.types || []).join(' ') + ' ' + (business.name || '')).toLowerCase();
         let businessImages = [];
 
-        if (businessTypesStr.includes('hair') || businessTypesStr.includes('barber') || businessTypesStr.includes('salon') || businessTypesStr.includes('saloon') || businessTypesStr.includes('grooming') || businessTypesStr.includes('حلاقة')) {
+        if (businessTypesStr.includes('hair') || businessTypesStr.includes('barber') || businessTypesStr.includes('salon') || businessTypesStr.includes('saloon') || businessTypesStr.includes('grooming') || businessTypesStr.includes('حلاقة') || businessTypesStr.includes('صالون')) {
             businessImages = [
                 "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?q=80&w=1000&auto=format&fit=crop", // Barbershop
                 "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?q=80&w=1000&auto=format&fit=crop", // Hair styling
@@ -56,7 +56,7 @@ class RetoucherAgent {
                 "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1000&auto=format&fit=crop", // Phone repair person
                 "https://images.unsplash.com/photo-1574824874457-3fb2d887be17?q=80&w=1000&auto=format&fit=crop"  // Broken screen
             ];
-        } else if (businessTypesStr.includes('restaurant') || businessTypesStr.includes('cafe') || businessTypesStr.includes('food')) {
+        } else if (businessTypesStr.includes('restaurant') || businessTypesStr.includes('cafe') || businessTypesStr.includes('food') || businessTypesStr.includes('hot pot') || businessTypesStr.includes('hotpot') || businessTypesStr.includes('kitchen') || businessTypesStr.includes('dining') || businessTypesStr.includes('grill') || businessTypesStr.includes('bakery') || businessTypesStr.includes('pizza') || businessTypesStr.includes('burger') || businessTypesStr.includes('sushi') || businessTypesStr.includes('diner') || businessTypesStr.includes('eatery') || businessTypesStr.includes('sweets') || businessTypesStr.includes('مطعم') || businessTypesStr.includes('مقهى') || businessTypesStr.includes('مخبز')) {
             businessImages = [
                 "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?q=80&w=1000&auto=format&fit=crop", // Restaurant interior
                 "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?q=80&w=1000&auto=format&fit=crop", // Fine dining
@@ -78,7 +78,7 @@ class RetoucherAgent {
                 "https://images.unsplash.com/photo-1485231183945-80f6880da6d8?q=80&w=1000&auto=format&fit=crop", // Boutique interior
                 "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=1000&auto=format&fit=crop"  // Retail experience
             ];
-        } else if (businessTypesStr.includes('clinic') || businessTypesStr.includes('medical') || businessTypesStr.includes('doctor') || businessTypesStr.includes('health') || businessTypesStr.includes('عيادة') || businessTypesStr.includes('طبي')) {
+        } else if (businessTypesStr.includes('clinic') || businessTypesStr.includes('medical') || businessTypesStr.includes('doctor') || businessTypesStr.includes('health') || businessTypesStr.includes('عيادة') || businessTypesStr.includes('طبي') || businessTypesStr.includes('dental') || businessTypesStr.includes('dentist') || businessTypesStr.includes('hospital')) {
             businessImages = [
                 "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=1000&auto=format&fit=crop", // Modern clinic
                 "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=1000&auto=format&fit=crop", // Doctor
