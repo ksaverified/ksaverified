@@ -239,15 +239,15 @@ class DatabaseService {
         if (cleanPhone.length < 7) return null;
 
         const last7 = cleanPhone.slice(-7);
+        const last4 = cleanPhone.slice(-4); // Broader DB filter that survives spaces in stored format
 
-        // Use DB-side filtering: only pull rows where the phone column contains the last 7 digits.
-        // This avoids a full table scan and is safe because 7 trailing digits uniquely identify
-        // Saudi mobile numbers regardless of prefix formatting (+966 / 0 / bare).
+        // Use last 4 digits for a DB-side pre-filter (spaces in stored numbers like "+966 53 717 7672"
+        // break last-7 ilike matches). We then do precise digit matching in memory.
         const { data, error } = await this.supabase
             .from('leads')
             .select('*')
-            .ilike('phone', `%${last7}%`)
-            .limit(5); // small safety cap
+            .ilike('phone', `%${last4}%`)
+            .limit(20); // slightly wider cap since last4 is less selective
 
         if (error) {
             console.error('[DB] Error searching for lead by phone:', error.message);
@@ -256,11 +256,11 @@ class DatabaseService {
 
         if (!data || data.length === 0) return null;
 
-        // Do the precise in-memory check on the small result set
+        // Precise in-memory check: strip ALL non-digits from the stored phone and compare
         for (const lead of data) {
             if (lead.phone) {
                 const dbCleanPhone = lead.phone.replace(/\D/g, '');
-                if (dbCleanPhone.includes(last7) || cleanPhone.includes(dbCleanPhone)) {
+                if (dbCleanPhone.endsWith(last7) || cleanPhone.endsWith(dbCleanPhone.slice(-7))) {
                     return lead;
                 }
             }
