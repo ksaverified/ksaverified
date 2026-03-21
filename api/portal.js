@@ -59,7 +59,8 @@ async function handleRequestPassword(req, res) {
         
         // 3. Send the PIN via WhatsApp Service
         const axios = require('axios');
-        const waUrl = process.env.WHATSAPP_API_URL || 'http://127.0.0.1:8081';
+        // Temporarily hardcoded for immediate stability due to Vercel env propagation lag
+        const waUrl = 'https://adelaida-ferulaceous-hypsometrically.ngrok-free.dev';
         
         console.log(`[Portal] Sending PIN to ${waUrl}/send for phone ${formattedPhone}`);
         
