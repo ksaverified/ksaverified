@@ -227,7 +227,7 @@ async function startWhatsApp() {
     // Express API Endpoints
 
     app.get('/', (req, res) => {
-        res.send('Atlas Digital WhatsApp API Service Running.');
+        res.send('KSAVerified WhatsApp API Service Running.');
     });
 
     app.get('/qr', (req, res) => {
@@ -430,7 +430,7 @@ async function startWhatsApp() {
 
     const PORT = process.env.PORT || 8080;
     app.listen(PORT, () => {
-        console.log(`[Express] WhatsApp Microservice listening on port ${PORT}`);
+        console.log(`[Express] KSAVerified WhatsApp Microservice listening on port ${PORT}`);
     });
 }
 

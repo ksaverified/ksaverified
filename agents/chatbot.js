@@ -70,6 +70,13 @@ class ChatbotAgent {
         return intent;
     }
 
+    async detectLanguageManual(text) {
+        if (!text) return 'en';
+        // Simple heuristic for Arabic characters
+        const arabicPattern = /[\u0600-\u06FF]/;
+        return arabicPattern.test(text) ? 'ar' : 'en';
+    }
+
     async handleMessage(lead, incomingPhone, messageText, db) {
         try {
             // 1. Classify Intent first
@@ -92,7 +99,23 @@ class ChatbotAgent {
                 return;
             }
 
-            // 3. Handle Explicit Interest (Automated Trial Activation) - ONLY for known leads
+            // 3. Mission Step Handling
+            if (lead && lead.chatbot_mission_step === 'greeting_sent') {
+                console.log(`[Chatbot] ${lead.name} replied to greeting. Moving to wait state.`);
+                await db.supabase
+                    .from('leads')
+                    .update({ 
+                        chatbot_mission_step: 'user_answered_greeting',
+                        chatbot_last_contact_at: new Date().toISOString()
+                    })
+                    .eq('place_id', lead.place_id);
+                
+                await db.addLog('chatbot', 'mission_step_updated', lead.place_id, { step: 'user_answered_greeting' }, 'info');
+                // We don't reply immediately, we wait 10 minutes (handled by script)
+                return;
+            }
+
+            // 4. Handle Explicit Interest (Automated Trial Activation) - ONLY for known leads
             if (lead && intent === 'USER_INTERESTED' && (lead.status === 'scouted' || lead.status === 'warming_sent')) {
                 console.log(`[Chatbot] Interest Confirmed for ${lead.name}. Activating Trial...`);
                 await db.updateLeadStatus(lead.place_id, 'interest_confirmed', { 
@@ -136,12 +159,34 @@ We are finalizing your custom AI-powered website now. You will receive a link to
             const businessName = lead ? lead.name : "Valued Business";
             const previewUrl = lead ? lead.vercel_url : "https://ksaverified.com/login";
             const currentStatus = lead ? lead.status : "new inquiry";
+            const missionStep = lead ? lead.chatbot_mission_step : null;
+
+            // Script Branching Instructions
+            let scriptInstructions = "";
+            if (missionStep === 'website_query_sent' || missionStep === 'trial_offered') {
+                scriptInstructions = `
+                CURRENT MISSION CONTEXT:
+                - If the person answered in Arabic, continue the entire conversation in Arabic.
+                - If the person answered in English, ask if they are comfortable talking in English or prefer Arabic.
+                - If they confirm they've seen the website: Offer a 1-week FREE TRIAL. Explain clearly that if they don't subscribe after the week, the service will be deactivated.
+                - If they haven't seen it: Send them the preview link (${previewUrl}) and say you'll wait for them to check it and you're here to help.
+                
+                SPECIFIC OBJECTIONS:
+                - "I can't see it / site blocked": Give them a 1-day unblock exception and message them about it.
+                - "How much?": Mark their status as "Interest Confirmed" and offer the 1-month promotion for 19 SAR.
+                - "How to pay?": Payment via STC Pay to 966507913514. They must send the receipt here for activation.
+                - "Is it permanent?": Explain it's a prepaid model (like a phone credit). Service is active when paid, blocked when not. No extra charges.
+                - "Can I change something?": We don't do modifications in this phase, but take their requirements and say we'll implement them as soon as possible.
+                `;
+            }
 
             const prompt = `
 System Prompt:
 You are the KSA Verified AI Sales Assistant, representing KSA Verified—a premium, automated web development and business intelligence agency. 
 
 Your goal is to answer questions from local business owners (like ${businessName}) who messaged you.
+
+${scriptInstructions}
 
 NEW PROMOTION: 
 - 1 Week FREE Trial: They can test the site for 7 days without paying. If they express interest, tell them their "Free Week" starts NOW.

@@ -124,7 +124,7 @@ const Login = () => {
             </motion.div>
 
             <div className="absolute bottom-8 text-center text-[10px] text-gray-600 font-mono tracking-widest uppercase opacity-50">
-                &copy; 2026 Atlas Digital System // Encrypted Session
+                &copy; 2026 KSAVerified System // Encrypted Session
             </div>
         </div>
     );
