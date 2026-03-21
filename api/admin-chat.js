@@ -154,7 +154,7 @@ ${contextText}`
                         result = 'Successfully started chatbot mission (sending greetings to up to 50 leads) in the background.';
                     } else if (name === 'send_whatsapp_message') {
                         const axios = require('axios');
-                        const url = process.env.WHATSAPP_API_URL || 'http://127.0.0.1:8082';
+                        const url = process.env.WHATSAPP_API_URL || 'http://127.0.0.1:8081';
                         // Catch error silently so the bot can report it smoothly
                         await axios.post(`${url}/send`, { to: args.phone, message: args.message });
                         result = `Successfully sent message to ${args.phone}`;

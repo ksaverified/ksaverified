@@ -39,7 +39,7 @@ async function handleRequestPassword(req, res) {
         
         // 3. Send the PIN via WhatsApp Service
         const axios = require('axios');
-        const waUrl = process.env.WHATSAPP_API_URL || 'http://127.0.0.1:8082';
+        const waUrl = process.env.WHATSAPP_API_URL || 'http://127.0.0.1:8081';
         
         const message = `Hello ${lead.name}!\n\nYour secure KSA Verified Customer Portal login code is: *${registrationData.pin}*\n\nPlease enter this code to sign in.\n\n---\nمرحباً ${lead.name}!\n\nرمز تسجيل الدخول الآمن الخاص بك لبوابة عملاء KSA Verified هو: *${registrationData.pin}*\n\nيرجى إدخال هذا الرمز لتسجيل الدخول.`;
         

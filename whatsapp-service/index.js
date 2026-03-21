@@ -5,8 +5,8 @@ const qrImage = require('qr-image');
 const { downloadSession, uploadSession } = require('./supabaseStorage');
 const path = require('path');
 require('dotenv').config();
-const PORT = process.env.PORT || 8080;
-
+const PORT = process.env.PORT || 8081;
+console.log(`[Express] Port configured as: ${PORT} (Source: ${process.env.PORT ? 'ENV' : 'Default'})`);
 const app = express();
 app.use(express.json());
 
@@ -428,7 +428,7 @@ async function startWhatsApp() {
         }
     });
 
-    const PORT = process.env.PORT || 8080;
+    const PORT = process.env.PORT || 8081;
     app.listen(PORT, () => {
         console.log(`[Express] KSAVerified WhatsApp Microservice listening on port ${PORT}`);
     });
