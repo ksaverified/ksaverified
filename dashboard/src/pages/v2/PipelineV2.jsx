@@ -121,7 +121,8 @@ export default function PipelineV2() {
                                 {filtered.map(lead => {
                                     const stage = getStage(lead.status);
                                     return (
-                                        <tr key={lead.place_id} className="hover:bg-zinc-800/20 transition-colors">
+                                        <tr key={lead.place_id} className="hover:bg-zinc-800/20 transition-colors cursor-pointer"
+                                            onClick={() => navigate(`/admin-v2/pipeline/${lead.place_id}`)}>
                                             <td className="px-4 py-3">
                                                 <p className="text-sm font-medium text-zinc-200">{lead.name}</p>
                                                 <p className="text-[11px] text-zinc-600 flex items-center gap-1 mt-0.5">
@@ -182,7 +183,7 @@ export default function PipelineV2() {
                                         {stageLeads.slice(0, 10).map(lead => (
                                             <div key={lead.place_id}
                                                 className="p-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all cursor-pointer group"
-                                                onClick={() => setModal(lead)}>
+                                                onClick={() => navigate(`/admin-v2/pipeline/${lead.place_id}`)}>
                                                 <p className="text-xs font-semibold text-zinc-300 group-hover:text-white truncate">{lead.name}</p>
                                                 <p className="text-[10px] text-zinc-600 mt-1 flex items-center gap-1">
                                                     <Phone className="w-2.5 h-2.5" />

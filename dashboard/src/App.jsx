@@ -27,6 +27,7 @@ import WhatsAppV2 from './pages/v2/WhatsAppV2';
 import MapV2 from './pages/v2/MapV2';
 import AnswersV2 from './pages/v2/AnswersV2';
 import SettingsV2 from './pages/v2/SettingsV2';
+import LeadDetailV2 from './pages/v2/LeadDetailV2';
 
 function App() {
   return (
@@ -77,6 +78,7 @@ function App() {
           <Route path="/admin-v2/whatsapp" element={<AuthGuard><WhatsAppV2 /></AuthGuard>} />
           <Route path="/admin-v2/map" element={<AuthGuard><MapV2 /></AuthGuard>} />
           <Route path="/admin-v2/answers" element={<AuthGuard><AnswersV2 /></AuthGuard>} />
+          <Route path="/admin-v2/pipeline/:placeId" element={<AuthGuard><LeadDetailV2 /></AuthGuard>} />
           <Route path="/admin-v2/settings" element={<AuthGuard><SettingsV2 /></AuthGuard>} />
         </Routes>
       </BrowserRouter>
