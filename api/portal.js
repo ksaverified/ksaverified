@@ -105,7 +105,7 @@ async function handleGetWebsiteConfig(req, res) {
 
     const { data: lead, error } = await supabase
         .from('leads')
-        .select('website_config, name, address, phone')
+        .select('website_config, website_html, name, address, phone')
         .eq('phone', phone)
         .single();
 
@@ -114,12 +114,30 @@ async function handleGetWebsiteConfig(req, res) {
     // Initialize default config if empty
     let config = lead.website_config;
     if (!config || Object.keys(config).length === 0) {
-        config = {
-            en: { title: lead.name, subtitle: '', hero_text: '', about: '', services: [], testimonials: [] },
-            ar: { title: lead.name, subtitle: '', hero_text: '', about: '', services: [], testimonials: [] },
-            contact: { phone: lead.phone, email: '', address: lead.address, google_maps_iframe: '' },
-            photos: { hero: '', about: '' }
-        };
+        console.log(`[Portal] Config for ${phone} is empty. Attempting to extract from HTML...`);
+        
+        const PatcherService = require('../services/patcher');
+        const patcher = new PatcherService();
+
+        // 1. Try to extract from HTML using the PatcherService
+        if (lead.website_html) {
+            const extracted = await patcher.extractConfig(lead.website_html);
+            if (extracted) {
+                config = extracted;
+                // Save it immediately so next time is faster
+                await supabase.from('leads').update({ website_config: config }).eq('phone', phone);
+            }
+        }
+
+        // 2. Fallback to basic defaults if extraction fails or no HTML
+        if (!config || Object.keys(config).length === 0) {
+            config = {
+                en: { title: lead.name, subtitle: '', hero_text: '', about: '', services: [], testimonials: [] },
+                ar: { title: lead.name, subtitle: '', hero_text: '', about: '', services: [], testimonials: [] },
+                contact: { phone: lead.phone, email: '', address: lead.address, google_maps_iframe: '' },
+                photos: { hero: '', about: '' }
+            };
+        }
     }
 
     return res.status(200).json({ success: true, config });

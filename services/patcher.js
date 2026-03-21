@@ -92,6 +92,101 @@ ${JSON.stringify(config, null, 2)}
             return currentHtml;
         }
     }
+
+    /**
+     * Extracts the current website configuration from the provided HTML.
+     * This is useful for pre-populating the editor for the first time.
+     * @param {string} html - The existing website HTML
+     * @returns {Promise<Object>} The extracted configuration object
+     */
+    async extractConfig(html) {
+        if (!this.apiKey) return null;
+
+        console.log('[Patcher] Extracting configuration from HTML...');
+
+        const systemPrompt = `You are a specialist in reverse-engineering HTML into structured JSON.
+Your task is to take a full website HTML and extract its content into a specific JSON schema.
+
+SCHEMA:
+{
+  "en": {
+    "title": "...",
+    "subtitle": "...",
+    "hero_text": "...",
+    "about": "...",
+    "services": [{"title": "...", "text": "...", "photo": "..."}],
+    "testimonials": [{"name": "...", "text": "..."}]
+  },
+  "ar": {
+    "title": "...",
+    "subtitle": "...",
+    "hero_text": "...",
+    "about": "...",
+    "services": [{"title": "...", "text": "...", "photo": "..."}],
+    "testimonials": [{"name": "...", "text": "..."}]
+  },
+  "contact": {
+    "phone": "...",
+    "email": "...",
+    "address": "...",
+    "google_maps_iframe": "..."
+  },
+  "photos": {
+    "hero": "...",
+    "about": "..."
+  }
+}
+
+RULES:
+1. **ACCURACY**: Extract exactly what's written in the HTML.
+2. **SERVICES**: Match the items in the same order. If images are present, include their src.
+3. **BILINGUAL**: 
+   - Look for elements with [data-lang="en"] or .lang-en for English.
+   - Look for elements with [data-lang="ar"] or .lang-ar for Arabic.
+4. **FALLBACK**: If a language section is missing, try to translate the other language or leave empty.
+5. **MAPS**: Extract the <iframe> src or the full iframe tag if it's a Google Map.
+6. **PHOTOS**: Extract the main hero image and about section image.
+
+OUTPUT: Return ONLY the JSON object. No markdown.`;
+
+        const userPrompt = `HTML CONTENT:\n${html.substring(0, 15000)}`;
+
+        try {
+            const response = await axios.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                {
+                    model: this.model,
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userPrompt }
+                    ],
+                    temperature: 0.1,
+                    max_tokens: 8000
+                },
+                {
+                    headers: {
+                        "Authorization": `Bearer ${this.apiKey}`,
+                        "Content-Type": "application/json"
+                    },
+                    timeout: 45000
+                }
+            );
+
+            let content = response.data.choices[0].message.content || '';
+            
+            // Clean up potentially included markdown
+            if (content.startsWith('```json')) {
+                content = content.replace(/^```json\n/, '').replace(/\n```$/, '');
+            } else if (content.startsWith('```')) {
+                content = content.replace(/^```\n/, '').replace(/\n```$/, '');
+            }
+
+            return JSON.parse(content.trim());
+        } catch (error) {
+            console.error(`[Patcher] Error extracting config: ${error.message}`);
+            return null;
+        }
+    }
 }
 
 module.exports = PatcherService;
