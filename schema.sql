@@ -29,6 +29,7 @@ CREATE TABLE leads (
     claimed_by UUID, -- Reference to salesmen table
     claimed_at TIMESTAMP WITH TIME ZONE,
     slug TEXT, -- SEO friendly URL name
+    website_config JSONB DEFAULT '{}'::jsonb, -- Structured website content
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

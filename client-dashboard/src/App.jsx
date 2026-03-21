@@ -4,6 +4,7 @@ import AuthGuard from './components/AuthGuard';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import MyWebsite from './pages/MyWebsite';
+import WebsiteEditor from './pages/WebsiteEditor';
 import Profile from './pages/Profile';
 import Payment from './pages/Payment';
 
@@ -21,6 +22,7 @@ function App() {
           }>
             <Route index element={<Navigate to="/my-website" replace />} />
             <Route path="my-website" element={<MyWebsite />} />
+            <Route path="editor" element={<WebsiteEditor />} />
             <Route path="profile" element={<Profile />} />
             <Route path="payment" element={<Payment />} />
           </Route>

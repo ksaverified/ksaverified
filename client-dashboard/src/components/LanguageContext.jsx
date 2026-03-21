@@ -9,7 +9,46 @@ const translations = {
             profile: "Profile",
             payment: "Payment",
             signOut: "Sign Out",
-            portal: "Client Portal"
+            portal: "Client Portal",
+            editor: "Edit Website"
+        },
+        editor: {
+            title: "Website Editor",
+            subtitle: "Update your content and photos in both languages",
+            save: "Save Changes",
+            saving: "Saving...",
+            saved: "Website updated! Changes will appear shortly.",
+            tabs: {
+                content: "Content",
+                services: "Services",
+                testimonials: "Testimonials",
+                contact: "Contact",
+                photos: "Photos"
+            },
+            fields: {
+                title: "Website Title",
+                subtitle: "Main Subtitle",
+                hero: "Hero Section Text",
+                about: "About Us Text",
+                serviceTitle: "Service Name",
+                serviceDesc: "Service Description",
+                testiName: "Client Name",
+                testiText: "Testimonial",
+                phone: "Phone Numbers",
+                email: "Email Address",
+                address: "Physical Address",
+                maps: "Google Maps Iframe (Embed)",
+                heroPhoto: "Hero Photograph",
+                aboutPhoto: "About Us Photo",
+                servicePhoto: "Service Image"
+            },
+            actions: {
+                addService: "Add Service",
+                addTesti: "Add Testimonial",
+                remove: "Remove",
+                reset: "Reset Photo",
+                maxReached: "Maximum limit reached"
+            }
         },
         login: {
             title: "KSA Verified",
@@ -87,7 +126,46 @@ const translations = {
             profile: "الملف الشخصي",
             payment: "الدفع",
             signOut: "تسجيل الخروج",
-            portal: "بوابة العملاء"
+            portal: "بوابة العملاء",
+            editor: "تعديل الموقع"
+        },
+        editor: {
+            title: "محرر الموقع",
+            subtitle: "تحديث المحتوى والصور باللغتين",
+            save: "حفظ التغييرات",
+            saving: "جاري الحفظ...",
+            saved: "تم تحديث الموقع! ستظهر التغييرات قريباً.",
+            tabs: {
+                content: "المحتوى",
+                services: "الخدمات",
+                testimonials: "الآراء",
+                contact: "الاتصال",
+                photos: "الصور"
+            },
+            fields: {
+                title: "عنوان الموقع",
+                subtitle: "العنوان الفرعي الرئيسي",
+                hero: "نص قسم الترحيب",
+                about: "نص من نحن",
+                serviceTitle: "اسم الخدمة",
+                serviceDesc: "وصف الخدمة",
+                testiName: "اسم العميل",
+                testiText: "الرأي",
+                phone: "أرقام الهاتف",
+                email: "البريد الإلكتروني",
+                address: "العنوان الفعلي",
+                maps: "كود خريطة جوجل (Iframe)",
+                heroPhoto: "صورة قسم الترحيب",
+                aboutPhoto: "صورة من نحن",
+                servicePhoto: "صورة الخدمة"
+            },
+            actions: {
+                addService: "إضافة خدمة",
+                addTesti: "إضافة رأي",
+                remove: "إزالة",
+                reset: "إعادة تعيين الصورة",
+                maxReached: "تم الوصول للحد الأقصى"
+            }
         },
         login: {
             title: "KSA Verified",
