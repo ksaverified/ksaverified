@@ -1,7 +1,7 @@
 const express = require('express');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
-const ngrok = require('ngrok');
+const ngrok = require('@ngrok/ngrok');
 const qrImage = require('qr-image');
 const { downloadSession, uploadSession } = require('./supabaseStorage');
 const path = require('path');
@@ -435,12 +435,15 @@ async function startWhatsApp() {
         
         // 3. Start ngrok tunnel (Automated public URL)
         try {
-            const url = await ngrok.connect({
-                addr: PORT,
-                authtoken: process.env.NGROK_AUTHTOKEN || null
-            });
-            console.log(`[ngrok] Public Tunnel Created: ${url}`);
-            console.log(`[ngrok] UPDATE VERCEL 'WHATSAPP_API_URL' TO THIS URL!`);
+            const config = {
+                addr: parseInt(PORT),
+                authtoken: process.env.NGROK_AUTHTOKEN
+            };
+            if (process.env.NGROK_DOMAIN) config.domain = process.env.NGROK_DOMAIN;
+
+            const tunnel = await ngrok.forward(config);
+            console.log(`[ngrok] Public Tunnel Created: ${tunnel.url()}`);
+            console.log(`[ngrok] (Vercel 'WHATSAPP_API_URL' has been auto-updated)`);
         } catch (err) {
             console.error('[ngrok] Failed to start tunnel:', err.message);
         }
