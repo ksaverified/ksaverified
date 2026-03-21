@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
+import { useSearchParams } from 'react-router-dom';
 import { MessageCircle, Search, User, Hash, Globe2, Send, Loader2 } from 'lucide-react';
 import V2Shell from './V2Shell';
 
@@ -31,6 +32,8 @@ export default function WhatsAppV2() {
     const [replyText, setReplyText] = useState('');
     const [isTranslating, setIsTranslating] = useState(false);
     const [isSending, setIsSending] = useState(false);
+    const [searchParams] = useSearchParams();
+    const phoneParam = searchParams.get('phone');
     const endRef = useRef(null);
 
     useEffect(() => {
@@ -58,10 +61,12 @@ export default function WhatsAppV2() {
                 const seen = new Set();
                 const threads = [];
                 rows.forEach(log => {
+                    const cleanPhone = log.phone.replace('@c.us', '');
                     if (!seen.has(log.phone)) {
                         seen.add(log.phone);
                         threads.push({
                             phone: log.phone,
+                            cleanPhone: cleanPhone,
                             name: log.leads?.name || 'Unknown Lead',
                             lastMessage: log.message_in || log.message_out || '—',
                             lastTime: log.created_at,
@@ -70,6 +75,15 @@ export default function WhatsAppV2() {
                     }
                 });
                 setThreads(threads);
+
+                // Auto-select if phone param is present
+                if (phoneParam && !active) {
+                    const target = threads.find(t => t.cleanPhone === phoneParam || t.phone === phoneParam);
+                    if (target) {
+                        setActive(target);
+                        fetchMessages(target.phone);
+                    }
+                }
             }
         } catch (e) { console.error(e); } finally { setLoading(false); }
     }

@@ -135,7 +135,7 @@ We are finalizing your custom AI-powered website now. You will receive a link to
 
                 const closer = new CloserAgent();
                 await closer.sendMessage(incomingPhone, activationMsg);
-                await db.saveOutboundChatLog(lead.place_id, incomingPhone, activationMsg);
+                // Note: outbound log is handled automatically by whatsapp-service message_create event
                 return; // Stop here, the Orchestrator will pick it up
             }
 

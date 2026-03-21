@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { Terminal, Copy, Check, RefreshCw } from 'lucide-react';
+import { Terminal, Copy, Check, RefreshCw, MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import V2Shell from './V2Shell';
 
 const AGENTS = ['orchestrator', 'scout', 'creator', 'retoucher', 'publisher', 'closer', 'chatbot', 'biller', 'auditor'];
@@ -152,7 +153,13 @@ export default function LogsV2() {
                                         {new Date(log.created_at).toLocaleTimeString()}
                                     </span>
                                     <span className={`flex-shrink-0 w-28 font-semibold capitalize text-[11px] pt-0.5 ${statusColor(log.status)}`}>
-                                        [{log.agent}]
+                                        {log.details?.phone ? (
+                                            <Link to={`/admin-v2/whatsapp?phone=${log.details.phone}`} className="hover:underline flex items-center gap-1 group/link">
+                                                [{log.agent}] <MessageSquare className="w-2 h-2 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                                            </Link>
+                                        ) : (
+                                            `[${log.agent}]`
+                                        )}
                                     </span>
                                     <span className="text-zinc-300 text-[11px] leading-relaxed">
                                         {log.action}

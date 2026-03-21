@@ -5,7 +5,7 @@ require('dotenv').config();
 
 /**
  * Chatbot Mission Orchestrator
- * Contacts 10 leads with a specific multi-step script.
+ * Contacts leads that haven't yet been greeted, up to 50 per run.
  */
 async function runMission() {
     console.log('[Mission] Starting Chatbot Contact Mission...');
@@ -14,16 +14,18 @@ async function runMission() {
     const chatbot = new ChatbotAgent();
 
     try {
-        // 1. Fetch the first 10 leads ordered by created_at
+        // Fetch leads that have NOT been contacted yet (no chatbot_mission_step)
         const { data: leads, error } = await db.supabase
             .from('leads')
             .select('*')
+            .is('chatbot_mission_step', null)
             .order('created_at', { ascending: true })
-            .limit(10);
+            .limit(50);
 
         if (error) throw error;
 
         console.log(`[Mission] Processing ${leads.length} leads...`);
+        const contactedPhones = new Set();
 
         for (const lead of leads) {
             try {
@@ -37,12 +39,20 @@ async function runMission() {
 
                 const cleanPhone = phone.replace(/\D/g, '');
                 
+                // Skip if we already contacted this phone in this run (prevents cross-company contamination)
+                if (contactedPhones.has(cleanPhone)) {
+                    console.log(`[Mission] Already contacted ${cleanPhone} in this run. Skipping ${lead.name}.`);
+                    continue;
+                }
+
                 // Skip if it looks like a landline (not starting with 05 or 5 or 9665)
                 const isMobile = cleanPhone.startsWith('9665') || cleanPhone.startsWith('05') || (cleanPhone.startsWith('5') && cleanPhone.length === 9);
                 if (!isMobile) {
                     console.warn(`[Mission] Lead ${lead.name} (${cleanPhone}) is likely a landline. Skipping.`);
                     continue;
                 }
+
+                contactedPhones.add(cleanPhone);
 
                 // Step 1: Initial Greeting
                 if (!step) {
@@ -51,7 +61,7 @@ async function runMission() {
                     
                     try {
                         await closer.sendMessage(cleanPhone, greeting);
-                        await db.saveOutboundChatLog(lead.place_id, cleanPhone, greeting);
+                        // Note: outbound log is handled automatically by whatsapp-service message_create event
                         
                         await db.supabase
                             .from('leads')
@@ -93,7 +103,7 @@ async function runMission() {
                             }
 
                             await closer.sendMessage(cleanPhone, followUp);
-                            await db.saveOutboundChatLog(lead.place_id, cleanPhone, followUp);
+                            // Note: outbound log is handled automatically by whatsapp-service message_create event
 
                             await db.supabase
                                 .from('leads')

@@ -272,17 +272,20 @@ class DatabaseService {
     /**
      * Save an inbound chat interaction
      */
-    async saveChatLog(placeId, phone, messageIn, messageOut, status = 'pending', translatedMessage = null) {
+    async saveChatLog(placeId, phone, messageIn, messageOut, status = 'pending', translatedMessage = null, whatsappMsgId = null) {
+        const payload = {
+            place_id: placeId,
+            phone: phone,
+            message_in: messageIn,
+            message_out: messageOut,
+            status: status,
+            translated_message: translatedMessage,
+            whatsapp_msg_id: whatsappMsgId
+        };
+        
         const { error } = await this.supabase
             .from('chat_logs')
-            .insert({
-                place_id: placeId,
-                phone: phone,
-                message_in: messageIn,
-                message_out: messageOut,
-                status: status,
-                translated_message: translatedMessage
-            });
+            .upsert(payload, { onConflict: 'whatsapp_msg_id', ignoreDuplicates: true });
 
         if (error) {
             console.error('[DB] Error saving chat log:', error.message);
@@ -292,17 +295,20 @@ class DatabaseService {
     /**
      * Save only an inbound message (used by webhook)
      */
-    async saveInboundChatLog(placeId, phone, messageIn, translatedMessage = null) {
+    async saveInboundChatLog(placeId, phone, messageIn, translatedMessage = null, whatsappMsgId = null) {
+        const payload = {
+            place_id: placeId,
+            phone: phone,
+            message_in: messageIn,
+            message_out: null,
+            status: 'pending',
+            translated_message: translatedMessage,
+            whatsapp_msg_id: whatsappMsgId
+        };
+
         const { error } = await this.supabase
             .from('chat_logs')
-            .insert({
-                place_id: placeId,
-                phone: phone,
-                message_in: messageIn,
-                message_out: null,
-                status: 'pending',
-                translated_message: translatedMessage
-            });
+            .upsert(payload, { onConflict: 'whatsapp_msg_id', ignoreDuplicates: true });
 
         if (error) {
             console.error('[DB] Error saving inbound chat log:', error.message);
@@ -350,16 +356,19 @@ class DatabaseService {
     /**
      * Save a unilateral outbound message (e.g. from manual admin typing or webhook)
      */
-    async saveOutboundChatLog(placeId, phone, messageOut) {
+    async saveOutboundChatLog(placeId, phone, messageOut, whatsappMsgId = null) {
+        const payload = {
+            place_id: placeId,
+            phone: phone,
+            message_in: null,
+            message_out: messageOut,
+            status: 'approved', // Automatically "approved" so it bypasses AI Answers queue but shows in loop
+            whatsapp_msg_id: whatsappMsgId
+        };
+
         const { error } = await this.supabase
             .from('chat_logs')
-            .insert({
-                place_id: placeId,
-                phone: phone,
-                message_in: null,
-                message_out: messageOut,
-                status: 'approved' // Automatically "approved" so it bypasses AI Answers queue but shows in loop
-            });
+            .upsert(payload, { onConflict: 'whatsapp_msg_id', ignoreDuplicates: true });
 
         if (error) {
             console.error('[DB] Error saving outbound chat log:', error.message);

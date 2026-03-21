@@ -154,7 +154,7 @@ async function startWhatsApp() {
                 // 2. Identify lead and log
                 const lead = await db.getLeadByPhone(fromPhone);
                 const placeId = lead ? lead.place_id : null;
-                await db.saveInboundChatLog(placeId, fromPhone, msg.body, translatedMsg);
+                await db.saveInboundChatLog(placeId, fromPhone, msg.body, translatedMsg, msg.id._serialized);
 
                 // 3. Handle via ChatbotAgent (REPLIES HAPPEN LOCALLY NOW)
                 chatbot.handleMessage(lead, fromPhone, msg.body, db).catch(e => {
@@ -163,7 +163,7 @@ async function startWhatsApp() {
             } else {
                 const lead = await db.getLeadByPhone(fromPhone);
                 const placeId = lead ? lead.place_id : null;
-                await db.saveInboundChatLog(placeId, fromPhone, msg.body, null);
+                await db.saveInboundChatLog(placeId, fromPhone, msg.body, null, msg.id._serialized);
                 console.log(`[Local-Bot] Old message logged (sync only) from ${fromPhone}`);
             }
         }
@@ -171,7 +171,7 @@ async function startWhatsApp() {
         if (event_type === 'message_create' && msg.fromMe && msg.type === 'chat') {
             const lead = await db.getLeadByPhone(toPhone);
             const placeId = lead ? lead.place_id : null;
-            await db.saveOutboundChatLog(placeId, toPhone, msg.body);
+            await db.saveOutboundChatLog(placeId, toPhone, msg.body, msg.id._serialized);
             console.log(`[Local-Bot] Outbound logged to ${toPhone}`);
         }
 

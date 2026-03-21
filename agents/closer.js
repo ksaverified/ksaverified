@@ -109,11 +109,7 @@ class CloserAgent {
             await this.sendMedia(formattedPhone, marketingImageUrl, "KSA Verified 💎");
 
             // 2. Send the Access Details message SECOND
-            console.log(`[Closer] Step 2: Sending dashboard details to ${formattedPhone}...`);
             await this.sendMessage(formattedPhone, messageBody);
-
-            // 3. Log to history
-            await db.saveOutboundChatLog(registrationData.place_id || null, formattedPhone, messageBody);
 
             console.log(`[Closer] Enhanced Pitch successfully delivered to ${formattedPhone}`);
             return 'local_sent';
@@ -140,18 +136,7 @@ Would you like to see a custom preview for your business completely for free? Ju
 هل تود رؤية معاينة مخصصة لعملك مجاناً تماماً؟ فقط رد بـ "نعم" وسنرسلها لك!`;
 
         console.log(`[Closer] Warming lead ${formattedPhone}...`);
-        const sent = await this.sendMessage(formattedPhone, message);
-        if (sent) {
-            // Log to chat_logs for dashboard visibility
-            try {
-                const db = new (require('../services/db'))();
-                const lead = await db.getLeadByPhone(formattedPhone);
-                await db.saveOutboundChatLog(lead?.place_id || null, formattedPhone, message);
-            } catch (e) {
-                console.warn(`[Closer] Failed to log warming message history: ${e.message}`);
-            }
-        }
-        return sent;
+        return await this.sendMessage(formattedPhone, message);
     }
 
     /**
@@ -187,12 +172,6 @@ Reply 'INTERESTED' to activate this offer!
         try {
             await this.sendMedia(formattedPhone, promoImageUrl, "Flash Sale: 1 Week FREE + 19 SAR 🚀");
             await this.sendMessage(formattedPhone, message);
-
-            // Log to history
-            const db = new (require('../services/db'))();
-            const lead = await db.getLeadByPhone(formattedPhone);
-            await db.saveOutboundChatLog(lead?.place_id || null, formattedPhone, message);
-
             return true;
         } catch (err) {
             console.error(`[Closer] Promo send failed: ${err.message}`);
