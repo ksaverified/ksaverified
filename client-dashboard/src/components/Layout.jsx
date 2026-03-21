@@ -32,9 +32,12 @@ export default function Layout() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0c10] flex">
+        <div className="min-h-screen bg-[#0a0c10] flex relative overflow-hidden">
+            {/* Ambient Background */}
+            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+            
             {/* Sidebar - Desktop */}
-            <aside className="hidden lg:flex w-72 flex-col bg-[#11141b] border-r border-zinc-800/60 p-6 overflow-y-auto">
+            <aside className="hidden lg:flex w-72 flex-col bg-[#0a0c10]/80 backdrop-blur-3xl border-r border-white/5 p-6 overflow-y-auto z-10">
                 <div className="flex items-center gap-3 px-2 mb-10">
                     <img src="/logo.png" alt="KSA Verified" className="h-10 w-10 object-contain" />
                     <div className="flex-1">
@@ -97,7 +100,7 @@ export default function Layout() {
             </aside>
 
             {/* Mobile Header */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#11141b]/80 backdrop-blur-lg border-b border-zinc-800 z-50 px-4 flex items-center justify-between">
+            <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 z-50 px-4 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                     <img src="/logo.png" alt="KSA Verified" className="h-8 w-8 object-contain" />
                     <span className="font-bold text-white tracking-tighter italic">KSA Verified</span>
@@ -126,7 +129,7 @@ export default function Layout() {
                         initial={{ opacity: 0, x: lang === 'ar' ? 100 : -100 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: lang === 'ar' ? 100 : -100 }}
-                        className="lg:hidden fixed inset-0 top-16 bg-[#11141b] z-40 p-6 flex flex-col"
+                        className="lg:hidden fixed inset-0 top-16 bg-[#0a0c10]/95 backdrop-blur-2xl z-40 p-6 flex flex-col"
                     >
                         <nav className="space-y-2">
                             {navigation.map((item) => (

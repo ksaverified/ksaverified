@@ -10,7 +10,7 @@ import Payment from './pages/Payment';
 function App() {
   return (
     <AuthProvider>
-      <Router basename="/client-dashboard">
+      <Router basename="/customers">
         <Routes>
           <Route path="/login" element={<Login />} />
 

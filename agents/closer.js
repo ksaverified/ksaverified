@@ -71,7 +71,7 @@ class CloserAgent {
 
         // Image and Portal details
         const marketingImageUrl = 'https://ksaverified.com/marketing/offer.png';
-        const portalUrl = 'https://ksaverified.com/client-dashboard';
+        const portalUrl = 'https://ksaverified.com/customers';
 
         let templates;
         try {
@@ -146,7 +146,7 @@ Would you like to see a custom preview for your business completely for free? Ju
         const formattedPhone = this.formatPhoneNumber(phone);
         if (!formattedPhone) return 'skipped_invalid';
         const promoImageUrl = 'https://ksaverified.com/marketing/promo_19sar.png';
-        const portalUrl = 'https://ksaverified.com/client-dashboard';
+        const portalUrl = 'https://ksaverified.com/customers';
 
         const message = `Special Offer for ${businessName}! 🚀 
 

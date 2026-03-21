@@ -23,11 +23,33 @@ module.exports = async function handler(req, res) {
 
 async function handleRequestPassword(req, res) {
     const { phone } = req.body;
-    // Implementation logic from request-client-password.js
-    // For now, simple mock or direct Supabase check
-    const { data, error } = await supabase.from('leads').select('name').eq('phone', phone).single();
-    if (error || !data) return res.status(404).json({ error: 'Lead not found' });
-    return res.status(200).json({ success: true, message: 'Password reset link sent (Simulated)' });
+    
+    try {
+        const authService = require('../services/auth');
+        const formattedPhone = authService.formatPhone(phone);
+
+        // 1. Fetch the lead to ensure they exist
+        const { data: lead, error } = await supabase.from('leads').select('name').eq('phone', formattedPhone).single();
+        if (error || !lead) {
+            return res.status(404).json({ error: 'Lead not found in the system.' });
+        }
+
+        // 2. Generate a new PIN and update Supabase Auth
+        const registrationData = await authService.registerLead({ name: lead.name, phone: formattedPhone });
+        
+        // 3. Send the PIN via WhatsApp Service
+        const axios = require('axios');
+        const waUrl = process.env.WHATSAPP_API_URL || 'http://127.0.0.1:8082';
+        
+        const message = `Hello ${lead.name}!\n\nYour secure KSA Verified Customer Portal login code is: *${registrationData.pin}*\n\nPlease enter this code to sign in.\n\n---\nمرحباً ${lead.name}!\n\nرمز تسجيل الدخول الآمن الخاص بك لبوابة عملاء KSA Verified هو: *${registrationData.pin}*\n\nيرجى إدخال هذا الرمز لتسجيل الدخول.`;
+        
+        await axios.post(`${waUrl}/send`, { to: formattedPhone, message: message });
+
+        return res.status(200).json({ success: true, message: 'Login code sent via WhatsApp.' });
+    } catch (err) {
+        console.error(`[Portal API Error: request-password]`, err.message);
+        return res.status(500).json({ error: 'Failed to generate or send login code' });
+    }
 }
 
 async function handleRecordLogin(req, res) {

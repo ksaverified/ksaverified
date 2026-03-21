@@ -8,7 +8,7 @@
     "redirects": [
         {
             "source": "/login",
-            "destination": "/client-dashboard/login",
+            "destination": "/customers/login",
             "permanent": false
         }
     ],
@@ -22,8 +22,8 @@
             "destination": "/api/preview?id=$1"
         },
         {
-            "source": "/client-dashboard/:path((?!.*\\.).*)",
-            "destination": "/client-dashboard/index.html"
+            "source": "/customers/:path((?!.*\\.).*)",
+            "destination": "/customers/index.html"
         },
         {
             "source": "/(manage|admin|pipeline|websites|map|answers|analytics|settings|whatsapp|interest-confirmed|logs)(.*)",

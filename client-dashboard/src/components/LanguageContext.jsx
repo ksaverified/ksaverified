@@ -14,16 +14,17 @@ const translations = {
         login: {
             title: "KSA Verified",
             subtitle: "Secure Client Portal",
-            phoneLabel: "Phone Number (with Country Code)",
-            passwordLabel: "Password",
-            passPlaceholder: "Enter your password",
+            phoneLabel: "WhatsApp Number",
+            phonePlaceholder: "+966...",
+            requestCode: "Send Login Code via WhatsApp",
+            codeLabel: "6-Digit Login Code",
+            codePlaceholder: "000000",
             signIn: "Sign In",
             authenticating: "Authenticating...",
-            firstTime: "First time or forgot password?",
-            requestPass: "Request Password via WhatsApp",
-            phoneError: "Please enter your phone number first.",
-            successSent: "If this number is registered, a password has been sent via WhatsApp!",
-            loginFailed: "Failed to login"
+            phoneError: "Please enter your WhatsApp number.",
+            codeSent: "Code sent! Please check your WhatsApp.",
+            loginFailed: "Invalid code or phone number.",
+            backToPhone: "Change Phone Number"
         },
         website: {
             title: "My Website",
@@ -91,16 +92,17 @@ const translations = {
         login: {
             title: "KSA Verified",
             subtitle: "بوابة العملاء الآمنة",
-            phoneLabel: "رقم الهاتف (مع رمز الدولة)",
-            passwordLabel: "كلمة المرور",
-            passPlaceholder: "أدخل كلمة المرور",
+            phoneLabel: "رقم الواتساب",
+            phonePlaceholder: "+966...",
+            requestCode: "إرسال رمز الدخول عبر الواتساب",
+            codeLabel: "رمز الدخول المكون من 6 أرقام",
+            codePlaceholder: "000000",
             signIn: "تسجيل الدخول",
             authenticating: "جاري التحقق...",
-            firstTime: "أول مرة أو نسيت كلمة المرور؟",
-            requestPass: "طلب كلمة المرور عبر الواتساب",
-            phoneError: "يرجى إدخال رقم هاتفك أولاً.",
-            successSent: "إذا كان هذا الرقم مسجلاً، فقد تم إرسال كلمة المرور عبر الواتساب!",
-            loginFailed: "فشل تسجيل الدخول"
+            phoneError: "يرجى إدخال رقم الواتساب الخاص بك أولاً.",
+            codeSent: "تم إرسال الرمز! يرجى التحقق من الواتساب الخاص بك.",
+            loginFailed: "الرمز أو رقم الهاتف غير صالح.",
+            backToPhone: "تغيير رقم الهاتف"
         },
         website: {
             title: "موقعي الإلكتروني",

@@ -3,14 +3,15 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/AuthContext';
 import { useLanguage } from '../components/LanguageContext';
 import { Navigate } from 'react-router-dom';
-import { Lock, Phone, MessageCircle, Languages, ArrowLeft } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Lock, Phone, MessageCircle, Languages, ArrowLeft, RefreshCw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Login() {
     const { user } = useAuth();
     const { lang, toggleLanguage, t } = useLanguage();
+    const [step, setStep] = useState(1);
     const [phone, setPhone] = useState('');
-    const [password, setPassword] = useState('');
+    const [code, setCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [message, setMessage] = useState(null);
@@ -24,6 +25,37 @@ export default function Login() {
         return `${digits}@client.ksaverified.com`;
     };
 
+    const handleRequestCode = async (e) => {
+        e.preventDefault();
+        if (!phone) {
+            setError(t('login.phoneError'));
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        setMessage(null);
+        try {
+            const response = await fetch('/api/portal?action=request-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone }),
+            });
+
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || 'Failed to request login code');
+            }
+
+            setMessage(t('login.codeSent'));
+            setStep(2);
+        } catch (err) {
+            setError(err.message);
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -34,7 +66,7 @@ export default function Login() {
             const email = formatPhoneForEmail(phone);
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email,
-                password,
+                password: code,
             });
 
             if (signInError) throw signInError;
@@ -53,32 +85,11 @@ export default function Login() {
         }
     };
 
-    const handleRequestPassword = async () => {
-        if (!phone) {
-            setError(t('login.phoneError'));
-            return;
-        }
-        setLoading(true);
+    const goBack = () => {
+        setStep(1);
+        setCode('');
         setError(null);
-        try {
-            const response = await fetch('/api/portal?action=request-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone }),
-            });
-
-            if (!response.ok) {
-                const data = await response.json();
-                throw new Error(data.error || 'Failed to request password');
-            }
-
-            setMessage(t('login.successSent'));
-        } catch (err) {
-            setError(err.message);
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
+        setMessage(null);
     };
 
     return (
@@ -126,81 +137,109 @@ export default function Login() {
 
                     {error && (
                         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-                            <p className="text-sm text-red-500 text-center">{error}</p>
+                            <p className="text-sm text-red-500 text-center font-bold">{error}</p>
                         </div>
                     )}
 
                     {message && (
                         <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                            <p className="text-sm text-emerald-500 text-center">{message}</p>
+                            <p className="text-sm text-emerald-500 text-center font-bold">{message}</p>
                         </div>
                     )}
 
-                    <form onSubmit={handleLogin} className="space-y-5">
-                        <div className="space-y-1.5">
-                            <label className={`text-sm font-medium text-zinc-400 ${lang === 'ar' ? 'pr-1 text-right' : 'pl-1 text-left'} block`}>
-                                {t('login.phoneLabel')}
-                            </label>
-                            <div className="relative">
-                                <div className={`absolute inset-y-0 ${lang === 'ar' ? 'right-0 pr-4' : 'left-0 pl-4'} flex items-center pointer-events-none`}>
-                                    <Phone className="h-5 w-5 text-zinc-500" />
+                    <AnimatePresence mode="wait">
+                        {step === 1 ? (
+                            <motion.form
+                                key="step1"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                onSubmit={handleRequestCode}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-1.5">
+                                    <label className={`text-sm font-medium text-zinc-400 ${lang === 'ar' ? 'pr-1 text-right' : 'pl-1 text-left'} block`}>
+                                        {t('login.phoneLabel')}
+                                    </label>
+                                    <div className="relative">
+                                        <div className={`absolute inset-y-0 ${lang === 'ar' ? 'right-0 pr-4' : 'left-0 pl-4'} flex items-center pointer-events-none`}>
+                                            <Phone className="h-5 w-5 text-zinc-500" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
+                                            placeholder={t('login.phonePlaceholder')}
+                                            className={`w-full bg-zinc-900/50 border border-zinc-800 rounded-xl py-4 ${lang === 'ar' ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4 text-left'} text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono font-bold text-lg`}
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                <input
-                                    type="text"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    placeholder="+96650..."
-                                    autocomplete="username"
-                                    className={`w-full bg-black/40 border border-zinc-800 rounded-xl py-3 ${lang === 'ar' ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-mono`}
-                                    required
-                                />
-                            </div>
-                        </div>
 
-                        <div className="space-y-1.5">
-                            <label className={`text-sm font-medium text-zinc-400 ${lang === 'ar' ? 'pr-1 text-right' : 'pl-1 text-left'} block`}>
-                                {t('login.passwordLabel')}
-                            </label>
-                            <div className="relative">
-                                <div className={`absolute inset-y-0 ${lang === 'ar' ? 'right-0 pr-4' : 'left-0 pl-4'} flex items-center pointer-events-none`}>
-                                    <Lock className="h-5 w-5 text-zinc-500" />
+                                <button
+                                    type="submit"
+                                    disabled={loading || !phone}
+                                    className={`w-full py-4 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${loading || !phone ? 'opacity-50 cursor-not-allowed' : 'shadow-lg shadow-blue-500/25'}`}
+                                >
+                                    <MessageCircle className="w-5 h-5" />
+                                    {loading ? t('login.authenticating') : t('login.requestCode')}
+                                </button>
+                            </motion.form>
+                        ) : (
+                            <motion.form
+                                key="step2"
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                onSubmit={handleLogin}
+                                className="space-y-6"
+                            >
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between">
+                                        <label className={`text-sm font-medium text-zinc-400 ${lang === 'ar' ? 'pr-1 text-right' : 'pl-1 text-left'} block`}>
+                                            {t('login.codeLabel')}
+                                        </label>
+                                        <span className="text-xs text-blue-400 font-bold">{phone}</span>
+                                    </div>
+                                    <div className="relative">
+                                        <div className={`absolute inset-y-0 ${lang === 'ar' ? 'right-0 pr-4' : 'left-0 pl-4'} flex items-center pointer-events-none`}>
+                                            <Lock className="h-5 w-5 text-zinc-500" />
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={code}
+                                            onChange={(e) => setCode(e.target.value)}
+                                            placeholder={t('login.codePlaceholder')}
+                                            className={`w-full bg-emerald-500/5 border border-emerald-500/20 rounded-xl py-4 ${lang === 'ar' ? 'pr-12 pl-4 text-right' : 'pl-12 pr-4 text-left'} text-emerald-400 placeholder-zinc-700/50 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all font-mono font-black tracking-widest text-2xl text-center`}
+                                            maxLength={6}
+                                            autoComplete="one-time-code"
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                                <input
-                                    type="password"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder={t('login.passPlaceholder')}
-                                    autocomplete="current-password"
-                                    className={`w-full bg-black/40 border border-zinc-800 rounded-xl py-3 ${lang === 'ar' ? 'pr-11 pl-4 text-right' : 'pl-11 pr-4 text-left'} text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all`}
-                                />
-                            </div>
-                        </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading || !password}
-                            className={`w-full py-3.5 px-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all ${loading || !password ? 'opacity-50 cursor-not-allowed' : 'shadow-lg shadow-blue-500/25'
-                                }`}
-                        >
-                            {loading ? t('login.authenticating') : t('login.signIn')}
-                        </button>
-                    </form>
+                                <button
+                                    type="submit"
+                                    disabled={loading || code.length !== 6}
+                                    className={`w-full py-4 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-widest rounded-xl transition-all ${loading || code.length !== 6 ? 'opacity-50 cursor-not-allowed' : 'shadow-lg shadow-emerald-500/25'}`}
+                                >
+                                    {loading ? t('login.authenticating') : t('login.signIn')}
+                                </button>
 
-                    <div className="mt-8 pt-6 border-t border-zinc-800 text-center">
-                        <p className="text-sm text-zinc-400 mb-4">{t('login.firstTime')}</p>
-                        <button
-                            type="button"
-                            onClick={handleRequestPassword}
-                            disabled={loading}
-                            className={`w-full py-3 px-4 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 font-bold rounded-xl transition-all border border-zinc-700 flex items-center justify-center gap-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''
-                                }`}
-                        >
-                            <MessageCircle className="w-5 h-5 text-emerald-500" />
-                            {t('login.requestPass')}
-                        </button>
-                    </div>
+                                <button
+                                    type="button"
+                                    onClick={goBack}
+                                    className="w-full py-3 text-zinc-500 hover:text-zinc-300 font-bold flex items-center justify-center gap-2 transition-colors text-sm"
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                    {t('login.backToPhone')}
+                                </button>
+                            </motion.form>
+                        )}
+                    </AnimatePresence>
                 </div>
             </motion.div>
         </div>
     );
 }
+
