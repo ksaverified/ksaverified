@@ -216,7 +216,7 @@ Reply 'INTERESTED' to activate this offer!
         const formattedPhone = this.formatPhoneNumber(lead.phone);
         if (!formattedPhone) return false;
 
-        const portalUrl = 'https://ksaverified.com/client-dashboard';
+        const portalUrl = 'https://ksaverified.com/customers';
         const stcPayDetails = 'STC Pay: +966 50 791 3514';
 
         const messageEn = `Hi ${lead.name}! 💎 Your 1-week FREE trial expires in *${daysRemaining} day${daysRemaining > 1 ? 's' : ''}*. 

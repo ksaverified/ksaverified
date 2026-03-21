@@ -157,7 +157,7 @@ We are finalizing your custom AI-powered website now. You will receive a link to
 
             // Fallbacks for unknown numbers
             const businessName = lead ? lead.name : "Valued Business";
-            const previewUrl = lead ? lead.vercel_url : "https://ksaverified.com/login";
+            const previewUrl = lead ? lead.vercel_url : "https://ksaverified.com/customers/login";
             const currentStatus = lead ? lead.status : "new inquiry";
             const missionStep = lead ? lead.chatbot_mission_step : null;
 
@@ -195,7 +195,7 @@ NEW PROMOTION:
 
 Payment Detail: Payment via STC Pay to +966 50 791 3514. 
 Verification: Once paid, they must send a screenshot of the receipt here.
-Dashboard: Manage site at https://ksaverified.com/client-dashboard (Login with WhatsApp number).
+Dashboard: Manage site at https://ksaverified.com/customers (Login with WhatsApp number).
 Preview Link: Always encourage them to check their preview at ${previewUrl} if they haven't already.
 
 Be polite, professional, very concise, and speak in the language they used. If they speak Arabic, reply in Arabic.
