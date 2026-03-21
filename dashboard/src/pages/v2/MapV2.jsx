@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
 import { ExternalLink, Filter, Eye, MousePointer2, Map } from 'lucide-react';
@@ -41,6 +42,7 @@ function MapUpdater({ leads }) {
 }
 
 export default function MapV2() {
+    const navigate = useNavigate();
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState(null);
@@ -158,6 +160,10 @@ export default function MapV2() {
                                                 <ExternalLink className="w-3.5 h-3.5" /> View Site
                                             </a>
                                         )}
+                                        <button onClick={() => navigate(`/admin-v2/pipeline/${selected.place_id}`)}
+                                            className="mt-2 flex items-center justify-center gap-1.5 py-1.5 px-3 bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold rounded-lg w-full transition-all">
+                                            <Eye className="w-3.5 h-3.5" /> View Details
+                                        </button>
                                     </div>
                                 </InfoWindow>
                             )}

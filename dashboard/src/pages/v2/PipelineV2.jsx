@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Users, Phone, MapPin, Eye, CheckCircle, X, Search, ArrowRight } from 'lucide-react';
 import V2Shell from './V2Shell';
@@ -19,11 +20,11 @@ function getStage(key) {
 }
 
 export default function PipelineV2() {
+    const navigate = useNavigate();
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [modal, setModal] = useState(null); // { lead }
     const [unlockModal, setUnlockModal] = useState(null);
     const [unlockDate, setUnlockDate] = useState('');
     const [unlockTier, setUnlockTier] = useState('monthly');
@@ -102,7 +103,7 @@ export default function PipelineV2() {
                     </div>
                 </div>
 
-                {/* Kanban View */}
+                {/* Main View */}
                 {loading ? (
                     <div className="h-96 flex items-center justify-center text-zinc-500 animate-pulse">Loading pipeline...</div>
                 ) : statusFilter !== 'all' ? (
@@ -142,13 +143,13 @@ export default function PipelineV2() {
                                             <td className="px-4 py-3 text-right">
                                                 <div className="flex items-center justify-end gap-2">
                                                     {lead.status === 'pitched' && (
-                                                        <button onClick={() => { setUnlockModal(lead); setUnlockDate(new Date().toISOString().split('T')[0]); }}
+                                                        <button onClick={(e) => { e.stopPropagation(); setUnlockModal(lead); setUnlockDate(new Date().toISOString().split('T')[0]); }}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-medium rounded-lg transition-all">
                                                             <CheckCircle className="w-3.5 h-3.5" /> Verify Payment
                                                         </button>
                                                     )}
                                                     {lead.vercel_url && (
-                                                        <a href={lead.vercel_url} target="_blank" rel="noreferrer"
+                                                        <a href={lead.vercel_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
                                                             className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-all">
                                                             <Eye className="w-3.5 h-3.5" /> Live Site
                                                         </a>
@@ -161,7 +162,7 @@ export default function PipelineV2() {
                             </tbody>
                         </table>
                         {filtered.length === 0 && (
-                            <div className="py-16 text-center text-zinc-500">No leads in this stage</div>
+                            <div className="py-16 text-center text-zinc-500">No leads match your filter</div>
                         )}
                     </div>
                 ) : (
@@ -208,91 +209,41 @@ export default function PipelineV2() {
                         })}
                     </div>
                 )}
+
+                {/* Unlock Modal */}
+                {unlockModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                        <div className="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-white">Verify Payment</h3>
+                                <button onClick={() => setUnlockModal(null)} className="text-zinc-500 hover:text-white"><X className="w-5 h-5" /></button>
+                            </div>
+                            <p className="text-sm text-zinc-400 mb-4">Confirming payment for: <span className="text-emerald-400 font-medium">{unlockModal.name}</span></p>
+                            <div className="space-y-3">
+                                <div>
+                                    <label className="text-xs text-zinc-400 block mb-1">Payment Date</label>
+                                    <input type="date" value={unlockDate} onChange={e => setUnlockDate(e.target.value)}
+                                        className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500" />
+                                </div>
+                                <div>
+                                    <label className="text-xs text-zinc-400 block mb-1">Subscription Tier</label>
+                                    <select value={unlockTier} onChange={e => setUnlockTier(e.target.value)}
+                                        className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500">
+                                        <option value="monthly">Monthly — 99 SAR / 30 Days</option>
+                                        <option value="yearly">Yearly — 990 SAR / 365 Days</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex gap-3 mt-5">
+                                <button onClick={() => setUnlockModal(null)} className="flex-1 py-2.5 text-sm text-zinc-400 hover:text-white border border-zinc-700 rounded-xl transition-all">Cancel</button>
+                                <button onClick={handleUnlock} className="flex-1 py-2.5 text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl transition-all">
+                                    Confirm & Unlock
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-
-            {/* Lead Detail Modal */}
-            {modal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setModal(null)}>
-                    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-lg p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 className="text-lg font-bold text-white">{modal.name}</h3>
-                                <p className="text-sm text-zinc-500 mt-0.5">{modal.address}</p>
-                            </div>
-                            <button onClick={() => setModal(null)} className="text-zinc-500 hover:text-white transition-colors p-1">
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                                <span className="text-xs text-zinc-500">Phone</span>
-                                <span className="text-sm text-zinc-200">{modal.phone || '—'}</span>
-                            </div>
-                            <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                                <span className="text-xs text-zinc-500">Status</span>
-                                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${getStage(modal.status).bg} ${getStage(modal.status).text} ${getStage(modal.status).border} border`}>
-                                    {getStage(modal.status).label}
-                                </span>
-                            </div>
-                            {modal.vercel_url && (
-                                <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                                    <span className="text-xs text-zinc-500">Live Site</span>
-                                    <a href={modal.vercel_url} target="_blank" rel="noreferrer"
-                                        className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
-                                        View <ArrowRight className="w-3 h-3" />
-                                    </a>
-                                </div>
-                            )}
-                            {modal.login_count > 0 && (
-                                <div className="flex items-center justify-between py-2 border-b border-zinc-800">
-                                    <span className="text-xs text-zinc-500">Client Logins</span>
-                                    <span className="text-xs text-emerald-400 font-bold">{modal.login_count} logins</span>
-                                </div>
-                            )}
-                        </div>
-                        {modal.status === 'pitched' && (
-                            <button onClick={() => { setUnlockModal(modal); setModal(null); setUnlockDate(new Date().toISOString().split('T')[0]); }}
-                                className="mt-5 w-full flex items-center justify-center gap-2 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl text-sm font-semibold transition-all">
-                                <CheckCircle className="w-4 h-4" /> Verify Payment & Unlock
-                            </button>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* Unlock Modal */}
-            {unlockModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                    <div className="bg-zinc-900 border border-zinc-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white">Verify Payment</h3>
-                            <button onClick={() => setUnlockModal(null)} className="text-zinc-500 hover:text-white"><X className="w-5 h-5" /></button>
-                        </div>
-                        <p className="text-sm text-zinc-400 mb-4">Confirming payment for: <span className="text-emerald-400 font-medium">{unlockModal.name}</span></p>
-                        <div className="space-y-3">
-                            <div>
-                                <label className="text-xs text-zinc-400 block mb-1">Payment Date</label>
-                                <input type="date" value={unlockDate} onChange={e => setUnlockDate(e.target.value)}
-                                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500" />
-                            </div>
-                            <div>
-                                <label className="text-xs text-zinc-400 block mb-1">Subscription Tier</label>
-                                <select value={unlockTier} onChange={e => setUnlockTier(e.target.value)}
-                                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-emerald-500">
-                                    <option value="monthly">Monthly — 99 SAR / 30 Days</option>
-                                    <option value="yearly">Yearly — 990 SAR / 365 Days</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div className="flex gap-3 mt-5">
-                            <button onClick={() => setUnlockModal(null)} className="flex-1 py-2.5 text-sm text-zinc-400 hover:text-white border border-zinc-700 rounded-xl transition-all">Cancel</button>
-                            <button onClick={handleUnlock} className="flex-1 py-2.5 text-sm font-bold bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl transition-all">
-                                Confirm & Unlock
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </V2Shell>
     );
 }
