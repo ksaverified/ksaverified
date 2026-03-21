@@ -10,6 +10,13 @@ const PORT = process.env.PORT || 8081;
 console.log(`[Express] Port configured as: ${PORT} (Source: ${process.env.PORT ? 'ENV' : 'Default'})`);
 const app = express();
 app.use(express.json());
+app.use((req, res, next) => {
+    console.log(`[Express] INCOMING: ${req.method} ${req.url}`);
+    if (Object.keys(req.body).length > 0) {
+        console.log(`[Express] BODY:`, JSON.stringify(req.body, null, 2));
+    }
+    next();
+});
 
 let qrCodeData = null;
 let isReady = false;
