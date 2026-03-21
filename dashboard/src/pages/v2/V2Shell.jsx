@@ -3,7 +3,7 @@ import { useAuth } from '../../components/AuthContext';
 import { supabase } from '../../lib/supabase';
 import {
     Shield, LayoutDashboard, Users, Globe, MessageSquare,
-    BarChart2, Map, BookOpen, Terminal, Settings, LogOut, ChevronLeft
+    BarChart2, Map, BookOpen, Terminal, Settings, LogOut, ChevronLeft, Bot
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
     { path: '/admin-v2/analytics', label: 'Analytics', icon: BarChart2 },
     { path: '/admin-v2/map', label: 'Map View', icon: Map },
     { path: '/admin-v2/answers', label: 'AI Answers', icon: BookOpen },
+    { path: '/admin-v2/assistant', label: 'Admin Assistant', icon: Bot },
     { path: '/admin-v2/logs', label: 'System Logs', icon: Terminal },
     { path: '/admin-v2/settings', label: 'Settings', icon: Settings },
 ];

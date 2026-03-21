@@ -28,6 +28,7 @@ import MapV2 from './pages/v2/MapV2';
 import AnswersV2 from './pages/v2/AnswersV2';
 import SettingsV2 from './pages/v2/SettingsV2';
 import LeadDetailV2 from './pages/v2/LeadDetailV2';
+import AdminAssistantV2 from './pages/v2/AdminAssistantV2';
 
 function App() {
   return (
@@ -79,6 +80,7 @@ function App() {
           <Route path="/admin-v2/map" element={<AuthGuard><MapV2 /></AuthGuard>} />
           <Route path="/admin-v2/answers" element={<AuthGuard><AnswersV2 /></AuthGuard>} />
           <Route path="/admin-v2/pipeline/:placeId" element={<AuthGuard><LeadDetailV2 /></AuthGuard>} />
+          <Route path="/admin-v2/assistant" element={<AuthGuard><AdminAssistantV2 /></AuthGuard>} />
           <Route path="/admin-v2/settings" element={<AuthGuard><SettingsV2 /></AuthGuard>} />
         </Routes>
       </BrowserRouter>
