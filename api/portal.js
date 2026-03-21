@@ -48,7 +48,7 @@ async function handleRequestPassword(req, res) {
         return res.status(200).json({ success: true, message: 'Login code sent via WhatsApp.' });
     } catch (err) {
         console.error(`[Portal API Error: request-password]`, err.message);
-        return res.status(500).json({ error: 'Failed to generate or send login code' });
+        return res.status(500).json({ error: 'Server Error: ' + err.message });
     }
 }
 
