@@ -56,14 +56,63 @@ Your knowledge is primarily based on the database context provided below. When t
 ${contextText}`
         };
 
-        // 4. Call OpenRouter
+        // 4. Define Tools
+        const tools = [
+            {
+                type: "function",
+                function: {
+                    name: "trigger_pipeline",
+                    description: "Starts the main KSAVerified orchestrator pipeline to scrape new leads from Google Maps. Use this when the user asks to find new leads."
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "trigger_chatbot_mission",
+                    description: "Starts the chatbot mission to selectively send the initial WhatsApp greeting to uncontacted leads in the database. Use this when the user asks to start contacting leads or start the mission."
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "send_whatsapp_message",
+                    description: "Sends a manual WhatsApp text message to a specific phone number.",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            phone: { type: "string", description: "The phone number to send the message to, e.g. 966537177672" },
+                            message: { type: "string", description: "The exact text message to send" }
+                        },
+                        required: ["phone", "message"]
+                    }
+                }
+            },
+            {
+                type: "function",
+                function: {
+                    name: "update_lead_status",
+                    description: "Changes a lead's status in the database.",
+                    parameters: {
+                        type: "object",
+                        properties: {
+                            phone: { type: "string", description: "The phone number of the lead" },
+                            status: { type: "string", enum: ["interested", "not_interested", "junk", "contacted"], description: "The new status to assign to the lead" }
+                        },
+                        required: ["phone", "status"]
+                    }
+                }
+            }
+        ];
+
+        // 5. Call OpenRouter
         const openRouterKey = process.env.OPENROUTER_API_KEY;
         if (!openRouterKey) throw new Error('Missing OPENROUTER_API_KEY');
 
         const apiPayload = {
             model: process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash',
             messages: [systemPrompt, ...messages],
-            temperature: 0.3
+            temperature: 0.3,
+            tools: tools
         };
 
         const fetch = (await import('node-fetch')).default;
@@ -84,9 +133,83 @@ ${contextText}`
         }
 
         const data = await response.json();
-        const replyText = data.choices[0].message.content;
+        const messageResponse = data.choices[0].message;
 
-        res.status(200).json({ reply: replyText });
+        // 6. Handle Tool Calls if any
+        if (messageResponse.tool_calls && messageResponse.tool_calls.length > 0) {
+            let functionResults = [];
+            const { exec } = require('child_process');
+            
+            for (const toolCall of messageResponse.tool_calls) {
+                const name = toolCall.function.name;
+                const args = JSON.parse(toolCall.function.arguments || '{}');
+                let result = '';
+                
+                try {
+                    if (name === 'trigger_pipeline') {
+                        exec('node orchestrator.js', { cwd: process.cwd(), detached: true });
+                        result = 'Successfully started the main pipeline (scraping leads) in the background.';
+                    } else if (name === 'trigger_chatbot_mission') {
+                        exec('node scripts/chatbot_mission.js', { cwd: process.cwd(), detached: true });
+                        result = 'Successfully started chatbot mission (sending greetings to up to 50 leads) in the background.';
+                    } else if (name === 'send_whatsapp_message') {
+                        const axios = require('axios');
+                        const url = process.env.WHATSAPP_API_URL || 'http://127.0.0.1:8082';
+                        // Catch error silently so the bot can report it smoothly
+                        await axios.post(`${url}/send`, { to: args.phone, message: args.message });
+                        result = `Successfully sent message to ${args.phone}`;
+                    } else if (name === 'update_lead_status') {
+                        const { error } = await supabase.from('leads').update({ status: args.status }).eq('phone', args.phone);
+                        if (error) throw error;
+                        result = `Successfully updated lead ${args.phone} status to ${args.status}`;
+                    } else {
+                        result = `Unknown function ${name}`;
+                    }
+                } catch (e) {
+                    result = `Failed to execute ${name}: ${e.message}`;
+                    console.error('[Admin Chat Tool Error]', e);
+                }
+                
+                functionResults.push({
+                    tool_call_id: toolCall.id,
+                    role: "tool",
+                    name: name,
+                    content: result
+                });
+            }
+
+            // Second pass: Send results back to OpenRouter
+            const secondPayload = {
+                model: apiPayload.model,
+                messages: [
+                    ...apiPayload.messages,
+                    messageResponse,
+                    ...functionResults
+                ],
+                temperature: 0.3
+            };
+            
+            const secondResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openRouterKey}`,
+                    'HTTP-Referer': 'https://ksaverified.com',
+                    'X-Title': 'KSAVerified Admin Assistant'
+                },
+                body: JSON.stringify(secondPayload)
+            });
+
+            if (!secondResponse.ok) {
+                throw new Error(`OpenRouter second pass error: ${secondResponse.status}`);
+            }
+
+            const secondData = await secondResponse.json();
+            return res.status(200).json({ reply: secondData.choices[0].message.content });
+        }
+
+        // Return direct text if no tools called
+        res.status(200).json({ reply: messageResponse.content });
     } catch (err) {
         console.error('[Admin Chat API Error]:', err);
         res.status(500).json({ error: err.message });
