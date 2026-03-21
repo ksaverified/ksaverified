@@ -1,6 +1,7 @@
 const express = require('express');
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const axios = require('axios');
+const ngrok = require('ngrok');
 const qrImage = require('qr-image');
 const { downloadSession, uploadSession } = require('./supabaseStorage');
 const path = require('path');
@@ -429,8 +430,20 @@ async function startWhatsApp() {
     });
 
     const PORT = process.env.PORT || 8081;
-    app.listen(PORT, () => {
+    app.listen(PORT, async () => {
         console.log(`[Express] KSAVerified WhatsApp Microservice listening on port ${PORT}`);
+        
+        // 3. Start ngrok tunnel (Automated public URL)
+        try {
+            const url = await ngrok.connect({
+                addr: PORT,
+                authtoken: process.env.NGROK_AUTHTOKEN || null
+            });
+            console.log(`[ngrok] Public Tunnel Created: ${url}`);
+            console.log(`[ngrok] UPDATE VERCEL 'WHATSAPP_API_URL' TO THIS URL!`);
+        } catch (err) {
+            console.error('[ngrok] Failed to start tunnel:', err.message);
+        }
     });
 }
 
