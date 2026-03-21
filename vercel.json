@@ -10,7 +10,7 @@
             "source": "/login",
             "destination": "/customers/login",
             "permanent": false
-        }
+        },
         {
             "source": "/client-dashboard(.*)",
             "destination": "/customers$1",
