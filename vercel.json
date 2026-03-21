@@ -11,6 +11,11 @@
             "destination": "/customers/login",
             "permanent": false
         }
+        {
+            "source": "/client-dashboard(.*)",
+            "destination": "/customers$1",
+            "permanent": false
+        }
     ],
     "rewrites": [
         {

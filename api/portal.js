@@ -61,9 +61,17 @@ async function handleRequestPassword(req, res) {
         const axios = require('axios');
         const waUrl = process.env.WHATSAPP_API_URL || 'http://127.0.0.1:8081';
         
+        console.log(`[Portal] Sending PIN to ${waUrl}/send for phone ${formattedPhone}`);
+        
         const message = `Hello ${lead.name}!\n\nYour secure KSA Verified Customer Portal login code is: *${registrationData.pin}*\n\nPlease enter this code to sign in.\n\n---\nمرحباً ${lead.name}!\n\nرمز تسجيل الدخول الآمن الخاص بك لبوابة عملاء KSA Verified هو: *${registrationData.pin}*\n\nيرجى إدخال هذا الرمز لتسجيل الدخول.`;
         
-        await axios.post(`${waUrl}/send`, { to: formattedPhone, message: message });
+        try {
+            const waRes = await axios.post(`${waUrl}/send`, { to: formattedPhone, message: message });
+            console.log(`[Portal] WhatsApp Service response:`, waRes.data);
+        } catch (waErr) {
+            console.error(`[Portal] WhatsApp Service ERROR:`, waErr.response?.data || waErr.message);
+            throw new Error(`WhatsApp Service failed: ${waErr.message}`);
+        }
 
         return res.status(200).json({ success: true, message: 'Login code sent via WhatsApp.' });
     } catch (err) {
