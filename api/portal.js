@@ -7,6 +7,8 @@ module.exports = async function handler(req, res) {
     try {
         switch (action) {
             case 'request-password':
+                // Debug log for production
+                console.log(`[Portal] Body type: ${typeof req.body}, Content-Type: ${req.headers['content-type']}`);
                 return await handleRequestPassword(req, res);
             case 'record-login':
                 return await handleRecordLogin(req, res);
@@ -22,7 +24,25 @@ module.exports = async function handler(req, res) {
 };
 
 async function handleRequestPassword(req, res) {
-    const { phone } = req.body;
+    let body = req.body;
+    
+    // Handle cases where body might be a string (depending on environment/headers)
+    if (typeof body === 'string') {
+        try {
+            body = JSON.parse(body);
+        } catch (e) {
+            console.error('[Portal] Failed to parse body string:', body);
+        }
+    }
+
+    if (!body) {
+        return res.status(400).json({ error: 'Request body is missing' });
+    }
+
+    const { phone } = body;
+    if (!phone) {
+        return res.status(400).json({ error: 'Phone number is required' });
+    }
     
     try {
         const authService = require('../services/auth');
