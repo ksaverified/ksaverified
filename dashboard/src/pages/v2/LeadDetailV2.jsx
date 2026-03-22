@@ -222,8 +222,8 @@ export default function LeadDetailV2() {
                         {/* Business Details Card */}
                         <div className="glass-card rounded-2xl overflow-hidden luminous-card">
                             <div className="px-6 py-4 border-b border-obsidian-surface-high/20 bg-obsidian-surface-low/30 flex items-center gap-2">
-                                <Hash className="w-4 h-4 text-amber-500/60" />
-                                <h3 className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Business Information</h3>
+                                <Hash className="w-4 h-4 text-amber-500/80" />
+                                <h3 className="text-[11px] font-bold text-amber-500 uppercase tracking-[0.2em] drop-shadow-sm">Business Information</h3>
                             </div>
                             <div className="p-8 grid grid-cols-2 gap-x-16 gap-y-8">
                                 <div className="space-y-6">
@@ -250,8 +250,8 @@ export default function LeadDetailV2() {
                                         renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.contact_email || ''} onChange={e => setEditData({...editData, contact_email: e.target.value})} />} />
                                     <div className="pt-2">
-                                        <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-[0.25em] block mb-1.5 opacity-60">Coordinates</label>
-                                        <p className="text-xs text-zinc-400 font-mono bg-obsidian-surface-low/40 px-3 py-1.5 rounded-lg border border-obsidian-surface-high/10">{lead.lat}, {lead.lng}</p>
+                                        <label className="text-[9px] text-zinc-400 uppercase font-bold tracking-[0.25em] block mb-1.5 opacity-80">Coordinates</label>
+                                        <p className="text-xs text-zinc-200 font-mono bg-obsidian-surface-low/40 px-3 py-1.5 rounded-lg border border-obsidian-surface-high/10">{lead.lat}, {lead.lng}</p>
                                     </div>
                                 </div>
                             </div>
@@ -261,8 +261,8 @@ export default function LeadDetailV2() {
                         <div className="glass-card rounded-2xl overflow-hidden">
                             <div className="px-6 py-4 border-b border-obsidian-surface-high/20 bg-obsidian-surface-low/30 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <BarChart2 className="w-4 h-4 text-amber-500/60" />
-                                    <h3 className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Recent Website Visits</h3>
+                                    <BarChart2 className="w-4 h-4 text-amber-500/80" />
+                                    <h3 className="text-[11px] font-bold text-amber-500 uppercase tracking-[0.2em] drop-shadow-sm">Recent Website Visits</h3>
                                 </div>
                                 <div className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">LAST 10</div>
                             </div>
@@ -298,7 +298,7 @@ export default function LeadDetailV2() {
                                         ))}
                                         {visits.length === 0 && (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-16 text-center text-zinc-600 text-xs font-bold uppercase tracking-[0.2em] italic opacity-40">No visit data recorded yet</td>
+                                                <td colSpan="5" className="px-6 py-16 text-center text-zinc-400 text-xs font-bold uppercase tracking-[0.2em] italic opacity-60">No visit data recorded yet</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -311,7 +311,7 @@ export default function LeadDetailV2() {
                     <div className="col-span-4 space-y-6">
                         {/* Status & Timing Card */}
                         <div className="glass-card rounded-2xl p-6 space-y-5">
-                            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.25em]">Pipeline & Timing</h3>
+                            <h3 className="text-[10px] font-bold text-amber-500 uppercase tracking-[0.25em]">Pipeline & Timing</h3>
                             <div className="space-y-4">
                                 <TimingItem label="Scouted At" date={lead.created_at} icon={Clock} />
                                 <TimingItem label="Website Created" date={lead.website_created_at || lead.created_at} icon={Calendar} />
@@ -330,7 +330,7 @@ export default function LeadDetailV2() {
                         {/* Subscription & Billing Card */}
                         <div className="glass-card rounded-2xl p-6 space-y-6 relative overflow-hidden luminous-card">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.25em]">Subscription</h3>
+                                <h3 className="text-[10px] font-bold text-amber-500 uppercase tracking-[0.25em]">Subscription</h3>
                                 {isCurrentlyUnlocked ? (
                                     <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-[10px] font-bold uppercase tracking-widest">
                                         <Unlock className="w-3 h-3" /> UNLOCKED
@@ -344,7 +344,7 @@ export default function LeadDetailV2() {
 
                             <div className="space-y-5">
                                 <div>
-                                    <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-[0.25em] block mb-2.5 opacity-60">Revenue Tier (Monthly)</label>
+                                    <label className="text-[9px] text-zinc-400 uppercase font-bold tracking-[0.25em] block mb-2.5 opacity-80">Revenue Tier (Monthly)</label>
                                     <div className="flex items-center gap-2">
                                         <div className="relative flex-1">
                                             <input type="number" value={subPrice} onChange={e => setSubPrice(e.target.value)}
@@ -358,7 +358,7 @@ export default function LeadDetailV2() {
                                 </div>
 
                                 <div className="p-5 rounded-xl bg-obsidian-surface-lowest/50 border border-obsidian-surface-high/10 space-y-4">
-                                    <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.25em] opacity-60">Admin Controls</p>
+                                    <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-[0.25em] opacity-80">Admin Controls</p>
                                     <div className="flex items-center justify-between">
                                         <span className="text-xs text-zinc-300 font-bold">Interest Confirmed</span>
                                         <button onClick={() => setLead({...lead, interest_confirmed: !lead.interest_confirmed})} 
@@ -429,8 +429,8 @@ export default function LeadDetailV2() {
 function DetailItem({ label, value, icon: Icon, isEditing, renderEdit }) {
     return (
         <div className="space-y-2">
-            <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-[0.25em] flex items-center gap-2 opacity-60">
-                <Icon className="w-3.5 h-3.5 text-amber-500/40" /> {label}
+            <label className="text-[9px] text-zinc-400 uppercase font-bold tracking-[0.25em] flex items-center gap-2 opacity-80">
+                <Icon className="w-3.5 h-3.5 text-amber-500/60" /> {label}
             </label>
             {isEditing ? renderEdit() : <p className="text-sm text-zinc-100 font-bold tracking-tight truncate">{value || '—'}</p>}
         </div>
