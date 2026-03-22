@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Globe, ExternalLink, Code, Search, Eye, X, RefreshCcw, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import V2Shell from './V2Shell';
 
 const STATUSES = ['all', 'scouted', 'published', 'pitched', 'warmed', 'interest_confirmed', 'completed', 'invalid'];
@@ -241,7 +242,11 @@ export default function WebsitesV2() {
                                 {/* Card body */}
                                 <div className="p-6 flex-1 flex flex-col relative z-10">
                                     <div className="flex-1">
-                                        <h3 className="text-sm font-black text-zinc-100 group-hover:text-white truncate uppercase tracking-tight leading-tight">{lead.name}</h3>
+                                        <Link to={`/admin-v2/pipeline/${lead.place_id}`} className="block group/link">
+                                            <h3 className="text-sm font-black text-zinc-100 group-hover:text-white group-hover/link:text-amber-500 truncate uppercase tracking-tight leading-tight transition-colors">
+                                                {lead.name}
+                                            </h3>
+                                        </Link>
                                         <div className="flex items-center gap-2 mt-2.5">
                                             <span className={`inline-flex items-center px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border shadow-inner ${statusStyle(lead.status)}`}>
                                                 {lead.status}
