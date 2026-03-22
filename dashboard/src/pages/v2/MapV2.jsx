@@ -24,16 +24,17 @@ const MAP_STYLES = [
 
 // Cosmetic mapping: DB status value → display label + color
 const LEAD_STATUS_META = {
-    created:         { label: 'Scouted',    color: '#6366f1' },
-    website_created: { label: 'Published',  color: '#8b5cf6' },
-    pitched:         { label: 'Pitched',    color: '#f59e0b' },
-    replied:         { label: 'Warmed',     color: '#3b82f6' },
-    interested:      { label: 'Interested', color: '#10b981' },
-    closed:          { label: 'Closed',     color: '#22c55e' },
-    error:           { label: 'Error',      color: '#ef4444' },
+    scouted:            { label: 'Scouted',    color: '#6366f1' },
+    published:          { label: 'Published',  color: '#8b5cf6' },
+    pitched:            { label: 'Pitched',    color: '#f59e0b' },
+    warmed:             { label: 'Warmed',     color: '#3b82f6' },
+    interest_confirmed: { label: 'Interested', color: '#10b981' },
+    completed:          { label: 'Closed',     color: '#22c55e' },
+    error:              { label: 'Error',      color: '#ef4444' },
+    invalid:            { label: 'Invalid',    color: '#3f3f46' },
 };
 
-const STATUS_ORDER = ['created', 'website_created', 'pitched', 'replied', 'interested', 'closed', 'error'];
+const STATUS_ORDER = ['scouted', 'published', 'pitched', 'warmed', 'interest_confirmed', 'completed', 'invalid', 'error'];
 
 function getStatusColor(status) {
     return (LEAD_STATUS_META[status] || { color: '#52525b' }).color;
@@ -137,7 +138,11 @@ export default function MapV2() {
     }, []);
 
     const startPlayback = useCallback((speed) => {
-        const cfg = SPEED_CONFIG[speed || playbackSpeed];
+        // Safe check for React SyntheticEvent (event.nativeEvent exists if it's an event object)
+        const activeSpeed = (speed && typeof speed === 'string') ? speed : playbackSpeed;
+        const cfg = SPEED_CONFIG[activeSpeed];
+        if (!cfg) return; 
+        
         setIsPlaying(true);
         intervalRef.current = setInterval(() => {
             setPlaybackDate(prev => {
@@ -434,7 +439,7 @@ export default function MapV2() {
                                         <RotateCcw className="w-3.5 h-3.5" />
                                     </button>
                                     <button
-                                        onClick={isPlaying ? stopPlayback : startPlayback}
+                                        onClick={isPlaying ? stopPlayback : () => startPlayback()}
                                         className="w-10 h-10 rounded-xl bg-amber-500 hover:bg-amber-400 shadow-lg shadow-amber-500/20 flex items-center justify-center text-black transition-all active:scale-95">
                                         {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                                     </button>
