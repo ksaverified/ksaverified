@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Globe, ExternalLink, Code, Search, Eye, X, RefreshCcw, Sparkles } from 'lucide-react';
+import { Globe, ExternalLink, Code, Search, Eye, X, RefreshCcw, Sparkles, ChevronDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import V2Shell from './V2Shell';
 
@@ -195,16 +195,23 @@ export default function WebsitesV2() {
                                 className="pl-10 pr-4 py-2.5 bg-obsidian-surface-high/50 border border-white/5 rounded-xl text-[11px] font-bold text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 w-64 uppercase tracking-widest transition-all" />
                         </div>
                         <div className="flex gap-2">
-                            <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
-                                className="px-4 py-2.5 bg-obsidian-surface-high/50 border border-white/5 rounded-xl text-[10px] font-bold text-zinc-400 focus:outline-none focus:border-amber-500/50 max-w-[160px] truncate uppercase tracking-widest appearance-none cursor-pointer">
-                                <option value="all">ALL CATEGORIES</option>
-                                {CATEGORIES.filter(c => c !== 'all').map(c => <option key={c} value={c}>{c.toUpperCase()}</option>)}
-                            </select>
-                            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                                className="px-4 py-2.5 bg-obsidian-surface-high/50 border border-white/5 rounded-xl text-[10px] font-bold text-zinc-400 focus:outline-none focus:border-amber-500/50 uppercase tracking-widest appearance-none cursor-pointer">
-                                <option value="all">ALL STATUSES</option>
-                                {STATUSES.filter(s => s !== 'all').map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
-                            </select>
+                            <div className="relative">
+                                <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
+                                    className="px-4 pr-10 py-2.5 bg-obsidian-bg border border-white/5 rounded-xl text-[10px] font-bold text-zinc-100 focus:outline-none focus:border-amber-500/50 max-w-[160px] truncate uppercase tracking-widest appearance-none cursor-pointer">
+                                    <option value="all" className="bg-[#111319] text-white">ALL CATEGORIES</option>
+                                    {CATEGORIES.filter(c => c !== 'all').map(c => <option key={c} value={c} className="bg-[#111319] text-white">{c.toUpperCase()}</option>)}
+                                </select>
+                                <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            </div>
+
+                            <div className="relative">
+                                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
+                                    className="px-4 pr-10 py-2.5 bg-obsidian-bg border border-white/5 rounded-xl text-[10px] font-bold text-zinc-100 focus:outline-none focus:border-amber-500/50 uppercase tracking-widest appearance-none cursor-pointer">
+                                    <option value="all" className="bg-[#111319] text-white">ALL STATUSES</option>
+                                    {STATUSES.filter(s => s !== 'all').map(s => <option key={s} value={s} className="bg-[#111319] text-white">{s.toUpperCase()}</option>)}
+                                </select>
+                                <ChevronDown className="w-3 h-3 text-zinc-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                            </div>
                         </div>
                     </div>
                 </div>
