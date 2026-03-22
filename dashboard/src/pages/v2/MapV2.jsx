@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { APIProvider, Map as GoogleMap, AdvancedMarker, InfoWindow, useMap } from '@vis.gl/react-google-maps';
-import { ExternalLink, Filter, Eye, MousePointer2, Map } from 'lucide-react';
+import { ExternalLink, Filter, Eye, MousePointer2, Map, Loader2 } from 'lucide-react';
 import V2Shell from './V2Shell';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';

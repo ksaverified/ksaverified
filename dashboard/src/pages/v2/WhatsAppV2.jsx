@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useSearchParams } from 'react-router-dom';
-import { MessageCircle, Search, User, Hash, Globe2, Send, Loader2 } from 'lucide-react';
+import { MessageCircle, Search, User, Hash, Globe2, Send, Loader2, Sparkles } from 'lucide-react';
 import V2Shell from './V2Shell';
 
 function TranslationTooltip({ text }) {

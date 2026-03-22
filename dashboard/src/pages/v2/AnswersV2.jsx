@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { BookOpen, MessageSquare, CheckCircle, Edit3, Save, X } from 'lucide-react';
+import { BookOpen, MessageSquare, CheckCircle, Edit3, Save, X, Loader2 } from 'lucide-react';
 import V2Shell from './V2Shell';
 
 export default function AnswersV2() {

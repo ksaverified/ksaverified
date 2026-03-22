@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, RefreshCw } from 'lucide-react';
 import V2Shell from './V2Shell';
 
 export default function AdminAssistantV2() {
