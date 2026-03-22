@@ -228,7 +228,7 @@ export default function LeadDetailV2() {
                             <div className="p-8 grid grid-cols-2 gap-x-16 gap-y-8">
                                 <div className="space-y-6">
                                     <DetailItem label="Official Phone" value={lead.phone} icon={Phone} isEditing={isEditing} 
-                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-zinc-500 cursor-not-allowed" value={editData.phone || ''} readOnly />} />
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-zinc-300 cursor-not-allowed uppercase font-bold tracking-wider" value={lead.phone || ''} readOnly />} />
                                     <DetailItem label="Mobile Number" value={lead.mobile} icon={Smartphone} isEditing={isEditing}
                                         renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.mobile || ''} onChange={e => setEditData({...editData, mobile: e.target.value})} />} />
@@ -282,7 +282,7 @@ export default function LeadDetailV2() {
                                             <tr key={v.id} className="hover:bg-obsidian-surface-high/20 transition-colors group">
                                                 <td className="px-6 py-4">
                                                     <p className="text-xs text-zinc-200 font-bold group-hover:text-amber-300 transition-colors">{formatDate(v.created_at).split(',')[1]}</p>
-                                                    <p className="text-[10px] text-zinc-500 font-medium">{formatDate(v.created_at).split(',')[0]}</p>
+                                                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wide">{formatDate(v.created_at).split(',')[0]}</p>
                                                 </td>
                                                 <td className="px-6 py-4 text-xs text-zinc-400 font-mono">{v.ip_address || '—'}</td>
                                                 <td className="px-6 py-4 text-xs text-zinc-400 font-medium">{v.location || '—'}</td>
@@ -317,12 +317,12 @@ export default function LeadDetailV2() {
                                 <TimingItem label="Website Created" date={lead.website_created_at || lead.created_at} icon={Calendar} />
                                 <TimingItem label="Last Retouched" date={lead.website_retouched_at} icon={Edit2} />
                                 <div className="pt-2 flex items-center justify-between border-t border-obsidian-surface-high/10 pt-4">
-                                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">First Visit</span>
-                                    <span className="text-[11px] text-zinc-300 font-bold">{formatDate(visits[visits.length-1]?.created_at).split(',')[0]}</span>
+                                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider opacity-90">First Visit</span>
+                                    <span className="text-[11px] text-zinc-200 font-bold">{formatDate(visits[visits.length-1]?.created_at).split(',')[0]}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Last Interaction</span>
-                                    <span className="text-[11px] text-amber-500 font-bold">{visits[0] ? formatDate(visits[0].created_at).split(',')[0] : '—'}</span>
+                                    <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider opacity-90">Last Interaction</span>
+                                    <span className="text-[11px] text-amber-500 font-black">{visits[0] ? formatDate(visits[0].created_at).split(',')[0] : '—'}</span>
                                 </div>
                             </div>
                         </div>
@@ -429,8 +429,8 @@ export default function LeadDetailV2() {
 function DetailItem({ label, value, icon: Icon, isEditing, renderEdit }) {
     return (
         <div className="space-y-2">
-            <label className="text-[9px] text-zinc-400 uppercase font-bold tracking-[0.25em] flex items-center gap-2 opacity-80">
-                <Icon className="w-3.5 h-3.5 text-amber-500/60" /> {label}
+            <label className="text-[9px] text-zinc-400 uppercase font-black tracking-[0.25em] flex items-center gap-2">
+                <Icon className="w-3.5 h-3.5 text-amber-500/80" /> {label}
             </label>
             {isEditing ? renderEdit() : <p className="text-sm text-zinc-100 font-bold tracking-tight truncate">{value || '—'}</p>}
         </div>
@@ -440,11 +440,11 @@ function DetailItem({ label, value, icon: Icon, isEditing, renderEdit }) {
 function TimingItem({ label, date, icon: Icon }) {
     return (
         <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5 text-zinc-500 font-medium">
-                <Icon className="w-4 h-4 text-amber-500/30" />
-                <span className="text-[10px] uppercase font-bold tracking-widest">{label}</span>
+            <div className="flex items-center gap-2.5 text-zinc-400 font-bold">
+                <Icon className="w-4 h-4 text-amber-500/50" />
+                <span className="text-[10px] uppercase font-black tracking-widest">{label}</span>
             </div>
-            <span className="text-[11px] text-zinc-300 font-black tracking-tight" title={date}>
+            <span className="text-[11px] text-zinc-200 font-black tracking-tight" title={date}>
                 {date ? formatDate(date).split(',')[0] : '—'}
             </span>
         </div>
