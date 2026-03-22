@@ -180,7 +180,7 @@ export default function WebsitesV2() {
                         <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
                             <Globe className="w-6 h-6 text-amber-500" /> Web Assets
                         </h1>
-                        <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest mt-1.5 opacity-60">{leads.length} Instances Synchronized via Vercel Edge</p>
+                        <p className="text-[11px] text-zinc-400 font-black uppercase tracking-widest mt-1.5 opacity-90">{leads.length} Instances Synchronized via Vercel Edge</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-3">
                         {leads.some(l => GENERIC_IDS.some(id => l.website_html?.includes(id))) && (
@@ -223,7 +223,7 @@ export default function WebsitesV2() {
                 ) : filtered.length === 0 ? (
                     <div className="py-32 text-center glass-card rounded-3xl border-t border-white/5">
                         <Globe className="w-12 h-12 text-zinc-800 mx-auto mb-4 opacity-40" />
-                        <p className="text-zinc-500 text-[11px] font-black uppercase tracking-[0.2em]">No Synchronized Assets Found</p>
+                        <p className="text-zinc-400 text-[11px] font-black uppercase tracking-[0.2em]">No Synchronized Assets Found</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -238,7 +238,7 @@ export default function WebsitesV2() {
                                         <div className="w-2.5 h-2.5 rounded-full bg-amber-500/40" />
                                         <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/40" />
                                     </div>
-                                    <div className="flex-1 text-[9px] text-zinc-600 font-black uppercase tracking-widest truncate text-center pr-6 opacity-60 group-hover:text-amber-500 group-hover:opacity-100 transition-all">
+                                    <div className="flex-1 text-[9px] text-zinc-400 font-black uppercase tracking-widest truncate text-center pr-6 opacity-80 group-hover:text-amber-500 group-hover:opacity-100 transition-all">
                                         {lead.vercel_url?.replace('https://', '').toUpperCase()}
                                     </div>
                                     <button onClick={() => shuffleImages(lead)} disabled={shuffling === lead.place_id}
@@ -292,7 +292,7 @@ export default function WebsitesV2() {
                                 </div>
                                 <div>
                                     <h2 className="text-xs font-black text-white uppercase tracking-[0.2em]">{previewName}</h2>
-                                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1 opacity-60 flex items-center gap-2">
+                                    <p className="text-[10px] text-zinc-400 font-black uppercase tracking-widest mt-1 opacity-90 flex items-center gap-2">
                                         <Sparkles className="w-3 h-3 text-amber-500" /> Autonomous Preview Render
                                     </p>
                                 </div>

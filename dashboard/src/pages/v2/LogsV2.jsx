@@ -84,17 +84,17 @@ export default function LogsV2() {
                         <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
                             <Terminal className="w-6 h-6 text-amber-500" /> Neural Diagnostic Console
                         </h1>
-                        <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest mt-1.5 opacity-60">
+                        <p className="text-[11px] text-zinc-400 font-black uppercase tracking-widest mt-1.5 opacity-90">
                             Live Telemetry Stream — Real-time Latent State Synchronization Across All Agent Clusters
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
-                        <button onClick={fetchLogs} className="p-2.5 rounded-xl bg-obsidian-surface-high border border-white/5 text-zinc-500 hover:text-amber-500 hover:border-amber-500/50 transition-all active:scale-95 shadow-lg">
+                        <button onClick={fetchLogs} className="p-2.5 rounded-xl bg-obsidian-surface-high border border-white/5 text-zinc-400 hover:text-amber-500 hover:border-amber-500/50 transition-all active:scale-95 shadow-lg">
                             <RefreshCw className="w-4 h-4" />
                         </button>
                         <button onClick={handleCopy} disabled={!filteredLogs.length}
-                            className="flex items-center gap-2.5 px-5 py-2.5 bg-obsidian-surface-high border border-white/5 hover:border-white/10 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-40 active:scale-95 shadow-lg">
-                            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-amber-500/70" />}
+                            className="flex items-center gap-2.5 px-5 py-2.5 bg-obsidian-surface-high border border-white/5 hover:border-white/10 text-zinc-200 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-40 active:scale-95 shadow-lg">
+                            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-amber-500" />}
                             {copied ? 'Buffer Cached' : 'Dump Sequence'}
                         </button>
                     </div>
@@ -140,11 +140,11 @@ export default function LogsV2() {
                                 <div className="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/30" />
                                 <div className="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/30" />
                             </div>
-                            <span className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] ml-4">
+                            <span className="text-[10px] text-amber-500/90 font-black uppercase tracking-[0.2em] ml-4">
                                 diagnostics:/{selectedAgent === 'all' ? 'global' : selectedAgent}.trace
                             </span>
                         </div>
-                        <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest opacity-60">
+                        <span className="text-[9px] text-zinc-400 font-black uppercase tracking-widest opacity-90">
                             {filteredLogs.length} Frames Cached
                         </span>
                     </div>
