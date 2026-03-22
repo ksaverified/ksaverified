@@ -55,76 +55,93 @@ export default function AnswersV2() {
 
     return (
         <V2Shell>
-            <div className="p-6 space-y-5">
+            <div className="p-8 space-y-8 max-w-5xl mx-auto">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                        <BookOpen className="w-6 h-6 text-indigo-400" /> AI Training — Answers Review
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
+                        <BookOpen className="w-6 h-6 text-amber-500" /> Neural Training Console
                     </h1>
-                    <p className="text-sm text-zinc-500 mt-0.5">
-                        Review AI replies to incoming WhatsApp messages. Approve good answers or correct mistakes to train the model.
+                    <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest mt-1.5 opacity-60">
+                        Reviewing Latent Space Projections — Calibrate the Bilingual Engine for Maximum Precision
                     </p>
                 </div>
 
                 {loading ? (
-                    <div className="py-12 text-center text-zinc-600 animate-pulse">Loading pending replies...</div>
+                    <div className="py-24 text-center">
+                        <Loader2 className="w-8 h-8 text-amber-500 animate-spin mx-auto mb-3 opacity-40" />
+                        <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">Accessing Knowledge Base...</span>
+                    </div>
                 ) : logs.length === 0 ? (
-                    <div className="py-16 text-center border border-dashed border-zinc-800 rounded-xl">
-                        <MessageSquare className="w-10 h-10 text-zinc-700 mx-auto mb-3" />
-                        <p className="text-zinc-400 font-medium">All caught up!</p>
-                        <p className="text-sm text-zinc-600 mt-1">No pending AI responses need review.</p>
+                    <div className="py-32 text-center glass-card border-dashed border-zinc-800 rounded-[2.5rem]">
+                        <MessageSquare className="w-12 h-12 text-zinc-900 mx-auto mb-4 opacity-40" />
+                        <p className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.2em]">Entropy Neutralized</p>
+                        <p className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest mt-2">Zero pending telemetry requires intervention</p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-8">
                         {logs.map(log => (
-                            <div key={log.id} className="rounded-xl border border-zinc-800 bg-zinc-900/30 overflow-hidden">
+                            <div key={log.id} className="glass-card border-t border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl relative group">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.02] to-transparent pointer-events-none" />
                                 {/* Header */}
-                                <div className="px-5 py-3 bg-zinc-900/50 border-b border-zinc-800 flex items-center justify-between">
-                                    <div>
-                                        <span className="text-sm font-semibold text-zinc-200">{log.leads?.name || 'Unknown Lead'}</span>
-                                        <span className="text-xs text-zinc-600 ml-3">{log.phone?.replace('@c.us', '')}</span>
+                                <div className="px-8 py-4 bg-obsidian-surface-medium/50 border-b border-white/5 flex items-center justify-between relative z-10">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-8 h-8 rounded-lg bg-obsidian-surface-high border border-white/10 flex items-center justify-center">
+                                            <span className="text-[10px] font-black text-amber-500">{log.leads?.name?.substring(0, 1) || 'U'}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-[11px] font-black text-white uppercase tracking-tight">{log.leads?.name || 'Inbound Terminal'}</span>
+                                            <span className="text-[10px] text-zinc-600 font-bold ml-3 uppercase tracking-widest opacity-60">+{log.phone?.replace('@c.us', '')}</span>
+                                        </div>
                                     </div>
-                                    <span className="text-[11px] text-zinc-600">{new Date(log.created_at).toLocaleString()}</span>
+                                    <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest opacity-40">{new Date(log.created_at).toLocaleString()}</span>
                                 </div>
 
                                 {/* Conversation */}
-                                <div className="p-5 space-y-3">
+                                <div className="p-8 space-y-6 relative z-10">
                                     {/* Inbound */}
                                     <div className="flex justify-start">
-                                        <div className="bg-zinc-800 border border-zinc-700/40 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%]">
-                                            <p className="text-[10px] text-zinc-500 mb-1 font-semibold uppercase tracking-wider">Lead asked</p>
-                                            <p className="text-sm text-zinc-200 whitespace-pre-wrap">{log.message_in}</p>
+                                        <div className="bg-obsidian-surface-high/50 border border-white/10 rounded-3xl rounded-tl-sm px-6 py-4 max-w-[80%] shadow-lg">
+                                            <p className="text-[9px] text-zinc-600 mb-2.5 font-black uppercase tracking-widest">Inbound Signal</p>
+                                            <p className="text-[13px] text-zinc-200 whitespace-pre-wrap leading-relaxed">{log.message_in}</p>
                                             {log.translated_message && log.translated_message !== log.message_in && (
-                                                <p className="text-xs text-indigo-300 italic mt-2 pt-2 border-t border-zinc-700/40">{log.translated_message}</p>
+                                                <div className="mt-4 pt-4 border-t border-white/5">
+                                                    <p className="text-[12px] text-amber-500/70 italic font-medium leading-relaxed">{log.translated_message}</p>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
                                     {/* Outbound */}
                                     <div className="flex justify-end">
-                                        <div className="bg-indigo-900/30 border border-indigo-500/20 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%]">
-                                            <p className="text-[10px] text-indigo-400 mb-1 font-semibold uppercase tracking-wider">AI replied</p>
+                                        <div className="bg-obsidian-surface-highest border border-white/10 rounded-3xl rounded-tr-sm px-6 py-4 max-w-[80%] shadow-xl relative overflow-hidden group/out">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.05] to-transparent pointer-events-none" />
+                                            <p className="text-[9px] text-amber-500/50 mb-2.5 font-black uppercase tracking-widest relative z-10">Synthetic Output</p>
                                             {editingId === log.id ? (
-                                                <div className="space-y-3 min-w-[280px]">
+                                                <div className="space-y-5 min-w-[320px] relative z-10">
                                                     <div>
-                                                        <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider mb-1">Compose in English</p>
+                                                        <p className="text-[9px] text-amber-500/30 font-black uppercase tracking-widest mb-2 px-1">Source Logic (English)</p>
                                                         <input value={englishInput} onChange={e => handleTranslate(e.target.value)} autoFocus
-                                                            placeholder="Type English..." className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-zinc-200 focus:outline-none focus:border-indigo-500" />
-                                                        {isTranslating && <span className="text-[10px] text-zinc-600 animate-pulse">Translating...</span>}
+                                                            placeholder="SEQUENCE INPUT..." className="w-full bg-obsidian-dark/80 border border-white/5 rounded-xl px-4 py-3 text-[11px] text-white focus:outline-none focus:border-amber-500/50 uppercase tracking-widest transition-all" />
+                                                        {isTranslating && (
+                                                            <div className="flex items-center gap-2 mt-2 px-1">
+                                                                <Loader2 className="w-2.5 h-2.5 text-amber-500 animate-spin" />
+                                                                <span className="text-[9px] text-zinc-700 font-bold uppercase tracking-widest">Compiling...</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <div>
-                                                        <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider mb-1">Arabic Correction</p>
+                                                        <p className="text-[9px] text-amber-500/30 font-black uppercase tracking-widest mb-2 px-1">Target Manifold (Arabic)</p>
                                                         <textarea value={editValue} onChange={e => setEditValue(e.target.value)}
-                                                            className="w-full bg-zinc-950 border border-indigo-500/40 rounded-lg p-3 text-sm text-zinc-200 focus:outline-none min-h-[80px] resize-none" />
+                                                            className="w-full bg-obsidian-dark/80 border border-white/10 rounded-xl p-4 text-[13px] text-white focus:outline-none focus:border-emerald-500/30 min-h-[100px] resize-none leading-relaxed transition-all" />
                                                     </div>
-                                                    <div className="flex justify-end gap-2">
-                                                        <button onClick={() => setEditingId(null)} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-white transition-colors">Cancel</button>
+                                                    <div className="flex justify-end gap-3">
+                                                        <button onClick={() => setEditingId(null)} className="px-4 py-2 text-[10px] font-black text-zinc-600 hover:text-white uppercase tracking-widest transition-colors">Abort</button>
                                                         <button onClick={() => handleSave(log.id)} disabled={!editValue.trim()}
-                                                            className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all">
-                                                            <Save className="w-3.5 h-3.5" /> Save Training
+                                                            className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-40 text-black text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2 transition-all shadow-lg active:scale-95">
+                                                            <Save className="w-4 h-4" /> Commit Training
                                                         </button>
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <p className="text-sm text-indigo-100 whitespace-pre-wrap">{log.message_out}</p>
+                                                <p className="text-[13px] text-zinc-100 whitespace-pre-wrap leading-relaxed relative z-10">{log.message_out}</p>
                                             )}
                                         </div>
                                     </div>
@@ -132,14 +149,14 @@ export default function AnswersV2() {
 
                                 {/* Actions footer */}
                                 {editingId !== log.id && (
-                                    <div className="px-5 py-3 border-t border-zinc-800 bg-zinc-950/40 flex justify-end gap-2">
+                                    <div className="px-8 py-5 border-t border-white/5 bg-obsidian-surface-medium/30 flex justify-end gap-4 relative z-10">
                                         <button onClick={() => { setEditingId(log.id); setEditValue(log.message_out || ''); setEnglishInput(''); }}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 text-xs font-medium rounded-lg transition-all">
-                                            <Edit3 className="w-3.5 h-3.5" /> Edit & Train
+                                            className="flex items-center gap-2 px-5 py-2.5 bg-obsidian-surface-high border border-white/5 hover:border-amber-500/50 text-zinc-400 hover:text-amber-500 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 group">
+                                            <Edit3 className="w-3.5 h-3.5" /> Calibrate Manifold
                                         </button>
                                         <button onClick={() => handleApprove(log.id)}
-                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-medium rounded-lg transition-all">
-                                            <CheckCircle className="w-3.5 h-3.5" /> Good Answer
+                                            className="flex items-center gap-2 px-6 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95">
+                                            <CheckCircle className="w-3.5 h-3.5" /> High Fidelity
                                         </button>
                                     </div>
                                 )}

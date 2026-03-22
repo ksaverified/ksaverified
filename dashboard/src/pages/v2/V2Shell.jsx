@@ -35,17 +35,17 @@ export default function V2Shell({ children }) {
     };
 
     return (
-        <div className="min-h-screen bg-[#080a0f] text-white font-['Inter',sans-serif] flex">
+        <div className="min-h-screen bg-obsidian-bg text-white font-['Inter',sans-serif] flex">
             {/* ── SIDEBAR ─────────────────────────────────────────────── */}
-            <aside className="w-56 flex-shrink-0 border-r border-zinc-800/80 bg-[#080a0f] flex flex-col sticky top-0 h-screen">
+            <aside className="w-56 flex-shrink-0 glass-sidebar flex flex-col sticky top-0 h-screen">
                 {/* Logo */}
-                <div className="px-4 py-5 flex items-center gap-2.5 border-b border-zinc-800/60">
-                    <div className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center flex-shrink-0">
-                        <Shield className="w-4 h-4 text-black" />
+                <div className="px-4 py-5 flex items-center gap-2.5 border-b border-obsidian-surface-high/20">
+                    <div className="w-8 h-8 rounded-lg bg-obsidian-surface-highest flex items-center justify-center flex-shrink-0 amber-glow border border-amber-500/30">
+                        <Shield className="w-4 h-4 text-amber-500" />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-white leading-none">KSA Verified</p>
-                        <p className="text-[9px] text-amber-500 font-bold tracking-widest uppercase leading-none mt-0.5">Orchestrator</p>
+                        <p className="text-sm font-bold text-white leading-none tracking-tight">KSA Verified</p>
+                        <p className="text-[9px] text-amber-500/80 font-bold tracking-[0.2em] uppercase leading-none mt-1">Orchestrator</p>
                     </div>
                 </div>
 
@@ -57,13 +57,14 @@ export default function V2Shell({ children }) {
                             <button
                                 key={item.path}
                                 onClick={() => navigate(item.path)}
-                                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all text-sm
+                                className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-left transition-all text-sm group
                                     ${active
-                                        ? 'bg-amber-500/15 text-amber-400 font-semibold'
-                                        : 'text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800/60'}`}
+                                        ? 'bg-amber-500/10 text-amber-400 font-semibold'
+                                        : 'text-zinc-500 hover:text-zinc-200 hover:bg-obsidian-surface-high/40'}`}
                             >
-                                <item.icon className="w-4 h-4 flex-shrink-0" />
+                                <item.icon className={`w-4 h-4 flex-shrink-0 transition-colors ${active ? 'text-amber-500' : 'group-hover:text-amber-400'}`} />
                                 {item.label}
+                                {active && <div className="ml-auto w-1 h-4 bg-amber-500/80 rounded-full" />}
                             </button>
                         );
                     })}

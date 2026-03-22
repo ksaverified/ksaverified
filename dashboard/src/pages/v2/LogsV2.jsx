@@ -77,34 +77,36 @@ export default function LogsV2() {
 
     return (
         <V2Shell>
-            <div className="p-6 flex flex-col gap-4 h-full min-h-screen">
+            <div className="p-8 space-y-8 max-w-7xl mx-auto h-full min-h-screen">
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            <Terminal className="w-6 h-6 text-zinc-400" /> System Logs
+                        <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
+                            <Terminal className="w-6 h-6 text-amber-500" /> Neural Diagnostic Console
                         </h1>
-                        <p className="text-sm text-zinc-500 mt-0.5">Live feed from all agents — auto-updates via realtime</p>
+                        <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest mt-1.5 opacity-60">
+                            Live Telemetry Stream — Real-time Latent State Synchronization Across All Agent Clusters
+                        </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button onClick={fetchLogs} className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-500 hover:text-zinc-200 hover:border-zinc-600 transition-all">
+                    <div className="flex items-center gap-3">
+                        <button onClick={fetchLogs} className="p-2.5 rounded-xl bg-obsidian-surface-high border border-white/5 text-zinc-500 hover:text-amber-500 hover:border-amber-500/50 transition-all active:scale-95 shadow-lg">
                             <RefreshCw className="w-4 h-4" />
                         </button>
                         <button onClick={handleCopy} disabled={!filteredLogs.length}
-                            className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 hover:border-zinc-600 text-zinc-300 text-sm rounded-lg transition-all disabled:opacity-40">
-                            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                            {copied ? 'Copied!' : 'Copy Logs'}
+                            className="flex items-center gap-2.5 px-5 py-2.5 bg-obsidian-surface-high border border-white/5 hover:border-white/10 text-zinc-300 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all disabled:opacity-40 active:scale-95 shadow-lg">
+                            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-amber-500/70" />}
+                            {copied ? 'Buffer Cached' : 'Dump Sequence'}
                         </button>
                     </div>
                 </div>
 
                 {/* Agent pills */}
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
                     <button
                         onClick={() => setSelectedAgent('all')}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${selectedAgent === 'all' ? 'bg-amber-500/20 border-amber-500/40 text-amber-400' : 'bg-zinc-900 border-zinc-800 text-zinc-500 hover:text-zinc-300'}`}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all shadow-md active:scale-95 ${selectedAgent === 'all' ? 'bg-amber-500/20 border-amber-500/40 text-amber-500' : 'bg-obsidian-surface-high/50 border-white/5 text-zinc-600 hover:text-zinc-300 hover:border-white/10'}`}
                     >
-                        All Agents · {logs.length}
+                        Master Stream [{logs.length}]
                     </button>
                     {AGENTS.map(agent => {
                         const last = agentLastLogs[agent];
@@ -113,65 +115,84 @@ export default function LogsV2() {
                         const isSelected = selectedAgent === agent;
                         return (
                             <button key={agent} onClick={() => setSelectedAgent(agent)}
-                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all capitalize
-                                    ${isSelected ? 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                                        : isError ? 'bg-red-500/10 border-red-500/20 text-red-400'
-                                        : isActive ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
-                                        : 'bg-zinc-900 border-zinc-800 text-zinc-600 hover:text-zinc-300'}`}>
-                                <span className={`w-1.5 h-1.5 rounded-full ${isError ? 'bg-red-500' : isActive ? 'bg-emerald-500 animate-pulse' : 'bg-zinc-700'}`} />
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all shadow-md active:scale-95
+                                    ${isSelected ? 'bg-amber-500/20 border-amber-500/40 text-amber-500'
+                                        : isError ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                                        : isActive ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                                        : 'bg-obsidian-surface-high/50 border-white/5 text-zinc-700 hover:text-zinc-400'}`}>
+                                <span className={`w-1.5 h-1.5 rounded-full ${isError ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : isActive ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-zinc-800'}`} />
                                 {agent}
-                                {last && <span className="opacity-60 hidden sm:inline">· {timeAgo(last.created_at)}</span>}
+                                {last && <span className="opacity-40 hidden sm:inline font-bold ml-1.5">{timeAgo(last.created_at)}</span>}
                             </button>
                         );
                     })}
                 </div>
 
                 {/* Terminal */}
-                <div className="flex-1 bg-[#0d0f14] border border-zinc-800 rounded-xl overflow-hidden flex flex-col font-mono text-sm shadow-2xl min-h-[500px]">
+                <div className="flex-1 glass-card border-t border-white/5 rounded-[2.5rem] overflow-hidden flex flex-col font-mono shadow-2xl min-h-[600px] relative group/terminal">
+                    <div className="absolute inset-0 bg-gradient-to-b from-amber-500/[0.01] to-transparent pointer-events-none" />
+                    
                     {/* Terminal titlebar */}
-                    <div className="bg-zinc-900/80 border-b border-zinc-800 px-4 py-2.5 flex items-center gap-3">
-                        <div className="flex gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-red-500/40 border border-red-500/50" />
-                            <div className="w-3 h-3 rounded-full bg-amber-500/40 border border-amber-500/50" />
-                            <div className="w-3 h-3 rounded-full bg-emerald-500/40 border border-emerald-500/50" />
+                    <div className="bg-obsidian-surface-highest border-b border-white/5 px-8 py-4 flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-4">
+                            <div className="flex gap-2">
+                                <div className="w-3 h-3 rounded-full bg-rose-500/20 border border-rose-500/30" />
+                                <div className="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/30" />
+                                <div className="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/30" />
+                            </div>
+                            <span className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] ml-4">
+                                diagnostics:/{selectedAgent === 'all' ? 'global' : selectedAgent}.trace
+                            </span>
                         </div>
-                        <span className="text-xs text-zinc-600">
-                            {selectedAgent === 'all' ? 'all-agents' : selectedAgent}.log — {filteredLogs.length} entries
+                        <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest opacity-60">
+                            {filteredLogs.length} Frames Cached
                         </span>
                     </div>
 
                     {/* Log entries */}
-                    <div className="p-4 overflow-y-auto flex-1 flex flex-col gap-0.5">
+                    <div className="p-8 overflow-y-auto flex-1 flex flex-col gap-1.5 relative z-10 custom-scrollbar">
                         {loading ? (
-                            <div className="text-zinc-600 animate-pulse">Connecting to log stream...</div>
+                            <div className="flex items-center gap-3">
+                                <RefreshCw className="w-3 h-3 text-amber-500 animate-spin" />
+                                <span className="text-[10px] text-zinc-700 font-black uppercase tracking-widest">Awaiting Upstream Synchronization...</span>
+                            </div>
                         ) : filteredLogs.length === 0 ? (
-                            <div className="text-zinc-600">No logs for this agent yet.</div>
+                            <div className="text-[10px] text-zinc-700 font-black uppercase tracking-widest opacity-40 italic">Null state detected. No telemetry data in current buffer.</div>
                         ) : (
                             filteredLogs.map(log => (
-                                <div key={log.id} className="flex gap-3 hover:bg-white/[0.03] px-2 py-0.5 rounded -mx-2 group">
-                                    <span className="text-zinc-600 flex-shrink-0 text-[11px] pt-0.5 w-20">
-                                        {new Date(log.created_at).toLocaleTimeString()}
+                                <div key={log.id} className="flex gap-4 hover:bg-white/[0.02] px-4 py-1.5 rounded-xl -mx-4 group/entry transition-colors items-start">
+                                    <span className="text-zinc-600 flex-shrink-0 text-[10px] font-bold w-20 pt-0.5 opacity-40 group-hover/entry:opacity-100 transition-opacity">
+                                        {new Date(log.created_at).toLocaleTimeString([], { hour12: false })}
                                     </span>
-                                    <span className={`flex-shrink-0 w-28 font-semibold capitalize text-[11px] pt-0.5 ${statusColor(log.status)}`}>
+                                    <div className="w-[120px] flex-shrink-0 text-[10px] font-black tracking-widest uppercase items-center flex">
                                         {log.details?.phone ? (
-                                            <Link to={`/admin-v2/whatsapp?phone=${log.details.phone}`} className="hover:underline flex items-center gap-1 group/link">
-                                                [{log.agent}] <MessageSquare className="w-2 h-2 opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                                            <Link to={`/admin-v2/whatsapp?phone=${log.details.phone}`} 
+                                                className={`hover:text-amber-500 transition-colors flex items-center gap-2 group/link ${statusColor(log.status)}`}>
+                                                <span className="opacity-80">[{log.agent}]</span>
+                                                <MessageSquare className="w-2.5 h-2.5 opacity-0 group-hover/link:opacity-100 transition-opacity" />
                                             </Link>
                                         ) : (
-                                            `[${log.agent}]`
+                                            <span className={`${statusColor(log.status)} opacity-80`}>[{log.agent}]</span>
                                         )}
-                                    </span>
-                                    <span className="text-zinc-300 text-[11px] leading-relaxed">
-                                        {log.action}
-                                        {log.place_id && (
-                                            <span className="text-zinc-600 ml-2">(…{log.place_id.slice(-8)})</span>
-                                        )}
-                                        {log.details && Object.keys(log.details).length > 0 && (
-                                            <span className="text-zinc-600 block text-[10px] mt-0.5 ml-2 border-l-2 border-zinc-800 pl-2">
-                                                {JSON.stringify(log.details)}
+                                    </div>
+                                    <div className="flex-1 space-y-1.5">
+                                        <div className="flex items-center gap-3 group-hover/entry:translate-x-1 transition-transform">
+                                            <span className="text-[11px] text-zinc-100 font-medium leading-relaxed tracking-tight group-hover/entry:text-white transition-colors">
+                                                {log.action}
                                             </span>
+                                            {log.place_id && (
+                                                <span className="text-[9px] text-amber-500/40 font-black uppercase tracking-widest">
+                                                    ID: {log.place_id.slice(-8)}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {log.details && Object.keys(log.details).length > 0 && (
+                                            <div className="text-[10px] text-zinc-600 font-bold bg-obsidian-surface-high/30 border-l border-white/5 py-2 px-3 rounded-lg overflow-x-auto custom-scrollbar-mini">
+                                                <span className="text-amber-500/30 mr-2 font-black tracking-widest">DETAILS</span>
+                                                {JSON.stringify(log.details)}
+                                            </div>
                                         )}
-                                    </span>
+                                    </div>
                                 </div>
                             ))
                         )}

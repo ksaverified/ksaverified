@@ -81,10 +81,10 @@ export default function PipelineV2() {
                 {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                            <Users className="w-6 h-6 text-indigo-400" /> Lead Pipeline
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-2 tracking-tight">
+                            <Users className="w-6 h-6 text-amber-500" /> Lead Pipeline
                         </h1>
-                        <p className="text-sm text-zinc-500 mt-0.5">{leads.length} total leads across {STAGES.length} stages</p>
+                        <p className="text-sm text-zinc-500 mt-1">{leads.length} total leads across {STAGES.length} stages</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <div className="relative">
@@ -92,11 +92,11 @@ export default function PipelineV2() {
                             <input
                                 value={search} onChange={e => setSearch(e.target.value)}
                                 placeholder="Search leads..."
-                                className="pl-9 pr-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-zinc-600 w-56"
+                                className="pl-9 pr-4 py-2 bg-obsidian-surface-low border border-obsidian-surface-high/30 rounded-xl text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 w-64 transition-all"
                             />
                         </div>
                         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                            className="px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-300 focus:outline-none focus:border-zinc-600">
+                            className="px-3 py-2 bg-obsidian-surface-low border border-obsidian-surface-high/30 rounded-xl text-sm text-zinc-300 focus:outline-none focus:border-amber-500/50 transition-all">
                             <option value="all">All Stages</option>
                             {STAGES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
                         </select>
@@ -108,50 +108,50 @@ export default function PipelineV2() {
                     <div className="h-96 flex items-center justify-center text-zinc-500 animate-pulse">Loading pipeline...</div>
                 ) : statusFilter !== 'all' ? (
                     /* Table view for filtered */
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 overflow-hidden">
+                    <div className="rounded-2xl border border-obsidian-surface-high/20 bg-obsidian-surface-lowest/40 overflow-hidden glass-card">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="border-b border-zinc-800 bg-zinc-900/50">
-                                    <th className="px-4 py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Business</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Phone</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider">Status</th>
-                                    <th className="px-4 py-3 text-xs font-semibold text-zinc-400 uppercase tracking-wider text-right">Actions</th>
+                                <tr className="border-b border-obsidian-surface-high/20 bg-obsidian-surface-low/50">
+                                    <th className="px-6 py-4 text-xs font-bold text-amber-500/80 uppercase tracking-[0.15em]">Business</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-amber-500/80 uppercase tracking-[0.15em]">Phone</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-amber-500/80 uppercase tracking-[0.15em]">Status</th>
+                                    <th className="px-6 py-4 text-xs font-bold text-amber-500/80 uppercase tracking-[0.15em] text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-zinc-800/50">
+                            <tbody className="divide-y divide-obsidian-surface-high/10">
                                 {filtered.map(lead => {
                                     const stage = getStage(lead.status);
                                     return (
-                                        <tr key={lead.place_id} className="hover:bg-zinc-800/20 transition-colors cursor-pointer"
+                                        <tr key={lead.place_id} className="hover:bg-obsidian-surface-high/30 transition-colors cursor-pointer group"
                                             onClick={() => navigate(`/admin-v2/pipeline/${lead.place_id}`)}>
-                                            <td className="px-4 py-3">
-                                                <p className="text-sm font-medium text-zinc-200">{lead.name}</p>
-                                                <p className="text-[11px] text-zinc-600 flex items-center gap-1 mt-0.5">
-                                                    <MapPin className="w-3 h-3" />{lead.address?.slice(0, 40) || '—'}
+                                            <td className="px-6 py-4">
+                                                <p className="text-sm font-semibold text-zinc-100 group-hover:text-amber-200 transition-colors">{lead.name}</p>
+                                                <p className="text-[11px] text-zinc-500 flex items-center gap-1 mt-1">
+                                                    <MapPin className="w-3 h-3 text-amber-500/40" />{lead.address?.slice(0, 40) || '—'}
                                                 </p>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <span className="text-sm text-zinc-400 flex items-center gap-1.5">
-                                                    <Phone className="w-3.5 h-3.5 text-zinc-600" />{lead.phone || '—'}
+                                            <td className="px-6 py-4">
+                                                <span className="text-sm text-zinc-400 flex items-center gap-2">
+                                                    <Phone className="w-3.5 h-3.5 text-obsidian-surface-highest" />{lead.phone || '—'}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3">
-                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${stage.bg} ${stage.border} ${stage.text}`}>
+                                            <td className="px-6 py-4">
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${stage.bg} ${stage.border} ${stage.text} uppercase tracking-wider`}>
                                                     {stage.label}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-right">
-                                                <div className="flex items-center justify-end gap-2">
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex items-center justify-end gap-2.5">
                                                     {lead.status === 'pitched' && (
                                                         <button onClick={(e) => { e.stopPropagation(); setUnlockModal(lead); setUnlockDate(new Date().toISOString().split('T')[0]); }}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-medium rounded-lg transition-all">
-                                                            <CheckCircle className="w-3.5 h-3.5" /> Verify Payment
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-[11px] font-bold rounded-lg transition-all uppercase tracking-wide">
+                                                            <CheckCircle className="w-3.5 h-3.5" /> Verify
                                                         </button>
                                                     )}
                                                     {lead.vercel_url && (
                                                         <a href={lead.vercel_url} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}
-                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition-all">
-                                                            <Eye className="w-3.5 h-3.5" /> Live Site
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-zinc-200 text-[11px] font-bold rounded-lg transition-all uppercase tracking-wide">
+                                                            <Eye className="w-3.5 h-3.5" /> Live
                                                         </a>
                                                     )}
                                                 </div>
@@ -167,40 +167,46 @@ export default function PipelineV2() {
                     </div>
                 ) : (
                     /* Kanban board */
-                    <div className="flex gap-4 overflow-x-auto pb-4">
+                    <div className="flex gap-5 overflow-x-auto pb-6 scrollbar-hide">
                         {STAGES.map(stage => {
                             const stageLeads = byStage[stage.key] || [];
                             return (
-                                <div key={stage.key} className="flex-shrink-0 w-[220px]">
-                                    <div className="flex items-center justify-between mb-2 px-1">
-                                        <span className="text-xs font-bold text-zinc-400">{stage.label}</span>
-                                        <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                                            style={{ backgroundColor: stage.color + '20', color: stage.color }}>
+                                <div key={stage.key} className="flex-shrink-0 w-[260px] flex flex-col">
+                                    <div className="flex items-center justify-between mb-4 px-2">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: stage.color }} />
+                                            <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">{stage.label}</span>
+                                        </div>
+                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-obsidian-surface-high/40 text-zinc-400">
                                             {stageLeads.length}
                                         </span>
                                     </div>
-                                    <div className="h-0.5 rounded-full mb-3" style={{ backgroundColor: stage.color + '50' }} />
-                                    <div className="space-y-2">
-                                        {stageLeads.slice(0, 10).map(lead => (
+                                    <div className="flex-1 space-y-3 min-h-[500px] p-2 rounded-2xl bg-obsidian-surface-low/20 border border-obsidian-surface-high/5">
+                                        {stageLeads.slice(0, 15).map(lead => (
                                             <div key={lead.place_id}
-                                                className="p-3 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all cursor-pointer group"
+                                                className="p-4 rounded-xl bg-obsidian-surface-low/50 border border-obsidian-surface-high/10 hover:border-amber-500/30 hover:bg-obsidian-surface-high/40 transition-all cursor-pointer group shadow-lg"
                                                 onClick={() => navigate(`/admin-v2/pipeline/${lead.place_id}`)}>
-                                                <p className="text-xs font-semibold text-zinc-300 group-hover:text-white truncate">{lead.name}</p>
-                                                <p className="text-[10px] text-zinc-600 mt-1 flex items-center gap-1">
-                                                    <Phone className="w-2.5 h-2.5" />
-                                                    {lead.phone ? `${lead.phone.slice(-4)}` : 'No phone'}
-                                                </p>
-                                                {lead.vercel_url && (
-                                                    <span className="text-[9px] text-indigo-400 mt-1 block truncate">{lead.vercel_url.replace('https://', '')}</span>
-                                                )}
+                                                <p className="text-xs font-bold text-zinc-200 group-hover:text-amber-300 transition-colors truncate">{lead.name}</p>
+                                                <div className="flex items-center justify-between mt-3">
+                                                    <p className="text-[10px] text-zinc-500 font-medium flex items-center gap-1.5">
+                                                        <Phone className="w-3 h-3 text-obsidian-surface-highest" />
+                                                        {lead.phone ? `${lead.phone.slice(-4)}` : 'N/A'}
+                                                    </p>
+                                                    {lead.vercel_url && (
+                                                        <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" title="Site Published" />
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
-                                        {stageLeads.length > 10 && (
-                                            <div className="text-[10px] text-zinc-600 text-center py-1">+{stageLeads.length - 10} more</div>
+                                        {stageLeads.length > 15 && (
+                                            <div className="text-[10px] text-zinc-600 text-center py-2 font-bold uppercase tracking-tight">
+                                                + {stageLeads.length - 15} more in stack
+                                            </div>
                                         )}
                                         {stageLeads.length === 0 && (
-                                            <div className="py-6 text-center text-[11px] text-zinc-700 border border-dashed border-zinc-800 rounded-lg">
-                                                Empty
+                                            <div className="py-12 flex flex-col items-center justify-center text-[10px] text-zinc-700 font-bold uppercase tracking-widest border border-dashed border-obsidian-surface-high/20 rounded-xl space-y-2">
+                                                <Users className="w-4 h-4 opacity-20" />
+                                                <span>No Leads</span>
                                             </div>
                                         )}
                                     </div>

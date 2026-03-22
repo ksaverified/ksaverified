@@ -4,24 +4,32 @@
 
 @layer components {
   .glass-card {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    @apply bg-obsidian-surface-highest/60 backdrop-blur-[12px];
+    border: 1px solid rgba(255, 193, 116, 0.08);
+    box-shadow: 0 32px 64px -12px rgba(12, 14, 19, 0.4);
   }
-  .glow-purple {
-    box-shadow: 0 0 20px rgba(115, 17, 212, 0.4);
+  .glass-sidebar {
+    @apply bg-obsidian-surface-lowest/80 backdrop-blur-[20px] border-r border-obsidian-surface-high/20;
   }
-  .text-gradient {
-    @apply bg-gradient-to-r from-white via-brand to-electric bg-clip-text text-transparent;
+  .amber-glow {
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.15);
   }
-  .hero-glow {
+  .text-gradient-amber {
+    @apply bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 bg-clip-text text-transparent;
+  }
+  .luminous-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .luminous-card::before {
+    content: '';
     position: absolute;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(115, 17, 212, 0.15) 0%, transparent 70%);
-    z-index: -1;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ffc174, #f59e0b);
+    opacity: 0.3;
   }
 }
 

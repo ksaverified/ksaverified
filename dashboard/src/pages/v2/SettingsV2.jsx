@@ -41,51 +41,60 @@ export default function SettingsV2() {
 
     return (
         <V2Shell>
-            <div className="p-6 space-y-5 max-w-3xl">
+            <div className="p-8 space-y-8 max-w-4xl">
                 <div>
-                    <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                        <Settings className="w-6 h-6 text-zinc-400" /> Agent Configuration
+                    <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
+                        <Settings className="w-6 h-6 text-amber-500" /> System Configuration
                     </h1>
-                    <p className="text-sm text-zinc-500 mt-0.5">Fine-tune the behavior of the KSA Verified pipeline</p>
+                    <p className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest mt-1.5 opacity-60">High-Precision Parametric Tuning for Autonomous Operations</p>
                 </div>
 
                 {loading ? (
-                    <div className="py-16 text-center text-zinc-600 animate-pulse text-sm">Loading settings...</div>
+                    <div className="py-24 text-center">
+                        <Loader2 className="w-6 h-6 text-amber-500 animate-spin mx-auto mb-3 opacity-40" />
+                        <span className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">Querying System Registry...</span>
+                    </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                         {settingsData.map(setting => (
-                            <div key={setting.key} className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div>
-                                        <h3 className="text-sm font-bold text-zinc-200 capitalize">
+                            <div key={setting.key} className="glass-card border-t border-white/5 rounded-3xl p-6 shadow-xl relative group">
+                                <div className="absolute inset-0 bg-gradient-to-br from-amber-500/[0.02] to-transparent pointer-events-none" />
+                                <div className="flex items-start justify-between mb-5 relative z-10">
+                                    <div className="flex-1 pr-6">
+                                        <h3 className="text-xs font-black text-white uppercase tracking-[0.1em]">
                                             {setting.key.replace(/_/g, ' ')}
                                         </h3>
                                         {setting.description && (
-                                            <p className="text-xs text-zinc-500 mt-1 flex items-start gap-1.5">
-                                                <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" /> {setting.description}
+                                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2 flex items-start gap-2 leading-relaxed opacity-60">
+                                                <Info className="w-3.5 h-3.5 flex-shrink-0 text-amber-500/50" /> {setting.description}
                                             </p>
                                         )}
                                     </div>
                                     <button onClick={() => handleSave(setting.key)} disabled={saving[setting.key]}
-                                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex-shrink-0 ml-4
-                                            ${saved[setting.key] ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                                : 'bg-zinc-800 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:text-white disabled:opacity-40'}`}>
-                                        {saving[setting.key] ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                            : saved[setting.key] ? <><CheckCircle className="w-3.5 h-3.5" /> Saved</>
-                                            : <><Save className="w-3.5 h-3.5" /> Save</>}
+                                        className={`h-10 px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg
+                                            ${saved[setting.key] ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                                                : 'bg-obsidian-surface-high border border-white/10 text-zinc-400 hover:text-amber-500 hover:border-amber-500/50 active:scale-95 disabled:opacity-40'}`}>
+                                        {saving[setting.key] ? <Loader2 className="w-4 h-4 animate-spin" />
+                                            : saved[setting.key] ? <><CheckCircle className="w-4 h-4" /> Commited</>
+                                            : <><Save className="w-4 h-4" /> Save Change</>}
                                     </button>
                                 </div>
-                                <textarea
-                                    value={values[setting.key] || ''}
-                                    onChange={e => setValues(p => ({ ...p, [setting.key]: e.target.value }))}
-                                    spellCheck={false}
-                                    className="w-full h-40 bg-[#0d0f14] border border-zinc-800 rounded-lg p-3 font-mono text-xs text-zinc-300 focus:outline-none focus:border-zinc-600 resize-y transition-all"
-                                />
+                                <div className="relative z-10">
+                                    <div className="absolute right-4 top-4 text-[9px] font-mono text-zinc-800 pointer-events-none group-focus-within:text-amber-500/20 transition-colors uppercase font-black tracking-widest">
+                                        JSON ENGINE / V2.0
+                                    </div>
+                                    <textarea
+                                        value={values[setting.key] || ''}
+                                        onChange={e => setValues(p => ({ ...p, [setting.key]: e.target.value }))}
+                                        spellCheck={false}
+                                        className="w-full h-48 bg-obsidian-dark/80 border border-white/5 rounded-2xl p-5 font-mono text-xs text-amber-500/80 focus:text-amber-400 placeholder-zinc-800 focus:outline-none focus:border-amber-500/30 resize-y transition-all shadow-inner"
+                                    />
+                                </div>
                             </div>
                         ))}
                         {settingsData.length === 0 && (
-                            <div className="py-12 text-center text-zinc-600 text-sm border border-dashed border-zinc-800 rounded-xl">
-                                No settings found in database
+                            <div className="py-24 text-center glass-card border-dashed border-zinc-800 rounded-3xl">
+                                <p className="text-[9px] font-black text-zinc-700 uppercase tracking-widest">No Schema Entries Found</p>
                             </div>
                         )}
                     </div>

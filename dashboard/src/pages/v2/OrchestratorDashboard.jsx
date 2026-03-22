@@ -54,9 +54,9 @@ function AgentPill({ agentKey, label, icon, lastLog, now, onClick }) {
     const isWorking = lastLog && !isError && (now - new Date(lastLog.created_at).getTime() < 3000000);
     const isIdle = !lastLog || (!isError && !isWorking);
 
-    const statusColor = isError ? '#ef4444' : isWorking ? '#10b981' : '#52525b';
-    const textColor = isError ? 'text-red-400' : isWorking ? 'text-emerald-400' : 'text-zinc-500';
-    const bgColor = isError ? 'bg-red-500/10 border-red-500/20' : isWorking ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-zinc-900/60 border-zinc-800';
+    const statusColor = isError ? '#ef4444' : isWorking ? '#f59e0b' : '#52525b';
+    const textColor = isError ? 'text-red-400' : isWorking ? 'text-amber-400' : 'text-zinc-500';
+    const bgColor = isError ? 'bg-red-500/10 border-red-500/20' : isWorking ? 'bg-amber-500/5 border-amber-500/20' : 'bg-obsidian-surface-high/30 border-white/5';
 
     // Calculate uptime from midnight
     const midnight = new Date(); midnight.setHours(0, 0, 0, 0);
@@ -65,25 +65,25 @@ function AgentPill({ agentKey, label, icon, lastLog, now, onClick }) {
     return (
         <button
             onClick={() => onClick(agentKey)}
-            className={`flex flex-col items-start gap-1 px-3 py-2 rounded-lg border transition-all hover:scale-105 ${bgColor} cursor-pointer min-w-[100px]`}
+            className={`flex flex-col items-start gap-1 px-4 py-2.5 rounded-xl border transition-all hover:bg-obsidian-surface-high group cursor-pointer min-w-[120px] ${bgColor}`}
             title={lastLog?.action || 'No recent activity'}
         >
             <div className="flex items-center gap-2 w-full">
-                <div className="relative flex h-2.5 w-2.5 flex-shrink-0">
+                <div className="relative flex h-2 w-2 flex-shrink-0">
                     {(isError || isWorking) && (
                         <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75`}
                             style={{ backgroundColor: statusColor }} />
                     )}
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5"
-                        style={{ backgroundColor: statusColor, boxShadow: `0 0 8px ${statusColor}80` }} />
+                    <span className="relative inline-flex rounded-full h-2 w-2 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                        style={{ backgroundColor: statusColor }} />
                 </div>
-                <span className={`text-xs font-bold tracking-wide ${textColor}`}>{icon} {label}</span>
+                <span className={`text-[10px] font-bold tracking-[0.1em] uppercase ${textColor} group-hover:text-white transition-colors`}>{icon} {label}</span>
             </div>
             <div className="flex items-center gap-2 w-full justify-between">
                 {lastLog ? (
                     <>
-                        <span className="text-[10px] text-zinc-600">{isWorking ? `↑ ${formatUptime(uptimeMs)}` : `idle ${timeAgo(lastLog.created_at)}`}</span>
-                        {isError && <span className="text-[10px] font-bold text-red-500 bg-red-500/10 px-1 rounded">ERR</span>}
+                        <span className="text-[10px] text-zinc-500 font-medium">{isWorking ? `↑ ${formatUptime(uptimeMs)}` : `idle ${timeAgo(lastLog.created_at)}`}</span>
+                        {isError && <span className="text-[9px] font-black text-red-500 bg-red-500/20 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">Alert</span>}
                     </>
                 ) : (
                     <span className="text-[10px] text-zinc-700">No data</span>
@@ -97,14 +97,16 @@ function AgentPill({ agentKey, label, icon, lastLog, now, onClick }) {
 
 function MetricCard({ label, value, sub, color = '#f59e0b', icon: Icon, highlight }) {
     return (
-        <div className={`flex flex-col gap-1 p-4 rounded-xl border ${highlight ? 'border-amber-500/40 bg-amber-500/5' : 'border-zinc-800 bg-zinc-900/50'} transition-all hover:border-zinc-700`}>
-            <div className="flex items-center gap-2">
-                {Icon && <Icon className="w-3.5 h-3.5" style={{ color }} />}
-                <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider">{label}</span>
+        <div className={`flex flex-col gap-2 p-5 rounded-2xl border transition-all group ${highlight ? 'bg-amber-500/5 border-amber-500/30' : 'bg-obsidian-surface-high/20 border-white/5 hover:border-white/10 hover:bg-obsidian-surface-high/30'}`}>
+            <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-obsidian-surface-low shadow-inner border border-white/5`}>
+                    {Icon && <Icon className="w-4 h-4 opacity-70" style={{ color }} />}
+                </div>
+                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{label}</span>
             </div>
-            <div className="flex items-end gap-2">
-                <span className="text-2xl font-bold text-white">{value ?? '—'}</span>
-                {sub && <span className="text-xs text-zinc-500 mb-0.5">{sub}</span>}
+            <div className="flex items-baseline gap-2 mt-1">
+                <span className="text-3xl font-black text-white tracking-tighter group-hover:text-amber-400 transition-colors uppercase">{value ?? '—'}</span>
+                {sub && <span className="text-[10px] text-zinc-500 font-bold uppercase opacity-60">{sub}</span>}
             </div>
         </div>
     );
@@ -114,27 +116,28 @@ function MetricCard({ label, value, sub, color = '#f59e0b', icon: Icon, highligh
 
 function PipelineColumn({ stage, leads }) {
     return (
-        <div className="flex flex-col gap-2 min-w-[160px] max-w-[180px]">
-            <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-bold text-zinc-400">{stage.label}</span>
-                <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
-                    style={{ backgroundColor: stage.color + '30', color: stage.color }}>
+        <div className="flex flex-col gap-3 min-w-[180px] max-w-[200px]">
+            <div className="flex items-center justify-between px-2">
+                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{stage.label}</span>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-lg border border-white/5 bg-obsidian-surface-low text-zinc-300">
                     {leads.length}
                 </span>
             </div>
-            <div className="h-0.5 rounded-full" style={{ backgroundColor: stage.color + '60' }} />
-            <div className="flex flex-col gap-2">
+            <div className="h-1 rounded-full bg-obsidian-surface-lowest overflow-hidden border border-white/5">
+                <div className="h-full rounded-full transition-all" style={{ backgroundColor: stage.color, width: leads.length > 0 ? '100%' : '0%' }} />
+            </div>
+            <div className="flex flex-col gap-2.5">
                 {leads.slice(0, 3).map(lead => (
                     <div key={lead.place_id}
-                        className="p-2.5 rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-600 transition-all cursor-default group">
-                        <p className="text-xs font-semibold text-zinc-300 truncate group-hover:text-white">{lead.name}</p>
-                        <p className="text-[10px] text-zinc-600 mt-0.5">
-                            {lead.phone ? `+966 *** ${lead.phone.slice(-4)}` : 'No phone'}
+                        className="p-3 rounded-xl bg-obsidian-surface-high/20 border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all cursor-default group shadow-sm">
+                        <p className="text-xs font-bold text-zinc-200 truncate group-hover:text-amber-400 transition-colors uppercase tracking-tight">{lead.name}</p>
+                        <p className="text-[10px] text-zinc-500 font-medium mt-1">
+                            {lead.phone ? `+966 *** ${lead.phone.slice(-4)}` : 'No contact'}
                         </p>
                     </div>
                 ))}
                 {leads.length > 3 && (
-                    <div className="text-[10px] text-zinc-600 text-center py-1">+{leads.length - 3} more</div>
+                    <div className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest text-center py-1 opacity-50">+{leads.length - 3} additional</div>
                 )}
             </div>
         </div>
@@ -252,23 +255,23 @@ export default function OrchestratorDashboard() {
     const errors = Object.values(agentLogs).filter(l => l.status === 'error');
 
     return (
-        <div className="min-h-screen bg-[#080a0f] text-white font-['Inter',sans-serif]">
+        <div className="min-h-screen bg-obsidian-dark text-white font-['Inter',sans-serif]">
             {/* ── TOP BAR ──────────────────────────────────────────────── */}
-            <header className="sticky top-0 z-50 border-b border-zinc-800/80 bg-[#080a0f]/95 backdrop-blur-xl">
-                <div className="px-6 py-3 flex items-center gap-4">
+            <header className="sticky top-0 z-50 border-b border-white/5 bg-obsidian-dark/80 backdrop-blur-2xl">
+                <div className="px-6 py-4 flex items-center gap-6">
                     {/* Logo */}
-                    <div className="flex items-center gap-2 mr-4 flex-shrink-0">
-                        <div className="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center">
-                            <Shield className="w-4 h-4 text-black" />
+                    <div className="flex items-center gap-3 mr-4 flex-shrink-0 cursor-pointer group" onClick={() => navigate('/admin-v2')}>
+                        <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform">
+                            <Shield className="w-5 h-5 text-black" />
                         </div>
                         <div>
-                            <p className="text-sm font-bold text-white leading-none">KSA Verified</p>
-                            <p className="text-[9px] text-amber-500 font-bold tracking-widest uppercase leading-none mt-0.5">Orchestrator</p>
+                            <p className="text-sm font-black text-white leading-none tracking-tight uppercase">Dashboard</p>
+                            <p className="text-[10px] text-amber-500 font-bold tracking-[0.2em] uppercase leading-none mt-1.5 glow-text-amber">V2 Orchestrator</p>
                         </div>
                     </div>
 
                     {/* Agent Pills */}
-                    <div className="flex items-center gap-2 flex-1 overflow-x-auto pb-0.5">
+                    <div className="flex items-center gap-3 flex-1 overflow-x-auto no-scrollbar scroll-smooth">
                         {AGENTS.map(a => (
                             <AgentPill
                                 key={a.key}
@@ -283,23 +286,29 @@ export default function OrchestratorDashboard() {
                     </div>
 
                     {/* Right Actions */}
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-xs text-zinc-500">{new Date().toLocaleDateString('en-SA', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                    <div className="flex items-center gap-4 flex-shrink-0">
+                        <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-60">
+                            {new Date().toLocaleDateString('en-SA', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        </span>
                         {errors.length > 0 && (
-                            <div className="flex items-center gap-1 bg-red-500/10 border border-red-500/20 rounded-full px-2 py-1">
-                                <AlertTriangle className="w-3 h-3 text-red-400" />
-                                <span className="text-[10px] text-red-400 font-bold">{errors.length} error{errors.length > 1 ? 's' : ''}</span>
+                            <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-1.5 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
+                                <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                                <span className="text-[10px] text-red-500 font-black uppercase tracking-tighter">{errors.length} Faults</span>
                             </div>
                         )}
-                        <button onClick={fetchData} className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-all">
-                            <RefreshCw className="w-4 h-4" />
+                        <div className="h-6 w-px bg-white/5 mx-1" />
+                        <button onClick={fetchData} className="w-9 h-9 rounded-xl text-zinc-500 hover:text-amber-500 hover:bg-obsidian-surface-high border border-transparent hover:border-white/5 transition-all flex items-center justify-center">
+                            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                         </button>
-                        <button onClick={() => navigate('/admin-v2/settings')} className="p-1.5 rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-all">
+                        <button onClick={() => navigate('/admin-v2/settings')} className="w-9 h-9 rounded-xl text-zinc-500 hover:text-white hover:bg-obsidian-surface-high border border-transparent hover:border-white/5 transition-all flex items-center justify-center">
                             <Settings className="w-4 h-4" />
                         </button>
-                        <button onClick={handleSignOut} className="flex items-center gap-1.5 text-xs text-zinc-500 hover:text-white transition-colors px-2 py-1.5 rounded-lg hover:bg-zinc-800">
-                            <LogOut className="w-3.5 h-3.5" />
-                            {user?.email?.split('@')[0]}
+                        <button onClick={handleSignOut} className="flex items-center gap-3 px-4 py-2 rounded-xl bg-obsidian-surface-high/50 hover:bg-obsidian-surface-highest border border-white/5 hover:border-white/10 transition-all">
+                            <div className="w-6 h-6 rounded-lg bg-zinc-800 flex items-center justify-center text-[10px] font-black uppercase text-zinc-400">
+                                {user?.email?.[0]}
+                            </div>
+                            <span className="text-xs font-bold text-zinc-300 group-hover:text-white uppercase tracking-tighter">{user?.email?.split('@')[0]}</span>
+                            <LogOut className="w-3.5 h-3.5 text-zinc-600" />
                         </button>
                     </div>
                 </div>
@@ -308,121 +317,128 @@ export default function OrchestratorDashboard() {
             <main className="px-6 py-6 space-y-6 max-w-[1600px] mx-auto">
 
                 {/* ── ORCHESTRATOR BRIEFING ─────────────────────────────── */}
-                <div className="relative rounded-xl border border-amber-500/30 bg-gradient-to-r from-amber-500/5 via-amber-500/10 to-transparent p-5 overflow-hidden">
-                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(245,158,11,0.08),transparent_60%)]" />
-                    <div className="relative flex items-start gap-4">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-xl">
+                <div className="relative rounded-3xl border border-amber-500/30 bg-obsidian-surface-low p-6 overflow-hidden luminous-card shadow-2xl">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_-20%,rgba(245,158,11,0.15),transparent_60%)]" />
+                    <div className="relative flex items-start gap-6">
+                        <div className="flex-shrink-0 w-14 h-14 rounded-2xl bg-obsidian-surface-high border border-amber-500/30 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(245,158,11,0.1)]">
                             🧠
                         </div>
                         <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                                <p className="text-sm font-bold text-amber-400">Orchestrator Summary</p>
-                                <span className="text-[10px] text-zinc-600">{new Date().toLocaleTimeString('en-SA', { hour: '2-digit', minute: '2-digit' })}</span>
+                            <div className="flex items-center gap-3 mb-2">
+                                <p className="text-xs font-black text-amber-500 uppercase tracking-[0.2em] glow-text-amber">Entity Engine Summary</p>
+                                <div className="h-4 w-px bg-white/10" />
+                                <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{new Date().toLocaleTimeString('en-SA', { hour: '2-digit', minute: '2-digit' })} AST</span>
                             </div>
-                            <p className="text-sm text-zinc-300 leading-relaxed">
-                                {loading ? 'Loading briefing...' : briefing}
+                            <p className="text-lg font-bold text-zinc-100 tracking-tight leading-snug max-w-4xl">
+                                {loading ? 'Synthesizing local intelligence data...' : briefing}
                             </p>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex items-center gap-3 flex-shrink-0 mt-2">
                             <button onClick={() => navigate('/admin-v2/logs?agent=publisher')}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-amber-400 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-3 py-1.5 rounded-lg transition-all">
-                                <RefreshCw className="w-3 h-3" /> Retry Publisher
+                                className="flex items-center gap-2 text-[10px] font-black text-amber-500 uppercase tracking-widest border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/20 px-5 py-3 rounded-xl transition-all shadow-inner">
+                                <RefreshCw className="w-4 h-4" /> Hard Reset Publisher
                             </button>
                             <button onClick={() => navigate('/admin-v2/whatsapp')}
-                                className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 border border-zinc-700 hover:border-zinc-600 px-3 py-1.5 rounded-lg transition-all">
-                                <MessageSquare className="w-3 h-3" /> Conversations
+                                className="flex items-center gap-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest border border-white/5 bg-obsidian-surface-high/50 hover:bg-obsidian-surface-highest px-5 py-3 rounded-xl transition-all">
+                                <MessageSquare className="w-4 h-4 opacity-60" /> Comms Hub
                             </button>
                         </div>
                     </div>
                 </div>
 
                 {/* ── COMMAND CENTER (3 COLUMNS) ────────────────────────── */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-6">
 
                     {/* ACQUISITION */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+                    <div className="glass-card rounded-3xl p-6 space-y-5 border-t border-white/5 relative overflow-hidden group">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-indigo-500/10 blur-3xl rounded-full group-hover:bg-indigo-500/20 transition-all" />
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.1)]">
+                                <TrendingUp className="w-4 h-4 text-indigo-400" />
                             </div>
-                            <h2 className="text-sm font-bold text-zinc-300">Acquisition</h2>
-                            <span className="text-[10px] text-zinc-600 ml-auto">Scout · Creator · Publisher</span>
+                            <h2 className="text-[11px] font-black text-zinc-200 uppercase tracking-[0.2em]">Acquisition Layer</h2>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <MetricCard label="New Today" value={stats.newLeadsToday} icon={Zap} color="#6366f1" />
-                            <MetricCard label="Total Leads" value={stats.totalLeads} icon={Users} color="#8b5cf6" />
-                            <MetricCard label="Sites Created" value={stats.websiteCount} icon={Globe} color="#6366f1" />
-                            <MetricCard label="Pitched" value={leads.filter(l => l.status === 'pitched').length} icon={Send} color="#8b5cf6" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <MetricCard label="Incoming Today" value={stats.newLeadsToday} icon={Zap} color="#6366f1" />
+                            <MetricCard label="Total Repository" value={stats.totalLeads} icon={Users} color="#8b5cf6" />
+                            <MetricCard label="Web Instances" value={stats.websiteCount} icon={Globe} color="#6366f1" />
+                            <MetricCard label="Active Pitches" value={leads.filter(l => l.status === 'pitched').length} icon={Send} color="#8b5cf6" />
                         </div>
-                        <div>
-                            <div className="flex justify-between text-[10px] text-zinc-600 mb-1">
-                                <span>Pipeline fill rate</span>
-                                <span>{stats.totalLeads ? Math.round((stats.websiteCount / stats.totalLeads) * 100) : 0}%</span>
+                        <div className="pt-2">
+                            <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 opacity-60">
+                                <span>Pipeline Utilization</span>
+                                <span className="text-zinc-300">{stats.totalLeads ? Math.round((stats.websiteCount / stats.totalLeads) * 100) : 0}%</span>
                             </div>
-                            <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                                <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full transition-all"
+                            <div className="h-2 bg-obsidian-surface-lowest rounded-full overflow-hidden border border-white/5 shadow-inner p-[1px]">
+                                <div className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500 rounded-full transition-all shadow-[0_0_10px_rgba(99,102,241,0.3)]"
                                     style={{ width: `${stats.totalLeads ? Math.round((stats.websiteCount / stats.totalLeads) * 100) : 0}%` }} />
                             </div>
                         </div>
                     </div>
 
                     {/* CONVERSION */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                                <Flame className="w-3.5 h-3.5 text-amber-400" />
+                    <div className="glass-card rounded-3xl p-6 space-y-5 border-t border-white/5 relative overflow-hidden group">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-amber-500/10 blur-3xl rounded-full group-hover:bg-amber-500/20 transition-all" />
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-amber-500/20 flex items-center justify-center border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]">
+                                <Flame className="w-4 h-4 text-amber-500" />
                             </div>
-                            <h2 className="text-sm font-bold text-zinc-300">Conversion</h2>
-                            <span className="text-[10px] text-zinc-600 ml-auto">Closer · Sales</span>
+                            <h2 className="text-[11px] font-black text-zinc-200 uppercase tracking-[0.2em]">Conversion Core</h2>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <MetricCard label="Replied" value={leads.filter(l => l.status === 'replied').length} icon={MessageSquare} color="#f59e0b" />
-                            <MetricCard label="Interested" value={stats.hotLeads} icon={Flame} color="#f59e0b" highlight />
-                            <MetricCard label="Closed" value={stats.closedLeads} icon={CheckCircle} color="#22c55e" />
-                            <MetricCard label="AI Chats" value={stats.chatCount} icon={BarChart2} color="#f59e0b" />
+                        <div className="grid grid-cols-2 gap-4">
+                            <MetricCard label="Comms Response" value={leads.filter(l => l.status === 'replied').length} icon={MessageSquare} color="#f59e0b" />
+                            <MetricCard label="High Interest" value={stats.hotLeads} icon={Flame} color="#f59e0b" highlight />
+                            <MetricCard label="Closed Won" value={stats.closedLeads} icon={CheckCircle} color="#10b981" />
+                            <MetricCard label="AI Interaction" value={stats.chatCount} icon={BarChart2} color="#f59e0b" />
                         </div>
-                        <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20">
-                            <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider mb-1">🔥 Action Needed</p>
-                            <p className="text-xs text-zinc-400">
-                                {stats.hotLeads > 0 ? `${stats.hotLeads} lead${stats.hotLeads > 1 ? 's' : ''} interested — follow up now` : 'No urgent actions'}
+                        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-inner group-hover:bg-amber-500/10 transition-colors">
+                            <p className="text-[10px] text-amber-500 font-black uppercase tracking-[0.2em] mb-1.5 flex items-center gap-2">
+                                <Zap className="w-3 h-3" /> Critical Action
+                            </p>
+                            <p className="text-xs font-bold text-zinc-300 uppercase tracking-tight leading-tight">
+                                {stats.hotLeads > 0 ? `${stats.hotLeads} High-intent opportunities detected — verify status` : 'Strategic balance maintained'}
                             </p>
                         </div>
                     </div>
 
                     {/* RETENTION */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5 space-y-4">
-                        <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                <Star className="w-3.5 h-3.5 text-emerald-400" />
+                    <div className="glass-card rounded-3xl p-6 space-y-5 border-t border-white/5 relative overflow-hidden group">
+                        <div className="absolute -top-10 -right-10 w-24 h-24 bg-emerald-500/10 blur-3xl rounded-full group-hover:bg-emerald-500/20 transition-all" />
+                        <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                                <Star className="w-4 h-4 text-emerald-400" />
                             </div>
-                            <h2 className="text-sm font-bold text-zinc-300">Retention</h2>
-                            <span className="text-[10px] text-zinc-600 ml-auto">Chatbot CX</span>
+                            <h2 className="text-[11px] font-black text-zinc-200 uppercase tracking-[0.2em]">System Integrity</h2>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                            <MetricCard label="Total Chats" value={stats.chatCount} icon={MessageSquare} color="#10b981" />
-                            <MetricCard label="Chatbot" value={agentLogs['chatbot'] ? '🟢 ON' : '⚫ OFF'} icon={Activity} color="#10b981" />
-                            <MetricCard label="Active Agents" value={Object.values(agentLogs).filter(l => (Date.now() - new Date(l.created_at).getTime()) < 3000000 && l.status !== 'error').length} icon={Shield} color="#10b981" />
-                            <MetricCard label="Errors Today" value={errors.length} icon={AlertTriangle} color={errors.length > 0 ? '#ef4444' : '#10b981'} />
+                        <div className="grid grid-cols-2 gap-4">
+                            <MetricCard label="Comms Feed" value={stats.chatCount} icon={MessageSquare} color="#10b981" />
+                            <MetricCard label="Bot Status" value={agentLogs['chatbot'] ? 'ACTIVE' : 'IDLE'} icon={Activity} color="#10b981" />
+                            <MetricCard label="Live Agents" value={Object.values(agentLogs).filter(l => (Date.now() - new Date(l.created_at).getTime()) < 3000000 && l.status !== 'error').length} icon={Shield} color="#10b981" />
+                            <MetricCard label="Fault Logs" value={errors.length} icon={AlertTriangle} color={errors.length > 0 ? '#ef4444' : '#10b981'} />
                         </div>
                         <button onClick={() => navigate('/admin-v2/logs')}
-                            className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10 px-3 py-2 rounded-lg transition-all">
-                            View System Logs <ArrowRight className="w-3 h-3" />
+                            className="w-full flex items-center justify-center gap-2 text-[10px] font-black text-emerald-500 uppercase tracking-widest border border-emerald-500/30 bg-emerald-500/5 hover:bg-emerald-500/10 px-4 py-3 rounded-xl transition-all shadow-inner">
+                            Audit System Logs <ArrowRight className="w-3.5 h-3.5" />
                         </button>
                     </div>
                 </div>
 
                 {/* ── PIPELINE KANBAN ───────────────────────────────────── */}
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/20 p-5">
-                    <div className="flex items-center gap-2 mb-5">
-                        <BarChart2 className="w-4 h-4 text-zinc-500" />
-                        <h2 className="text-sm font-bold text-zinc-300">Lead Pipeline</h2>
-                        <span className="text-xs text-zinc-600 ml-1">— {leads.length} total leads tracked</span>
+                <div className="glass-card rounded-3xl p-7 border-t border-white/5 shadow-2xl">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="w-8 h-8 rounded-xl bg-obsidian-surface-high flex items-center justify-center border border-white/10 shadow-inner">
+                            <BarChart2 className="w-4 h-4 text-amber-500/60" />
+                        </div>
+                        <div>
+                            <h2 className="text-[11px] font-black text-zinc-200 uppercase tracking-[0.2em]">Live Pipeline Visualization</h2>
+                            <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest opacity-60 mt-1">{leads.length} Entities in Synchronized Queue</p>
+                        </div>
                         <button onClick={() => navigate('/admin-v2/pipeline')}
-                            className="ml-auto flex items-center gap-1 text-xs text-zinc-500 hover:text-white transition-colors">
-                            Full View <ChevronRight className="w-3 h-3" />
+                            className="ml-auto flex items-center gap-2 text-[10px] font-black text-amber-500 uppercase tracking-[0.2em] hover:text-white transition-colors bg-amber-500/5 hover:bg-amber-500/10 px-4 py-2 rounded-xl border border-amber-500/20">
+                            Full Control Matrix <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
-                    <div className="flex gap-4 overflow-x-auto pb-2">
+                    <div className="flex gap-6 overflow-x-auto pb-4 no-scrollbar">
                         {PIPELINE_STAGES.map(stage => (
                             <PipelineColumn key={stage.key} stage={stage} leads={pipelineByStage[stage.key] || []} />
                         ))}
@@ -430,25 +446,27 @@ export default function OrchestratorDashboard() {
                 </div>
 
                 {/* ── DEPT NAVIGATION ───────────────────────────────────── */}
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-4 gap-4 pb-8">
                     {[
-                        { label: 'Leads & Pipeline', icon: '🔍', path: '/admin-v2/pipeline', desc: 'Scout & Creator' },
-                        { label: 'Websites', icon: '🌐', path: '/admin-v2/websites', desc: 'Publisher' },
-                        { label: 'WhatsApp CX', icon: '💬', path: '/admin-v2/whatsapp', desc: 'Chatbot' },
-                        { label: 'Analytics', icon: '📊', path: '/admin-v2/analytics', desc: 'Performance' },
-                        { label: 'Map View', icon: '🗺️', path: '/admin-v2/map', desc: 'Geographic' },
-                        { label: 'AI Answers', icon: '🤖', path: '/admin-v2/answers', desc: 'Responses' },
-                        { label: 'System Logs', icon: '📋', path: '/admin-v2/logs', desc: 'All agents' },
-                        { label: 'Settings', icon: '⚙️', path: '/admin-v2/settings', desc: 'Configuration' },
+                        { label: 'Intelligence & Pipeline', icon: '🔍', path: '/admin-v2/pipeline', desc: 'Leads & Acquisitions' },
+                        { label: 'Published Assets', icon: '🌐', path: '/admin-v2/websites', desc: 'Website Deployments' },
+                        { label: 'Communications', icon: '💬', path: '/admin-v2/whatsapp', desc: 'WhatsApp CX Matrix' },
+                        { label: 'System Analytics', icon: '📊', path: '/admin-v2/analytics', desc: 'Performance Metrics' },
+                        { label: 'Geospatial Map', icon: '🗺️', path: '/admin-v2/map', desc: 'Visual Scouting' },
+                        { label: 'Knowledge Base', icon: '🤖', path: '/admin-v2/answers', desc: 'AI Instruction Set' },
+                        { label: 'Audit Logs', icon: '📋', path: '/admin-v2/logs', desc: 'Process Forensics' },
+                        { label: 'Matrix Control', icon: '⚙️', path: '/admin-v2/settings', desc: 'Core Configuration' },
                     ].map(item => (
                         <button key={item.path} onClick={() => navigate(item.path)}
-                            className="flex items-center gap-3 p-3.5 rounded-xl border border-zinc-800 bg-zinc-900/30 hover:border-zinc-600 hover:bg-zinc-800/50 transition-all text-left group">
-                            <span className="text-xl">{item.icon}</span>
-                            <div>
-                                <p className="text-xs font-semibold text-zinc-300 group-hover:text-white">{item.label}</p>
-                                <p className="text-[10px] text-zinc-600">{item.desc}</p>
+                            className="flex items-center gap-4 p-5 rounded-2xl border border-white/5 bg-obsidian-surface-high/30 hover:border-amber-500/40 hover:bg-amber-500/5 transition-all text-left group shadow-lg">
+                            <div className="w-12 h-12 rounded-xl bg-obsidian-surface-low border border-white/5 flex items-center justify-center text-2xl group-hover:scale-110 group-hover:bg-obsidian-surface-high transition-all shadow-inner">
+                                {item.icon}
                             </div>
-                            <ChevronRight className="w-3.5 h-3.5 text-zinc-700 group-hover:text-zinc-400 ml-auto" />
+                            <div className="flex-1">
+                                <p className="text-[11px] font-black text-zinc-100 uppercase tracking-[0.15em] group-hover:text-amber-400 transition-colors">{item.label}</p>
+                                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-1.5 opacity-60">{item.desc}</p>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-zinc-700 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
                         </button>
                     ))}
                 </div>

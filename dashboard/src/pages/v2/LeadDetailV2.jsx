@@ -182,33 +182,33 @@ export default function LeadDetailV2() {
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                        <button onClick={() => navigate('/admin-v2/pipeline')} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors mb-2 text-xs font-medium">
-                            <ChevronLeft className="w-3.5 h-3.5" /> PIPELINE
+                        <button onClick={() => navigate('/admin-v2/pipeline')} className="flex items-center gap-2 text-zinc-500 hover:text-amber-500 transition-colors mb-2 text-[10px] font-bold tracking-[0.2em]">
+                            <ChevronLeft className="w-3.5 h-3.5" /> BACK TO PIPELINE
                         </button>
                         <div className="flex items-center gap-3">
-                            <h1 className="text-3xl font-bold text-white">{lead.name}</h1>
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${stage.bg} ${stage.border} ${stage.text}`}>
+                            <h1 className="text-3xl font-bold text-white tracking-tight">{lead.name}</h1>
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-widest ${stage.bg} ${stage.border} ${stage.text}`}>
                                 {stage.label}
                             </span>
                         </div>
-                        <p className="text-zinc-500 flex items-center gap-1.5 text-sm">
-                            <MapPin className="w-3.5 h-3.5" /> {lead.address}
+                        <p className="text-zinc-500 flex items-center gap-2 text-sm font-medium">
+                            <MapPin className="w-4 h-4 text-amber-500/40" /> {lead.address}
                         </p>
                     </div>
                     <div className="flex items-center gap-3">
                         {lead.vercel_url && (
-                            <a href={lead.vercel_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/20 rounded-xl text-sm font-semibold transition-all">
-                                <Globe className="w-4 h-4" /> View Site <ExternalLink className="w-3 h-3" />
+                            <a href={lead.vercel_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all amber-glow">
+                                <Globe className="w-4 h-4" /> View Site <ExternalLink className="w-3 h-3 opacity-50" />
                             </a>
                         )}
                         {!isEditing ? (
-                            <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl text-sm font-semibold transition-all">
-                                <Edit2 className="w-4 h-4" /> Edit Info
+                            <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2.5 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
+                                <Edit2 className="w-4 h-4 text-amber-500/60" /> Edit Info
                             </button>
                         ) : (
-                            <div className="flex items-center gap-2">
-                                <button onClick={() => setIsEditing(false)} className="px-4 py-2 text-zinc-500 hover:text-white text-sm font-semibold">Cancel</button>
-                                <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black rounded-xl text-sm font-bold transition-all disabled:opacity-50">
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => setIsEditing(false)} className="px-4 py-2.5 text-zinc-500 hover:text-white text-xs font-bold uppercase tracking-wider transition-all">Cancel</button>
+                                <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50">
                                     <Save className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Changes'}
                                 </button>
                             </div>
@@ -220,85 +220,85 @@ export default function LeadDetailV2() {
                     {/* Left Column: Info & Visits */}
                     <div className="col-span-8 space-y-6">
                         {/* Business Details Card */}
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden">
-                            <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
-                                <Hash className="w-4 h-4 text-zinc-500" />
-                                <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider">Business Information</h3>
+                        <div className="glass-card rounded-2xl overflow-hidden luminous-card">
+                            <div className="px-6 py-4 border-b border-obsidian-surface-high/20 bg-obsidian-surface-low/30 flex items-center gap-2">
+                                <Hash className="w-4 h-4 text-amber-500/60" />
+                                <h3 className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Business Information</h3>
                             </div>
-                            <div className="p-6 grid grid-cols-2 gap-x-12 gap-y-6">
-                                <div className="space-y-4">
+                            <div className="p-8 grid grid-cols-2 gap-x-16 gap-y-8">
+                                <div className="space-y-6">
                                     <DetailItem label="Official Phone" value={lead.phone} icon={Phone} isEditing={isEditing} 
-                                        renderEdit={() => <input className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-sm" value={editData.phone || ''} readOnly />} />
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-zinc-500 cursor-not-allowed" value={editData.phone || ''} readOnly />} />
                                     <DetailItem label="Mobile Number" value={lead.mobile} icon={Smartphone} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm focus:border-indigo-500 outline-none" 
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.mobile || ''} onChange={e => setEditData({...editData, mobile: e.target.value})} />} />
                                     <DetailItem label="Area / City" value={lead.area} icon={MapPin} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm focus:border-indigo-500 outline-none" 
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.area || ''} onChange={e => setEditData({...editData, area: e.target.value})} />} />
                                     <DetailItem label="Neighborhood" value={lead.neighborhood} icon={Search} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm focus:border-indigo-500 outline-none" 
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.neighborhood || ''} onChange={e => setEditData({...editData, neighborhood: e.target.value})} />} />
                                 </div>
-                                <div className="space-y-4">
+                                <div className="space-y-6">
                                     <DetailItem label="Contact Name" value={lead.contact_name} icon={User} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm focus:border-indigo-500 outline-none" 
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.contact_name || ''} onChange={e => setEditData({...editData, contact_name: e.target.value})} />} />
                                     <DetailItem label="Contact Mobile" value={lead.contact_mobile} icon={Phone} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm focus:border-indigo-500 outline-none" 
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.contact_mobile || ''} onChange={e => setEditData({...editData, contact_mobile: e.target.value})} />} />
                                     <DetailItem label="Contact Email" value={lead.contact_email} icon={Mail} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-zinc-950 border border-zinc-700 rounded px-2 py-1 text-sm focus:border-indigo-500 outline-none" 
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.contact_email || ''} onChange={e => setEditData({...editData, contact_email: e.target.value})} />} />
                                     <div className="pt-2">
-                                        <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest block mb-1">Coordinates</label>
-                                        <p className="text-xs text-zinc-400 font-mono">{lead.lat}, {lead.lng}</p>
+                                        <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-[0.25em] block mb-1.5 opacity-60">Coordinates</label>
+                                        <p className="text-xs text-zinc-400 font-mono bg-obsidian-surface-low/40 px-3 py-1.5 rounded-lg border border-obsidian-surface-high/10">{lead.lat}, {lead.lng}</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Recent Visits Table */}
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl overflow-hidden">
-                            <div className="px-6 py-4 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
+                        <div className="glass-card rounded-2xl overflow-hidden">
+                            <div className="px-6 py-4 border-b border-obsidian-surface-high/20 bg-obsidian-surface-low/30 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <BarChart2 className="w-4 h-4 text-zinc-500" />
-                                    <h3 className="text-sm font-bold text-zinc-200 uppercase tracking-wider">Recent Website Visits</h3>
+                                    <BarChart2 className="w-4 h-4 text-amber-500/60" />
+                                    <h3 className="text-[11px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Recent Website Visits</h3>
                                 </div>
-                                <div className="text-[10px] font-bold text-zinc-600 bg-zinc-800/50 px-2 py-1 rounded-lg">LAST 10</div>
+                                <div className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-2 py-1 rounded-lg border border-amber-500/20">LAST 10</div>
                             </div>
                             <div className="overflow-x-auto">
                                 <table className="w-full text-left border-collapse">
                                     <thead>
-                                        <tr className="border-b border-zinc-800 bg-zinc-900/30">
-                                            <th className="px-6 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Time</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">IP Address</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Location</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Device</th>
-                                            <th className="px-6 py-3 text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Browser</th>
+                                        <tr className="border-b border-obsidian-surface-high/10 bg-obsidian-surface-low/10">
+                                            <th className="px-6 py-4 text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Time</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">IP Address</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Location</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Device</th>
+                                            <th className="px-6 py-4 text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em]">Browser</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-zinc-800/50">
+                                    <tbody className="divide-y divide-obsidian-surface-high/10">
                                         {visits.map(v => (
-                                            <tr key={v.id} className="hover:bg-zinc-800/20 transition-colors">
-                                                <td className="px-6 py-3">
-                                                    <p className="text-xs text-zinc-300 font-medium">{formatDate(v.created_at).split(',')[1]}</p>
-                                                    <p className="text-[10px] text-zinc-600">{formatDate(v.created_at).split(',')[0]}</p>
+                                            <tr key={v.id} className="hover:bg-obsidian-surface-high/20 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <p className="text-xs text-zinc-200 font-bold group-hover:text-amber-300 transition-colors">{formatDate(v.created_at).split(',')[1]}</p>
+                                                    <p className="text-[10px] text-zinc-500 font-medium">{formatDate(v.created_at).split(',')[0]}</p>
                                                 </td>
-                                                <td className="px-6 py-3 text-xs text-zinc-400 font-mono">{v.ip_address || '—'}</td>
-                                                <td className="px-6 py-3 text-xs text-zinc-400">{v.location || '—'}</td>
-                                                <td className="px-6 py-3">
-                                                    <div className="flex items-center gap-2 text-xs text-zinc-400">
+                                                <td className="px-6 py-4 text-xs text-zinc-400 font-mono">{v.ip_address || '—'}</td>
+                                                <td className="px-6 py-4 text-xs text-zinc-400 font-medium">{v.location || '—'}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
                                                         <DeviceIcon device={v.device} /> {v.device || 'Unknown'}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-3 text-xs text-zinc-500 truncate max-w-[120px]" title={v.browser}>
+                                                <td className="px-6 py-4 text-xs text-zinc-500 truncate max-w-[120px] font-medium" title={v.browser}>
                                                     {v.browser?.split(' ')[0] || '—'}
                                                 </td>
                                             </tr>
                                         ))}
                                         {visits.length === 0 && (
                                             <tr>
-                                                <td colSpan="5" className="px-6 py-12 text-center text-zinc-600 text-sm italic">No visit data recorded yet</td>
+                                                <td colSpan="5" className="px-6 py-16 text-center text-zinc-600 text-xs font-bold uppercase tracking-[0.2em] italic opacity-40">No visit data recorded yet</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -310,100 +310,95 @@ export default function LeadDetailV2() {
                     {/* Right Column: Billing & Status */}
                     <div className="col-span-4 space-y-6">
                         {/* Status & Timing Card */}
-                        <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-4">
-                            <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Pipeline & Timing</h3>
+                        <div className="glass-card rounded-2xl p-6 space-y-5">
+                            <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.25em]">Pipeline & Timing</h3>
                             <div className="space-y-4">
                                 <TimingItem label="Scouted At" date={lead.created_at} icon={Clock} />
                                 <TimingItem label="Website Created" date={lead.website_created_at || lead.created_at} icon={Calendar} />
                                 <TimingItem label="Last Retouched" date={lead.website_retouched_at} icon={Edit2} />
-                                <div className="pt-2 flex items-center justify-between">
-                                    <span className="text-xs text-zinc-500">First Visit</span>
-                                    <span className="text-xs text-zinc-300 font-medium">{formatDate(visits[visits.length-1]?.created_at)}</span>
+                                <div className="pt-2 flex items-center justify-between border-t border-obsidian-surface-high/10 pt-4">
+                                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">First Visit</span>
+                                    <span className="text-[11px] text-zinc-300 font-bold">{formatDate(visits[visits.length-1]?.created_at).split(',')[0]}</span>
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs text-zinc-500">Last Visit</span>
-                                    <span className="text-xs text-emerald-400 font-bold">{visits[0] ? formatDate(visits[0].created_at) : '—'}</span>
+                                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Last Interaction</span>
+                                    <span className="text-[11px] text-amber-500 font-bold">{visits[0] ? formatDate(visits[0].created_at).split(',')[0] : '—'}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Subscription & Billing Card */}
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-5 shadow-lg relative overflow-hidden">
-                            {isCurrentlyUnlocked && (
-                                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
-                            )}
+                        <div className="glass-card rounded-2xl p-6 space-y-6 relative overflow-hidden luminous-card">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Subscription & Unlock</h3>
+                                <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-[0.25em]">Subscription</h3>
                                 {isCurrentlyUnlocked ? (
-                                    <span className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[10px] font-bold">
+                                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-[10px] font-bold uppercase tracking-widest">
                                         <Unlock className="w-3 h-3" /> UNLOCKED
                                     </span>
                                 ) : (
-                                    <span className="flex items-center gap-1.5 px-2 py-0.5 bg-zinc-800 text-zinc-500 border border-zinc-700 rounded-full text-[10px] font-bold">
+                                    <span className="flex items-center gap-1.5 px-2.5 py-1 bg-obsidian-surface-high text-zinc-500 border border-obsidian-surface-high rounded-lg text-[10px] font-bold uppercase tracking-widest">
                                         <Lock className="w-3 h-3" /> LOCKED
                                     </span>
                                 )}
                             </div>
 
-                            <div className="space-y-4">
+                            <div className="space-y-5">
                                 <div>
-                                    <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest block mb-2">Monthly Subscription Price</label>
+                                    <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-[0.25em] block mb-2.5 opacity-60">Revenue Tier (Monthly)</label>
                                     <div className="flex items-center gap-2">
                                         <div className="relative flex-1">
                                             <input type="number" value={subPrice} onChange={e => setSubPrice(e.target.value)}
-                                                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-white font-bold focus:outline-none focus:border-indigo-500 transition-all" />
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold text-xs uppercase tracking-widest">SAR</span>
+                                                className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/30 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-amber-500/50 transition-all text-sm" />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold text-[10px] uppercase tracking-widest">SAR</span>
                                         </div>
-                                        <button onClick={handleSave} disabled={saving} className="p-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl transition-all">
+                                        <button onClick={handleSave} disabled={saving} className="p-3.5 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-amber-500/80 rounded-xl transition-all shadow-lg border border-obsidian-surface-highest/20">
                                             <Save className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>
 
-                                <div className="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-3">
-                                    <p className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest">Interaction Status</p>
+                                <div className="p-5 rounded-xl bg-obsidian-surface-lowest/50 border border-obsidian-surface-high/10 space-y-4">
+                                    <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.25em] opacity-60">Admin Controls</p>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-zinc-400">Interest Confirmed</span>
+                                        <span className="text-xs text-zinc-300 font-bold">Interest Confirmed</span>
                                         <button onClick={() => setLead({...lead, interest_confirmed: !lead.interest_confirmed})} 
-                                            className={`w-10 h-5 rounded-full transition-all relative ${lead.interest_confirmed ? 'bg-indigo-500' : 'bg-zinc-800 text-zinc-600'}`}>
+                                            className={`w-10 h-5 rounded-full transition-all relative ${lead.interest_confirmed ? 'bg-amber-500' : 'bg-obsidian-surface-highest text-zinc-600'}`}>
                                             <div className={`absolute top-1 w-3 h-3 rounded-full bg-white transition-all ${lead.interest_confirmed ? 'right-1' : 'left-1'}`} />
                                         </button>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-xs text-zinc-400">Free Week</span>
+                                        <span className="text-xs text-zinc-300 font-bold">Free Week Status</span>
                                         <select value={lead.free_week_status || 'not_started'} onChange={e => setLead({...lead, free_week_status: e.target.value})}
-                                            className="bg-transparent text-xs text-zinc-300 font-bold outline-none cursor-pointer">
-                                            <option value="not_started">Not Started</option>
+                                            className="bg-transparent text-[11px] text-amber-500 font-bold uppercase tracking-wider outline-none cursor-pointer">
+                                            <option value="not_started">Inactive</option>
                                             <option value="active">Active</option>
-                                            <option value="ended">Ended</option>
+                                            <option value="ended">Expired</option>
                                         </select>
                                     </div>
                                 </div>
 
                                 <div className="pt-2 space-y-3">
-                                    <div className="flex items-center gap-2">
-                                        <select value={unlockHours} onChange={e => setUnlockHours(e.target.value)}
-                                            className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-zinc-300 font-bold outline-none focus:border-emerald-500 transition-all">
-                                            <option value="0">Permanent Unlock</option>
-                                            <option value="2">2 Hours</option>
-                                            <option value="24">24 Hours (1 Day)</option>
-                                            <option value="72">72 Hours (3 Days)</option>
-                                            <option value="168">168 Hours (1 Week)</option>
-                                            <option value="720">720 Hours (1 Month)</option>
-                                        </select>
-                                    </div>
-                                    <div className="flex gap-2">
+                                    <select value={unlockHours} onChange={e => setUnlockHours(e.target.value)}
+                                        className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/30 rounded-xl px-4 py-3 text-xs text-zinc-200 font-bold uppercase tracking-widest outline-none focus:border-amber-500/50 transition-all">
+                                        <option value="0">Life-time Access</option>
+                                        <option value="2">Temporary: 2 Hours</option>
+                                        <option value="24">Standard: 24 Hours</option>
+                                        <option value="72">Extended: 3 Days</option>
+                                        <option value="168">Premium: 1 Week</option>
+                                        <option value="720">Master: 1 Month</option>
+                                    </select>
+                                    <div className="flex gap-3">
                                         <button onClick={handleLock} disabled={saving || !isCurrentlyUnlocked} 
-                                            className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-xs font-bold rounded-xl transition-all disabled:opacity-30">
-                                            Lock Website
+                                            className="flex-1 py-3 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-zinc-500 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all disabled:opacity-20 border border-obsidian-surface-highest/20">
+                                            Revoke Access
                                         </button>
                                         <button onClick={handleUnlock} disabled={saving || isCurrentlyUnlocked} 
-                                            className="flex-1 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold rounded-xl transition-all disabled:opacity-30 shadow-lg shadow-emerald-500/20">
-                                            Unlock Now
+                                            className="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-black text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all disabled:opacity-20 shadow-lg shadow-amber-500/20 amber-glow">
+                                            Grant Access
                                         </button>
                                     </div>
                                     {isCurrentlyUnlocked && lead.unlock_until && (
-                                        <p className="text-[10px] text-center text-amber-500 font-bold uppercase tracking-widest mt-1">
+                                        <p className="text-[9px] text-center text-amber-500 font-bold uppercase tracking-[0.2em] mt-2 animate-pulse">
                                             EXPIRES: {formatDate(lead.unlock_until)}
                                         </p>
                                     )}
@@ -411,15 +406,15 @@ export default function LeadDetailV2() {
                             </div>
                         </div>
 
-                        {/* Totals Metric Card */}
+                        {/* Metric Metrics Card */}
                         <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4">
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Total Visits</p>
-                                <p className="text-2xl font-bold text-white">{lead.visit_count || visits.length || 0}</p>
+                            <div className="glass-card rounded-2xl p-5 border-t-2 border-amber-500/30">
+                                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em] mb-1.5 opacity-60">Digital Traffic</p>
+                                <p className="text-3xl font-black text-white tracking-tighter">{lead.visit_count || visits.length || 0}</p>
                             </div>
-                            <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-4 text-left">
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">Conversion</p>
-                                <p className="text-2xl font-bold text-emerald-400">
+                            <div className="glass-card rounded-2xl p-5 border-t-2 border-emerald-500/30">
+                                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em] mb-1.5 opacity-60">Conversion</p>
+                                <p className="text-3xl font-black text-emerald-400 tracking-tighter">
                                     {lead.status === 'completed' ? '100%' : '0%'}
                                 </p>
                             </div>
@@ -433,11 +428,11 @@ export default function LeadDetailV2() {
 
 function DetailItem({ label, value, icon: Icon, isEditing, renderEdit }) {
     return (
-        <div className="space-y-1">
-            <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest flex items-center gap-1.5">
-                <Icon className="w-3 h-3 text-zinc-600" /> {label}
+        <div className="space-y-2">
+            <label className="text-[9px] text-zinc-500 uppercase font-bold tracking-[0.25em] flex items-center gap-2 opacity-60">
+                <Icon className="w-3.5 h-3.5 text-amber-500/40" /> {label}
             </label>
-            {isEditing ? renderEdit() : <p className="text-sm text-zinc-200 font-medium truncate">{value || '—'}</p>}
+            {isEditing ? renderEdit() : <p className="text-sm text-zinc-100 font-bold tracking-tight truncate">{value || '—'}</p>}
         </div>
     );
 }
@@ -445,11 +440,11 @@ function DetailItem({ label, value, icon: Icon, isEditing, renderEdit }) {
 function TimingItem({ label, date, icon: Icon }) {
     return (
         <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-zinc-500">
-                <Icon className="w-3.5 h-3.5" />
-                <span className="text-xs">{label}</span>
+            <div className="flex items-center gap-2.5 text-zinc-500 font-medium">
+                <Icon className="w-4 h-4 text-amber-500/30" />
+                <span className="text-[10px] uppercase font-bold tracking-widest">{label}</span>
             </div>
-            <span className="text-xs text-zinc-300 font-medium" title={date}>
+            <span className="text-[11px] text-zinc-300 font-black tracking-tight" title={date}>
                 {date ? formatDate(date).split(',')[0] : '—'}
             </span>
         </div>
