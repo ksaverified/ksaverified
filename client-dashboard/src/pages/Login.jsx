@@ -20,9 +20,19 @@ export default function Login() {
         return <Navigate to="/" replace />;
     }
 
+    const normalizePhone = (p) => {
+        let cleaned = p.replace(/\D/g, '');
+        if (cleaned.startsWith('05') && cleaned.length === 10) {
+            cleaned = '966' + cleaned.substring(1);
+        } else if (cleaned.length === 9 && (cleaned.startsWith('5'))) {
+            cleaned = '966' + cleaned;
+        }
+        return cleaned;
+    };
+
     const formatPhoneForEmail = (p) => {
-        const digits = p.replace(/\D/g, '');
-        return `${digits}@client.ksaverified.com`;
+        const clean = normalizePhone(p);
+        return `${clean}@client.ksaverified.com`;
     };
 
     const handleRequestCode = async (e) => {
@@ -35,10 +45,11 @@ export default function Login() {
         setError(null);
         setMessage(null);
         try {
+            const normalized = normalizePhone(phone);
             const response = await fetch('/api/portal?action=request-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone }),
+                body: JSON.stringify({ phone: normalized }),
             });
 
             if (!response.ok) {
@@ -68,6 +79,7 @@ export default function Login() {
                 email,
                 password: code,
             });
+            const normalized = normalizePhone(phone);
 
             if (signInError) throw signInError;
 
@@ -75,7 +87,7 @@ export default function Login() {
             await fetch('/api/portal?action=record-login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone }),
+                body: JSON.stringify({ phone: normalized }),
             }).catch(err => console.error('Failed to record login event:', err));
         } catch (err) {
             setError(t('login.loginFailed'));

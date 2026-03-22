@@ -34,12 +34,21 @@ class AuthService {
      * Standardizes phone number to international format (e.g., 966...)
      */
     formatPhone(phone) {
-        let cleaned = phone.replace(/\D/g, '');
+        if (!phone) return '';
+        let cleaned = phone.toString().replace(/\D/g, '');
+        
+        // Handle leading 00966 or 966
+        if (cleaned.startsWith('00966')) {
+            cleaned = cleaned.substring(2);
+        }
+        
+        // Standardize Saudi numbers
         if (cleaned.startsWith('05') && cleaned.length === 10) {
             cleaned = '966' + cleaned.substring(1);
-        } else if (cleaned.length === 9 && !cleaned.startsWith('966')) {
+        } else if (cleaned.length === 9 && cleaned.startsWith('5')) {
             cleaned = '966' + cleaned;
         }
+        
         return cleaned;
     }
 
