@@ -63,34 +63,31 @@ class RetoucherAgent {
         let cleanedHtml = rawHtml;
         
         // PHASE 1: Programmatic Purge (Deterministic)
-        // Select images based on business types and name to enforce correct theming
-        const businessTypesStr = ((business.types || []).join(' ') + ' ' + (business.name || '')).toLowerCase();
+        // Select images dynamically using a fast LLM request to get the best Pexels search term
         let searchQuery = 'local business';
+        try {
+            const pexelsPrompt = `Analyze this business name and types, and reply with EXACTLY 1 OR 2 ENGLISH WORDS best describing their core visual product or service for a stock photo search.
+Example 1: Name: "Pizza Bar IOI", Types: "restaurant, food" -> "pizza"
+Example 2: Name: "Elite Dental", Types: "health, dentist" -> "dentist clinic"
+Example 3: Name: "Super Car Wash", Types: "car_repair" -> "car wash"
+Business Name: "${business.name}"
+Business Types: "${(business.types || []).join(', ')}"
+Output ONLY the 1-2 words in English, nothing else, no quotes.`;
 
-        if (businessTypesStr.includes('hair') || businessTypesStr.includes('barber') || businessTypesStr.includes('salon') || businessTypesStr.includes('حلاقة') || businessTypesStr.includes('صالون') || businessTypesStr.includes('تجميل')) {
-            searchQuery = 'barbershop beauty hair salon';
-        } else if (businessTypesStr.includes('repair') || businessTypesStr.includes('electronics') || businessTypesStr.includes('computer')) {
-            searchQuery = 'electronics repair computer tech';
-        } else if (businessTypesStr.includes('restaurant') || businessTypesStr.includes('cafe') || businessTypesStr.includes('food') || businessTypesStr.includes('مطعم') || businessTypesStr.includes('مقهى') || businessTypesStr.includes('مخبز')) {
-            searchQuery = 'restaurant cafe food dining';
-        } else if (businessTypesStr.includes('boutique') || businessTypesStr.includes('fashion') || businessTypesStr.includes('clothes') || businessTypesStr.includes('ملابس') || businessTypesStr.includes('ازياء')) {
-            searchQuery = 'fashion boutique clothing store';
-        } else if (businessTypesStr.includes('clinic') || businessTypesStr.includes('medical') || businessTypesStr.includes('doctor') || businessTypesStr.includes('عيادة') || businessTypesStr.includes('طبيب')) {
-            searchQuery = 'medical clinic doctor hospital';
-        } else if (businessTypesStr.includes('supermarket') || businessTypesStr.includes('grocery') || businessTypesStr.includes('بقالة') || businessTypesStr.includes('تموينات')) {
-            searchQuery = 'grocery store supermarket market';
-        } else if (businessTypesStr.includes('carwash') || businessTypesStr.includes('car wash') || businessTypesStr.includes('غسيل') || businessTypesStr.includes('تلميع')) {
-            searchQuery = 'car wash detailing';
-        } else if (businessTypesStr.includes('spa') || businessTypesStr.includes('massage') || businessTypesStr.includes('سبا') || businessTypesStr.includes('مساج')) {
-            searchQuery = 'spa massage wellness';
-        } else if (businessTypesStr.includes('gym') || businessTypesStr.includes('fitness') || businessTypesStr.includes('رياضة') || businessTypesStr.includes('لياقة')) {
-            searchQuery = 'gym fitness workout';
-        } else if (businessTypesStr.includes('flower') || businessTypesStr.includes('gift') || businessTypesStr.includes('ورد') || businessTypesStr.includes('هدايا')) {
-            searchQuery = 'flower shop gift bouquet';
-        } else if (businessTypesStr.includes('construct') || businessTypesStr.includes('contractor') || businessTypesStr.includes('بناء') || businessTypesStr.includes('مقاولات')) {
-            searchQuery = 'construction building architecture';
-        } else if (businessTypesStr.includes('optical') || businessTypesStr.includes('eye') || businessTypesStr.includes('بصريات') || businessTypesStr.includes('نظارات')) {
-            searchQuery = 'optician eye glasses store';
+            const queryRes = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+                model: this.model,
+                messages: [{ role: 'user', content: pexelsPrompt }],
+                temperature: 0.1
+            }, {
+                headers: { 'Authorization': `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
+                timeout: 5000
+            });
+            const suggestedQuery = queryRes.data.choices[0].message.content.trim().replace(/['"]/g, '');
+            if (suggestedQuery && suggestedQuery.length < 30) {
+                searchQuery = suggestedQuery;
+            }
+        } catch (e) {
+            console.warn('[Retoucher] Failed to generate dynamic Pexels query, falling back to local business:', e.message);
         }
 
         // Fetch dynamic images from Pexels
