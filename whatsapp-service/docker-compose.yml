@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  whatsapp-service:
+    build: .
+    container_name: ksaverified-whatsapp
+    restart: always
+    ports:
+      - "8081:8081"
+    volumes:
+      - .wwebjs_auth:/app/.wwebjs_auth
+    env_file:
+      - .env
+    environment:
+      - PORT=8081
+      - NODE_ENV=production
+
+volumes:
+  .wwebjs_auth:

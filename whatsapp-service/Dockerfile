@@ -1,6 +1,7 @@
-FROM node:20-slim
+# Use Node.js LTS (Bookworm or Bullseye for better Puppeteer support)
+FROM node:20-bookworm-slim
 
-# Install latest chrome dev package and fonts
+# Install system dependencies for Puppeteer and Chromium
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-ipafont-gothic \
@@ -9,46 +10,25 @@ RUN apt-get update && apt-get install -y \
     fonts-kacst \
     fonts-freefont-ttf \
     libxss1 \
-    libatk1.0-0 \
-    libatk-bridge2.0-0 \
-    libcups2 \
-    libdrm2 \
-    libgbm1 \
-    libasound2 \
-    libnss3 \
-    libxcomposite1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxrandr2 \
-    libpango-1.0-0 \
-    libpangocairo-1.0-0 \
-    libstdc++6 \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV NODE_ENV=production
+# Set environment variables for Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
-# Set working directory
+# Create and set working directory
 WORKDIR /app
 
-# Copy shared dependencies
-COPY services/ ./services/
-COPY agents/ ./agents/
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install --production
 
-# Copy WhatsApp service package and install at the ROOT level (/app)
-# This ensures shared services from /app/services can find modules in /app/node_modules
-COPY whatsapp-service/package*.json ./
-RUN npm install
+# Copy the rest of the application code
+COPY . .
 
-# Copy WhatsApp service code into its own subdirectory
-COPY whatsapp-service/ ./whatsapp-service/
-
-# Expose the API port
+# Expose the service port
 EXPOSE 8081
 
-# Start from the service subdirectory
-WORKDIR /app/whatsapp-service
+# Command to run the service
 CMD ["npm", "start"]
