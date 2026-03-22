@@ -364,6 +364,8 @@ const LandingPage = () => {
                             <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#">{currentT.home}</a>
                             <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#services">{currentT.solutions}</a>
                             <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#pricing">{currentT.pricing}</a>
+                            <a className="text-gold hover:text-white transition-colors text-sm font-semibold" href="https://ksaverified.store" target="_blank" rel="noopener noreferrer">{lang === 'en' ? 'Store & Services' : 'المتجر والخدمات'}</a>
+                            <a className="text-gray-300 hover:text-white transition-colors text-sm" href="https://ksaverified.info" target="_blank" rel="noopener noreferrer">{lang === 'en' ? 'Corporate' : 'الشركة'}</a>
                         </div>
                     </div>
                 </div>
@@ -627,16 +629,16 @@ const LandingPage = () => {
                                 <li><a className="hover:text-brand-light transition-colors" href="#">E-commerce</a></li>
                                 <li><a className="hover:text-brand-light transition-colors" href="#">Service Booking</a></li>
                                 <li><a className="hover:text-brand-light transition-colors" href="#">Local Retail</a></li>
-                                <li><a className="hover:text-brand-light transition-colors" href="#">Consulting</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="https://ksaverified.store" target="_blank" rel="noopener noreferrer">Marketplace Store</a></li>
                             </ul>
                         </div>
                         <div>
                             <h4 className="font-bold mb-6">{lang === 'en' ? 'Company' : 'الشركة'}</h4>
                             <ul className="space-y-4 text-gray-500 text-sm">
-                                <li><a className="hover:text-brand-light transition-colors" href="#">About Us</a></li>
-                                <li><a className="hover:text-brand-light transition-colors" href="#">Privacy Policy</a></li>
-                                <li><a className="hover:text-brand-light transition-colors" href="#">Terms of Service</a></li>
-                                <li><a className="hover:text-brand-light transition-colors" href="#">Contact</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="https://ksaverified.info/about" target="_blank" rel="noopener noreferrer">About Us</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="https://ksaverified.info/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="https://ksaverified.info/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a></li>
+                                <li><a className="hover:text-brand-light transition-colors" href="https://ksaverified.info" target="_blank" rel="noopener noreferrer">Corporate Hub</a></li>
                             </ul>
                         </div>
                     </div>
