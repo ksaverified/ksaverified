@@ -94,7 +94,11 @@ export default function MapV2() {
     const [isPlaying, setIsPlaying]       = useState(false);
     const [playbackMin, setPlaybackMin]   = useState(null);
     const [playbackMax, setPlaybackMax]   = useState(null);
+    const [playbackSpeed, setPlaybackSpeed] = useState('slow'); // 'slow' | 'normal' | 'fast'
     const intervalRef = useRef(null);
+
+    // Speed config: { ms: interval delay, step: days per tick }
+    const SPEED_CONFIG = { slow: { ms: 1200, step: 1 }, normal: { ms: 500, step: 1 }, fast: { ms: 120, step: 3 } };
 
     useEffect(() => {
         fetchLeads();
@@ -132,12 +136,13 @@ export default function MapV2() {
         setIsPlaying(false);
     }, []);
 
-    const startPlayback = useCallback(() => {
+    const startPlayback = useCallback((speed) => {
+        const cfg = SPEED_CONFIG[speed || playbackSpeed];
         setIsPlaying(true);
         intervalRef.current = setInterval(() => {
             setPlaybackDate(prev => {
                 if (!prev || !playbackMax) return prev;
-                const next = new Date(prev.getTime() + 7 * 24 * 60 * 60 * 1000);
+                const next = new Date(prev.getTime() + cfg.step * 24 * 60 * 60 * 1000);
                 if (next > playbackMax) {
                     clearInterval(intervalRef.current);
                     setIsPlaying(false);
@@ -145,8 +150,8 @@ export default function MapV2() {
                 }
                 return next;
             });
-        }, 700);
-    }, [playbackMax]);
+        }, cfg.ms);
+    }, [playbackMax, playbackSpeed]);
 
     const resetPlayback = useCallback(() => {
         stopPlayback();
@@ -433,6 +438,22 @@ export default function MapV2() {
                                         className="w-10 h-10 rounded-xl bg-amber-500 hover:bg-amber-400 shadow-lg shadow-amber-500/20 flex items-center justify-center text-black transition-all active:scale-95">
                                         {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
                                     </button>
+                                    {/* Speed selector */}
+                                    <div className="flex items-center gap-1 ml-1">
+                                        {[['slow','1×'],['normal','2×'],['fast','5×']].map(([key, label]) => (
+                                            <button key={key}
+                                                onClick={() => {
+                                                    setPlaybackSpeed(key);
+                                                    if (isPlaying) { stopPlayback(); setTimeout(() => startPlayback(key), 50); }
+                                                }}
+                                                className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all
+                                                    ${playbackSpeed === key
+                                                        ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                                                        : 'bg-white/5 border-white/8 text-zinc-500 hover:text-zinc-300'}`}>
+                                                {label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 {/* Scrubber */}
