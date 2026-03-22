@@ -79,18 +79,18 @@ export default function LoginV2() {
                 {/* Form */}
                 <form onSubmit={handleLogin} className="space-y-6 max-w-sm">
                     <div className="space-y-2">
-                        <label className="block text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1">Access Principal</label>
+                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Access Principal</label>
                         <input
                             type="email"
                             value={email}
                             onChange={e => setEmail(e.target.value)}
                             placeholder="OPERATOR ID..."
                             required
-                            className="w-full bg-obsidian-surface-medium/50 border border-white/5 rounded-2xl px-5 py-4 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/40 focus:ring-4 focus:ring-amber-500/5 transition-all uppercase tracking-widest"
+                            className="w-full bg-obsidian-surface-lowest border border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-amber-500/40 focus:ring-4 focus:ring-amber-500/5 transition-all uppercase tracking-widest selection:bg-amber-500/30 autofill:shadow-[0_0_0_1000px_#0c0e13_inset] autofill:text-white"
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="block text-[10px] font-black text-zinc-600 uppercase tracking-widest px-1">Cryptographic Key</label>
+                        <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Cryptographic Key</label>
                         <div className="relative">
                             <input
                                 type={showPass ? 'text' : 'password'}
@@ -98,7 +98,7 @@ export default function LoginV2() {
                                 onChange={e => setPassword(e.target.value)}
                                 placeholder="••••••••"
                                 required
-                                className="w-full bg-obsidian-surface-medium/50 border border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-zinc-800 focus:outline-none focus:border-amber-500/40 focus:ring-4 focus:ring-amber-500/5 transition-all pr-12"
+                                className="w-full bg-obsidian-surface-lowest border border-white/5 rounded-2xl px-5 py-4 text-sm text-white placeholder-zinc-800 focus:outline-none focus:border-amber-500/40 focus:ring-4 focus:ring-amber-500/5 transition-all pr-12 selection:bg-amber-500/30 autofill:shadow-[0_0_0_1000px_#0c0e13_inset] autofill:text-white"
                             />
                             <button type="button" onClick={() => setShowPass(!showPass)}
                                 className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-amber-500 transition-colors">
