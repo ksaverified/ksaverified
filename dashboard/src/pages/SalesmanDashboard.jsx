@@ -1,6 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star } from 'lucide-react';
+import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List } from 'lucide-react';
+import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
+
+const MAP_STYLES = [
+    { elementType: 'geometry', stylers: [{ color: '#1a1a1c' }] },
+    { elementType: 'labels.text.fill', stylers: [{ color: '#71717a' }] },
+    { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#27272a' }] },
+    { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
+];
+
+const Directions = ({ origin, destination, onRouteFound }) => {
+    const map = useMap();
+    const routesLibrary = useMapsLibrary('routes');
+    const [directionsService, setDirectionsService] = React.useState();
+    const [directionsRenderer, setDirectionsRenderer] = React.useState();
+
+    React.useEffect(() => {
+        if (!routesLibrary || !map) return;
+        setDirectionsService(new routesLibrary.DirectionsService());
+        setDirectionsRenderer(new routesLibrary.DirectionsRenderer({ map, suppressMarkers: true }));
+    }, [routesLibrary, map]);
+
+    React.useEffect(() => {
+        if (!directionsService || !directionsRenderer || !origin || !destination || !routesLibrary) return;
+
+        directionsService.route({
+            origin: origin,
+            destination: destination,
+            travelMode: routesLibrary.TravelMode.DRIVING,
+        }).then(response => {
+            directionsRenderer.setDirections(response);
+            if (onRouteFound) onRouteFound(response.routes[0]);
+        }).catch(e => console.error('Directions request failed', e));
+
+        return () => directionsRenderer.setMap(null);
+    }, [directionsService, directionsRenderer, origin, destination, routesLibrary]);
+
+    return null;
+};
 
 const SalesmanDashboard = () => {
     const [leads, setLeads] = useState([]);
@@ -8,6 +48,8 @@ const SalesmanDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [userLocation, setUserLocation] = useState(null);
     const [isVisiting, setIsVisiting] = useState(false);
+    const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+    const [routeInfo, setRouteInfo] = useState(null);
     const [statData] = useState({ visits: 0, pending: 0, earned: 0 });
 
     useEffect(() => {
@@ -122,41 +164,100 @@ const SalesmanDashboard = () => {
             </div>
 
             {/* Main Feed */}
-            <div className="px-4 space-y-4">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Nearby Leads</h3>
-                {loading ? (
-                    <div className="flex justify-center py-20"><div className="w-10 h-10 border-2 border-brand/20 border-t-brand rounded-full animate-spin" /></div>
-                ) : (
-                    leads.map(lead => (
-                        <motion.div 
-                            key={lead.place_id}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setSelectedLead(lead)}
-                            className="bg-white/[0.05] border border-white/10 p-5 rounded-3xl relative overflow-hidden group"
-                        >
-                            {lead.status === 'invalid' && (
-                                <div className="absolute top-4 right-4 bg-orange-500/10 text-orange-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-500/20">
-                                    LANDLINE GAP
-                                </div>
-                            )}
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                                    <Award className="w-6 h-6 text-gray-400" />
-                                </div>
-                                <div>
-                                    <h4 className="font-bold text-lg leading-tight">{lead.name}</h4>
-                                    <p className="text-sm text-gray-500 mt-1">{lead.address}</p>
-                                    <div className="flex items-center gap-2 mt-3">
-                                        <div className="px-2 py-0.5 bg-brand/10 text-brand text-[10px] font-bold rounded-md">
-                                            50 SAR Potential
+            <div className="px-4 pb-4">
+                <div className="flex justify-between items-center mb-4 px-1">
+                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Nearby Leads</h3>
+                    <button 
+                        onClick={() => setViewMode(viewMode === 'list' ? 'map' : 'list')}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10 rounded-xl text-[10px] font-bold uppercase tracking-wider text-brand"
+                    >
+                        {viewMode === 'list' ? <><MapIcon className="w-3 h-3" /> Map View</> : <><List className="w-3 h-3" /> List View</>}
+                    </button>
+                </div>
+
+                {viewMode === 'list' ? (
+                    <div className="space-y-4">
+                        {loading ? (
+                            <div className="flex justify-center py-20"><div className="w-10 h-10 border-2 border-brand/20 border-t-brand rounded-full animate-spin" /></div>
+                        ) : (
+                            leads.map(lead => (
+                                <motion.div 
+                                    key={lead.place_id}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setSelectedLead(lead)}
+                                    className="bg-white/[0.05] border border-white/10 p-5 rounded-3xl relative overflow-hidden group"
+                                >
+                                    {lead.status === 'invalid' && (
+                                        <div className="absolute top-4 right-4 bg-orange-500/10 text-orange-500 text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-500/20">
+                                            LANDLINE GAP
                                         </div>
-                                        <span className="text-[10px] text-gray-600">•</span>
-                                        <span className="text-[10px] text-gray-500 font-medium">{lead.distance || 'Calculated...'}</span>
+                                    )}
+                                    <div className="flex items-start gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                                            <Award className="w-6 h-6 text-gray-400" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-lg leading-tight">{lead.name}</h4>
+                                            <p className="text-sm text-gray-500 mt-1">{lead.address}</p>
+                                            <div className="flex items-center gap-2 mt-3">
+                                                <div className="px-2 py-0.5 bg-brand/10 text-brand text-[10px] font-bold rounded-md">
+                                                    50 SAR Potential
+                                                </div>
+                                                <span className="text-[10px] text-gray-600">•</span>
+                                                <span className="text-[10px] text-gray-500 font-medium">{lead.distance || 'Calculated...'}</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
+                                </motion.div>
+                            ))
+                        )}
+                    </div>
+                ) : (
+                    <div className="h-[60vh] rounded-[2.5rem] overflow-hidden border border-white/10 shadow-inner relative group">
+                        <Map
+                            defaultCenter={userLocation || { lat: 24.7136, lng: 46.6753 }}
+                            defaultZoom={13}
+                            mapId="sales_field_map"
+                            options={{ disableDefaultUI: true, styles: MAP_STYLES }}
+                        >
+                            {userLocation && (
+                                <AdvancedMarker position={userLocation}>
+                                    <div className="relative">
+                                        <div className="w-4 h-4 bg-brand rounded-full border-2 border-white shadow-lg animate-pulse" />
+                                        <div className="absolute inset-0 w-4 h-4 bg-brand rounded-full animate-ping opacity-50" />
+                                    </div>
+                                </AdvancedMarker>
+                            )}
+
+                            {leads.map(lead => {
+                                const lat = parseFloat(lead.lat), lng = parseFloat(lead.lng);
+                                if (isNaN(lat) || isNaN(lng)) return null;
+                                return (
+                                    <AdvancedMarker 
+                                        key={lead.place_id} 
+                                        position={{ lat, lng }}
+                                        onClick={() => setSelectedLead(lead)}
+                                    >
+                                        <div className={`w-3 h-3 rounded-full border border-white/50 shadow-md transition-all duration-300 ${selectedLead?.place_id === lead.place_id ? 'scale-150 bg-brand ring-4 ring-brand/20' : 'bg-gray-400 opacity-60'}`} />
+                                    </AdvancedMarker>
+                                );
+                            })}
+
+                            {selectedLead && userLocation && (
+                                <Directions 
+                                    origin={userLocation}
+                                    destination={{ lat: parseFloat(selectedLead.lat), lng: parseFloat(selectedLead.lng) }}
+                                    onRouteFound={(route) => setRouteInfo(route)}
+                                />
+                            )}
+                        </Map>
+                        
+                        {!userLocation && (
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center text-center p-8">
+                                <p className="text-sm text-gray-400">Waiting for GPS location...</p>
                             </div>
-                        </motion.div>
-                    ))
+                        )}
+                    </div>
                 )}
             </div>
 
@@ -178,20 +279,31 @@ const SalesmanDashboard = () => {
                             </div>
 
                             {!selectedLead.claimed ? (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button 
-                                        className="py-4 bg-white/5 rounded-2xl font-bold flex items-center justify-center gap-2"
-                                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedLead.address)}`)}
-                                    >
-                                        <Navigation className="w-5 h-5" />
-                                        Navigate
-                                    </button>
-                                    <button 
-                                        className="py-4 bg-brand rounded-2xl font-bold"
-                                        onClick={() => handleClaim(selectedLead)}
-                                    >
-                                        Claim Lead
-                                    </button>
+                                <div className="space-y-4">
+                                    {routeInfo && (
+                                        <div className="flex justify-between items-center px-2 py-3 bg-white/5 rounded-2xl border border-white/10">
+                                            <div className="flex items-center gap-2">
+                                                <Navigation className="w-4 h-4 text-brand" />
+                                                <span className="text-sm font-bold">{routeInfo.legs[0].distance.text}</span>
+                                            </div>
+                                            <span className="text-sm text-gray-500">{routeInfo.legs[0].duration.text} away</span>
+                                        </div>
+                                    )}
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <button 
+                                            className="py-4 bg-white/5 rounded-2xl font-bold flex items-center justify-center gap-2 border border-white/10"
+                                            onClick={() => setViewMode('map')}
+                                        >
+                                            <MapIcon className="w-5 h-5" />
+                                            View Map
+                                        </button>
+                                        <button 
+                                            className="py-4 bg-brand rounded-2xl font-bold shadow-lg shadow-brand/20"
+                                            onClick={() => handleClaim(selectedLead)}
+                                        >
+                                            Claim Lead
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="space-y-4">
@@ -259,4 +371,10 @@ const SalesmanDashboard = () => {
     );
 };
 
-export default SalesmanDashboard;
+export default function SalesmanDashboardWrapper() {
+    return (
+        <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+            <SalesmanDashboard />
+        </APIProvider>
+    );
+};
