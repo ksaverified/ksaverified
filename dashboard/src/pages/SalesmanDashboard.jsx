@@ -12,41 +12,66 @@ const MAP_STYLES = [
     { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
 ];
 
-// [FUTURE PROOF] Google has deprecated DirectionsService as of Feb 2026.
-// Recommends migration to Routes API (computeRoutes). Keeping legacy for now
-// as it simplifies DirectionsRenderer integration and is stable for 12+ months.
+// [MODERN] Migrated to Routes API (v1) to avoid 2026 deprecation.
+// We now compute the route and render it manually via Polyline.
 const Directions = ({ origin, destination, onRouteFound, onError }) => {
     const map = useMap();
     const routesLibrary = useMapsLibrary('routes');
-    const [directionsService, setDirectionsService] = React.useState();
-    const [directionsRenderer, setDirectionsRenderer] = React.useState();
+    const geometryLibrary = useMapsLibrary('geometry');
+    const [polyline, setPolyline] = React.useState(null);
 
     React.useEffect(() => {
-        if (!routesLibrary || !map) return;
-        setDirectionsService(new routesLibrary.DirectionsService());
-        setDirectionsRenderer(new routesLibrary.DirectionsRenderer({ map, suppressMarkers: true }));
-    }, [routesLibrary, map]);
+        if (!routesLibrary || !geometryLibrary || !map || !origin || !destination) return;
 
-    React.useEffect(() => {
-        if (!directionsService || !directionsRenderer || !origin || !destination || !routesLibrary) return;
+        // Cleanup existing polyline
+        if (polyline) polyline.setMap(null);
 
-        directionsService.route({
-            origin: origin,
-            destination: destination,
-            travelMode: routesLibrary.TravelMode.DRIVING,
+        // Modern computeRoutes call
+        routesLibrary.Route.computeRoutes({
+            origin: { location: { latLng: origin } },
+            destination: { location: { latLng: destination } },
+            travelMode: 'DRIVE',
+            routingPreference: 'TRAFFIC_AWARE',
+            polylineQuality: 'HIGH_QUALITY'
         }).then(response => {
-            directionsRenderer.setDirections(response);
-            if (onRouteFound) onRouteFound(response.routes[0]);
+            const route = response.routes[0];
+            if (!route) return;
+
+            // Extract path from the encoded polyline using geometry library
+            const path = geometryLibrary.encoding.decodePath(route.polyline.encodedPolyline);
+            
+            const newPolyline = new google.maps.Polyline({
+                path,
+                geodesic: true,
+                strokeColor: '#8b5cf6',
+                strokeOpacity: 0.8,
+                strokeWeight: 5,
+                map: map
+            });
+
+            setPolyline(newPolyline);
+
+            // Normalize for existing UI (which expects legacy structure)
+            const durationSec = parseInt(route.duration);
+            const durationMin = Math.ceil(durationSec / 60);
+
+            const normalizedRoute = {
+                legs: [{
+                    distance: { text: (route.distanceMeters / 1000).toFixed(1) + ' km' },
+                    duration: { text: durationMin + ' mins' }
+                }]
+            };
+
+            if (onRouteFound) onRouteFound(normalizedRoute);
         }).catch(e => {
-            // Log once and use fallback UI
-            console.warn('In-app Directions restricted. Using external fallback.', e.code);
+            console.warn('Routes API restricted or failed. Fallback active.', e);
             if (onError) onError(e);
         });
 
         return () => {
-            if (directionsRenderer) directionsRenderer.setMap(null);
+            if (polyline) polyline.setMap(null);
         };
-    }, [directionsService, directionsRenderer, origin, destination, routesLibrary]);
+    }, [routesLibrary, geometryLibrary, map, origin, destination]);
 
     return null;
 };
@@ -236,6 +261,7 @@ const SalesmanDashboard = () => {
                         <Map
                             defaultCenter={userLocation || { lat: 24.7136, lng: 46.6753 }}
                             defaultZoom={13}
+                            mapId="ksaverified_field_map" // Silences Advanced Marker warning
                             options={{ disableDefaultUI: true, styles: MAP_STYLES }}
                         >
                             {userLocation && (
