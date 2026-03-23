@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List } from 'lucide-react';
-import { APIProvider, Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, Marker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
@@ -12,6 +12,9 @@ const MAP_STYLES = [
     { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
 ];
 
+// [FUTURE PROOF] Google has deprecated DirectionsService as of Feb 2026.
+// Recommends migration to Routes API (computeRoutes). Keeping legacy for now
+// as it simplifies DirectionsRenderer integration and is stable for 12+ months.
 const Directions = ({ origin, destination, onRouteFound, onError }) => {
     const map = useMap();
     const routesLibrary = useMapsLibrary('routes');
@@ -35,15 +38,27 @@ const Directions = ({ origin, destination, onRouteFound, onError }) => {
             directionsRenderer.setDirections(response);
             if (onRouteFound) onRouteFound(response.routes[0]);
         }).catch(e => {
-            console.error('Directions request failed', e);
+            // Log once and use fallback UI
+            console.warn('In-app Directions restricted. Using external fallback.', e.code);
             if (onError) onError(e);
         });
 
-        return () => directionsRenderer.setMap(null);
+        return () => {
+            if (directionsRenderer) directionsRenderer.setMap(null);
+        };
     }, [directionsService, directionsRenderer, origin, destination, routesLibrary]);
 
     return null;
 };
+
+// Custom Premium Marker Pin
+const PinIcon = ({ color = '#8b5cf6' }) => (
+    `<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="18" fill="${color}" fill-opacity="0.15" stroke="${color}" stroke-width="1.5" stroke-dasharray="4 2"/>
+        <path d="M20 10C15.5817 10 12 13.5817 12 18C12 24 20 30 20 30C20 30 28 24 28 18C28 13.5817 24.4183 10 20 10Z" fill="${color}" stroke="white" stroke-width="1.5"/>
+        <circle cx="20" cy="18" r="3" fill="white"/>
+    </svg>`
+);
 
 const SalesmanDashboard = () => {
     const [leads, setLeads] = useState([]);
@@ -224,25 +239,23 @@ const SalesmanDashboard = () => {
                             options={{ disableDefaultUI: true, styles: MAP_STYLES }}
                         >
                             {userLocation && (
-                                <AdvancedMarker position={userLocation}>
-                                    <div className="relative">
-                                        <div className="w-4 h-4 bg-brand rounded-full border-2 border-white shadow-lg animate-pulse" />
-                                        <div className="absolute inset-0 w-4 h-4 bg-brand rounded-full animate-ping opacity-50" />
-                                    </div>
-                                </AdvancedMarker>
+                                <Marker position={userLocation} />
                             )}
 
                             {leads.map(lead => {
                                 const lat = parseFloat(lead.lat), lng = parseFloat(lead.lng);
                                 if (isNaN(lat) || isNaN(lng)) return null;
                                 return (
-                                    <AdvancedMarker 
+                                    <Marker 
                                         key={lead.place_id} 
                                         position={{ lat, lng }}
                                         onClick={() => setSelectedLead(lead)}
-                                    >
-                                        <div className={`w-3 h-3 rounded-full border border-white/50 shadow-md transition-all duration-300 ${selectedLead?.place_id === lead.place_id ? 'scale-150 bg-brand ring-4 ring-brand/20' : 'bg-gray-400 opacity-60'}`} />
-                                    </AdvancedMarker>
+                                        icon={{
+                                            url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(PinIcon({ color: '#f59e0b' }))}`,
+                                            anchor: { x: 20, y: 30 },
+                                            scaledSize: { width: 40, height: 40 }
+                                        }}
+                                    />
                                 );
                             })}
 
@@ -301,6 +314,9 @@ const SalesmanDashboard = () => {
                                             className={`py-4 rounded-2xl font-bold flex items-center justify-center gap-2 border ${directionsError ? 'bg-orange-500/10 border-orange-500/30 text-orange-500' : 'bg-white/5 border-white/10'}`}
                                             onClick={() => {
                                                 if (directionsError) {
+                                                    // Trigger a local retry by resetting state and switching to map
+                                                    setDirectionsError(false);
+                                                    setViewMode('map');
                                                     window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedLead.address)}&travelmode=driving`, '_blank');
                                                 } else {
                                                     setViewMode('map');
@@ -308,7 +324,7 @@ const SalesmanDashboard = () => {
                                             }}
                                         >
                                             {directionsError ? <Navigation className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
-                                            {directionsError ? 'External Nav' : 'View Map'}
+                                            {directionsError ? 'Open Google Maps' : 'View Map'}
                                         </button>
                                         <button 
                                             className="py-4 bg-brand rounded-2xl font-bold shadow-lg shadow-brand/20"
