@@ -12,7 +12,7 @@ const MAP_STYLES = [
     { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
 ];
 
-const Directions = ({ origin, destination, onRouteFound }) => {
+const Directions = ({ origin, destination, onRouteFound, onError }) => {
     const map = useMap();
     const routesLibrary = useMapsLibrary('routes');
     const [directionsService, setDirectionsService] = React.useState();
@@ -34,7 +34,10 @@ const Directions = ({ origin, destination, onRouteFound }) => {
         }).then(response => {
             directionsRenderer.setDirections(response);
             if (onRouteFound) onRouteFound(response.routes[0]);
-        }).catch(e => console.error('Directions request failed', e));
+        }).catch(e => {
+            console.error('Directions request failed', e);
+            if (onError) onError(e);
+        });
 
         return () => directionsRenderer.setMap(null);
     }, [directionsService, directionsRenderer, origin, destination, routesLibrary]);
@@ -50,6 +53,7 @@ const SalesmanDashboard = () => {
     const [isVisiting, setIsVisiting] = useState(false);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
     const [routeInfo, setRouteInfo] = useState(null);
+    const [directionsError, setDirectionsError] = useState(false);
     const [statData] = useState({ visits: 0, pending: 0, earned: 0 });
 
     useEffect(() => {
@@ -217,7 +221,6 @@ const SalesmanDashboard = () => {
                         <Map
                             defaultCenter={userLocation || { lat: 24.7136, lng: 46.6753 }}
                             defaultZoom={13}
-                            mapId="sales_field_map"
                             options={{ disableDefaultUI: true, styles: MAP_STYLES }}
                         >
                             {userLocation && (
@@ -247,7 +250,11 @@ const SalesmanDashboard = () => {
                                 <Directions 
                                     origin={userLocation}
                                     destination={{ lat: parseFloat(selectedLead.lat), lng: parseFloat(selectedLead.lng) }}
-                                    onRouteFound={(route) => setRouteInfo(route)}
+                                    onRouteFound={(route) => {
+                                        setRouteInfo(route);
+                                        setDirectionsError(false);
+                                    }}
+                                    onError={() => setDirectionsError(true)}
                                 />
                             )}
                         </Map>
@@ -291,11 +298,17 @@ const SalesmanDashboard = () => {
                                     )}
                                     <div className="grid grid-cols-2 gap-4">
                                         <button 
-                                            className="py-4 bg-white/5 rounded-2xl font-bold flex items-center justify-center gap-2 border border-white/10"
-                                            onClick={() => setViewMode('map')}
+                                            className={`py-4 rounded-2xl font-bold flex items-center justify-center gap-2 border ${directionsError ? 'bg-orange-500/10 border-orange-500/30 text-orange-500' : 'bg-white/5 border-white/10'}`}
+                                            onClick={() => {
+                                                if (directionsError) {
+                                                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedLead.address)}&travelmode=driving`, '_blank');
+                                                } else {
+                                                    setViewMode('map');
+                                                }
+                                            }}
                                         >
-                                            <MapIcon className="w-5 h-5" />
-                                            View Map
+                                            {directionsError ? <Navigation className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
+                                            {directionsError ? 'External Nav' : 'View Map'}
                                         </button>
                                         <button 
                                             className="py-4 bg-brand rounded-2xl font-bold shadow-lg shadow-brand/20"
@@ -304,6 +317,11 @@ const SalesmanDashboard = () => {
                                             Claim Lead
                                         </button>
                                     </div>
+                                    {directionsError && (
+                                        <p className="text-[10px] text-gray-600 text-center uppercase tracking-widest mt-2">
+                                            In-App Directions Restricted. Using External Fallback.
+                                        </p>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="space-y-4">
