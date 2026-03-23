@@ -41,7 +41,7 @@ function App() {
 
           {/* Protected Admin V1 Routes */}
           <Route path="/admin" element={
-            <AuthGuard>
+            <AuthGuard allowedRoles={['admin']}>
               <Layout />
             </AuthGuard>
           }>
@@ -68,20 +68,20 @@ function App() {
           {/* ── Dashboard V2 Routes ── */}
           <Route path="/login-v2" element={<LoginV2 />} />
           <Route path="/admin-v2" element={
-            <AuthGuard>
+            <AuthGuard allowedRoles={['admin']}>
               <OrchestratorDashboard />
             </AuthGuard>
           } />
-          <Route path="/admin-v2/pipeline" element={<AuthGuard><PipelineV2 /></AuthGuard>} />
-          <Route path="/admin-v2/logs" element={<AuthGuard><LogsV2 /></AuthGuard>} />
-          <Route path="/admin-v2/websites" element={<AuthGuard><WebsitesV2 /></AuthGuard>} />
-          <Route path="/admin-v2/analytics" element={<AuthGuard><AnalyticsV2 /></AuthGuard>} />
-          <Route path="/admin-v2/whatsapp" element={<AuthGuard><WhatsAppV2 /></AuthGuard>} />
-          <Route path="/admin-v2/map" element={<AuthGuard><MapV2 /></AuthGuard>} />
-          <Route path="/admin-v2/answers" element={<AuthGuard><AnswersV2 /></AuthGuard>} />
-          <Route path="/admin-v2/pipeline/:placeId" element={<AuthGuard><LeadDetailV2 /></AuthGuard>} />
-          <Route path="/admin-v2/assistant" element={<AuthGuard><AdminAssistantV2 /></AuthGuard>} />
-          <Route path="/admin-v2/settings" element={<AuthGuard><SettingsV2 /></AuthGuard>} />
+          <Route path="/admin-v2/pipeline" element={<AuthGuard allowedRoles={['admin']}><PipelineV2 /></AuthGuard>} />
+          <Route path="/admin-v2/logs" element={<AuthGuard allowedRoles={['admin']}><LogsV2 /></AuthGuard>} />
+          <Route path="/admin-v2/websites" element={<AuthGuard allowedRoles={['admin']}><WebsitesV2 /></AuthGuard>} />
+          <Route path="/admin-v2/analytics" element={<AuthGuard allowedRoles={['admin']}><AnalyticsV2 /></AuthGuard>} />
+          <Route path="/admin-v2/whatsapp" element={<AuthGuard allowedRoles={['admin']}><WhatsAppV2 /></AuthGuard>} />
+          <Route path="/admin-v2/map" element={<AuthGuard allowedRoles={['admin']}><MapV2 /></AuthGuard>} />
+          <Route path="/admin-v2/answers" element={<AuthGuard allowedRoles={['admin']}><AnswersV2 /></AuthGuard>} />
+          <Route path="/admin-v2/pipeline/:placeId" element={<AuthGuard allowedRoles={['admin']}><LeadDetailV2 /></AuthGuard>} />
+          <Route path="/admin-v2/assistant" element={<AuthGuard allowedRoles={['admin']}><AdminAssistantV2 /></AuthGuard>} />
+          <Route path="/admin-v2/settings" element={<AuthGuard allowedRoles={['admin']}><SettingsV2 /></AuthGuard>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

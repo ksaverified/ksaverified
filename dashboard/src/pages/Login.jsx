@@ -27,8 +27,13 @@ const Login = () => {
             });
 
             if (error) throw error;
-
-            navigate(from, { replace: true });
+            
+            const role = data.user?.user_metadata?.role || data.user?.app_metadata?.role;
+            if (role === 'sales') {
+                navigate('/sales', { replace: true });
+            } else {
+                navigate(from, { replace: true });
+            }
         } catch (err) {
             setError(err.message || 'Failed to sign in. Please check your credentials.');
         } finally {
