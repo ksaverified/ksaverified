@@ -42,8 +42,17 @@ async function handleGetLeads(req, res) {
 }
 
 async function handleClaim(req, res) {
-    const { place_id, salesman_id } = req.body;
-    const { data, error } = await supabase.from('leads').update({ claimed_by: salesman_id, claimed_at: new Date().toISOString() }).eq('place_id', place_id).is('claimed_by', null).select();
+    let { place_id, salesman_id } = req.body;
+    
+    // Convert 'default' to a valid UUID to avoid Postgres type errors
+    if (salesman_id === 'default') {
+        salesman_id = '00000000-0000-0000-0000-000000000000';
+    }
+
+    const { data, error } = await supabase.from('leads').update({ 
+        claimed_by: salesman_id, 
+        claimed_at: new Date().toISOString() 
+    }).eq('place_id', place_id).is('claimed_by', null).select();
     if (error) throw error;
     if (data.length === 0) return res.status(409).json({ success: false, message: 'Already claimed' });
     return res.status(200).json({ success: true, message: 'Claimed' });

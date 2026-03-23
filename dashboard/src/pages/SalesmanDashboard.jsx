@@ -28,8 +28,22 @@ const Directions = ({ origin, destination, onRouteFound, onError }) => {
 
         // Modern computeRoutes call
         routesLibrary.Route.computeRoutes({
-            origin: { location: { latLng: origin } },
-            destination: { location: { latLng: destination } },
+            origin: { 
+                location: { 
+                    latLng: {
+                        latitude: origin.lat,
+                        longitude: origin.lng
+                    } 
+                } 
+            },
+            destination: { 
+                location: { 
+                    latLng: {
+                        latitude: destination.lat,
+                        longitude: destination.lng
+                    }
+                } 
+            },
             travelMode: 'DRIVE',
             routingPreference: 'TRAFFIC_AWARE',
             polylineQuality: 'HIGH_QUALITY'
@@ -261,8 +275,8 @@ const SalesmanDashboard = () => {
                         <Map
                             defaultCenter={userLocation || { lat: 24.7136, lng: 46.6753 }}
                             defaultZoom={13}
-                            mapId="ksaverified_field_map" // Silences Advanced Marker warning
-                            options={{ disableDefaultUI: true, styles: MAP_STYLES }}
+                            mapId="ksaverified_field_map" // Style must be controlled via Cloud Console
+                            options={{ disableDefaultUI: true }}
                         >
                             {userLocation && (
                                 <Marker position={userLocation} />
