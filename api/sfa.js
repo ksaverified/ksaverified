@@ -68,13 +68,10 @@ async function handleLogVisit(req, res) {
     // Normalize salesman_id
     if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
 
-    // 1. Fetch commission rates
-    const { data: settingsData } = await supabase.from('settings').select('value').eq('key', 'commission_rates').single();
-    const rates = settingsData?.value || { trial_conversion_sar: 10, subscription_conversion_sar: 50 };
-    
     let commission = 0;
     if (result === 'success') {
-        commission = rates.trial_conversion_sar; // Default to trial conversion for now
+        const amountPaid = Number(req.body.amount_paid) || 0;
+        commission = amountPaid * 0.5;
     }
 
     // 2. Insert visit

@@ -109,6 +109,7 @@ const SalesmanDashboard = () => {
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
     const [routeInfo, setRouteInfo] = useState(null);
     const [directionsError, setDirectionsError] = useState(false);
+    const [amountPaid, setAmountPaid] = useState('');
     const [statData] = useState({ visits: 0, pending: 0, earned: 0 });
 
     useEffect(() => {
@@ -167,6 +168,7 @@ const SalesmanDashboard = () => {
                     place_id: selectedLead.place_id,
                     salesman_id: 'default',
                     result: result,
+                    amount_paid: amountPaid || 0, // Include amount_paid
                     lat: userLocation?.lat,
                     lng: userLocation?.lng
                 })
@@ -174,6 +176,7 @@ const SalesmanDashboard = () => {
             const data = await resp.json();
             if (data.success) {
                 setIsVisiting(false);
+                setAmountPaid(''); // Reset amount
                 setSelectedLead(null);
                 fetchLeads();
             }
@@ -264,7 +267,7 @@ const SalesmanDashboard = () => {
                                             <p className="text-sm text-gray-500 mt-1">{lead.address}</p>
                                             <div className="flex items-center gap-2 mt-3">
                                                 <div className="px-2 py-0.5 bg-brand/10 text-brand text-[10px] font-bold rounded-md">
-                                                    50 SAR Potential
+                                                    50% Commission
                                                 </div>
                                                 <span className="text-[10px] text-gray-600">•</span>
                                                 <span className="text-[10px] text-gray-500 font-medium">{lead.distance || 'Calculated...'}</span>
@@ -421,11 +424,25 @@ const SalesmanDashboard = () => {
                         </header>
 
                         <div className="space-y-12">
-                            <div className="text-center space-y-4">
-                                <div className="w-32 h-32 bg-white/5 border-2 border-dashed border-white/20 rounded-[40px] mx-auto flex items-center justify-center">
-                                    <Camera className="w-12 h-12 text-gray-600" />
+                            <div className="space-y-4">
+                                <div className="text-center space-y-4">
+                                    <div className="w-32 h-32 bg-white/5 border-2 border-dashed border-white/20 rounded-[40px] mx-auto flex items-center justify-center">
+                                        <Camera className="w-12 h-12 text-gray-600" />
+                                    </div>
+                                    <p className="text-gray-400 font-medium">Please take a photo of the storefront</p>
                                 </div>
-                                <p className="text-gray-400 font-medium">Please take a photo of the storefront</p>
+
+                                <div className="px-4">
+                                    <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-2">Subscription Amount Paid (SAR)</label>
+                                    <input 
+                                        type="number" 
+                                        placeholder="0.00"
+                                        value={amountPaid}
+                                        onChange={(e) => setAmountPaid(e.target.value)}
+                                        className="w-full bg-zinc-900/50 border border-white/10 rounded-2xl p-4 text-white font-bold text-center text-xl outline-none focus:border-amber-500 transition-colors"
+                                    />
+                                    <p className="text-[10px] text-amber-500/60 text-center mt-2 font-bold tracking-tight">Agent Commission: {amountPaid ? (Number(amountPaid) * 0.5).toFixed(2) : '0.00'} SAR (50%)</p>
+                                </div>
                             </div>
 
                             <div className="grid gap-3">
