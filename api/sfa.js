@@ -18,6 +18,13 @@ module.exports = async function handler(req, res) {
                 return await handleGetProfile(req, res);
             case 'request-withdrawal':
                 return await handleRequestWithdrawal(req, res);
+            // Admin Actions (Consolidated from admin_sfa.js)
+            case 'get-sales-team':
+                return await handleGetSalesTeam(req, res);
+            case 'get-withdrawals':
+                return await handleGetWithdrawals(req, res);
+            case 'process-withdrawal':
+                return await handleProcessWithdrawal(req, res);
             default:
                 return res.status(400).json({ error: 'Invalid SFA action' });
         }
@@ -27,6 +34,64 @@ module.exports = async function handler(req, res) {
     }
 };
 
+// ... existing functions (handleJoin, handleGetLeads, handleClaim, handleLogVisit, handleGetProfile, handleRequestWithdrawal) ...
+
+// [NEW] Admin SFA Handlers
+async function handleGetSalesTeam(req, res) {
+    const { data: salesmen, error: salesmenError } = await supabase.from('salesmen').select('*').order('created_at', { ascending: false });
+    if (salesmenError) throw salesmenError;
+
+    const salesmenWithStats = await Promise.all(salesmen.map(async (s) => {
+        const { count: claims } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('claimed_by', s.id);
+        const { count: visits } = await supabase.from('visits').select('*', { count: 'exact', head: true }).eq('salesman_id', s.id);
+        
+        return {
+            ...s,
+            stats: {
+                claims: claims || 0,
+                visits: visits || 0
+            }
+        };
+    }));
+
+    return res.status(200).json({ success: true, team: salesmenWithStats });
+}
+
+async function handleGetWithdrawals(req, res) {
+    const { status } = req.query;
+    let query = supabase.from('withdrawal_requests').select('*, salesmen(name, phone)').order('created_at', { ascending: false });
+    if (status) query = query.eq('status', status);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return res.status(200).json({ success: true, withdrawals: data });
+}
+
+async function handleProcessWithdrawal(req, res) {
+    const { id, status } = req.body;
+    if (!['completed', 'rejected'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+    const { data, error } = await supabase.from('withdrawal_requests').update({ 
+        status, 
+        updated_at: new Date().toISOString() 
+    }).eq('id', id).select().single();
+    
+    if (error) throw error;
+
+    if (status === 'rejected') {
+        const { data: salesman } = await supabase.from('salesmen').select('balance').eq('id', data.salesman_id).single();
+        if (salesman) {
+            await supabase.from('salesmen').update({ 
+                balance: (Number(salesman.balance) || 0) + Number(data.amount),
+                updated_at: new Date().toISOString()
+            }).eq('id', data.salesman_id);
+        }
+    }
+
+    return res.status(200).json({ success: true, withdrawal: data });
+}
+
+// Keep existing local functions below
 async function handleJoin(req, res) {
     const { name, phone, email } = req.body;
     if (!name || !phone) return res.status(400).json({ error: 'Name and Phone are required' });
@@ -47,16 +112,8 @@ async function handleGetLeads(req, res) {
 
 async function handleClaim(req, res) {
     let { place_id, salesman_id } = req.body;
-    
-    // Convert 'default' to a valid UUID to avoid Postgres type errors
-    if (salesman_id === 'default') {
-        salesman_id = '00000000-0000-0000-0000-000000000000';
-    }
-
-    const { data, error } = await supabase.from('leads').update({ 
-        claimed_by: salesman_id, 
-        claimed_at: new Date().toISOString() 
-    }).eq('place_id', place_id).is('claimed_by', null).select();
+    if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
+    const { data, error } = await supabase.from('leads').update({ claimed_by: salesman_id, claimed_at: new Date().toISOString() }).eq('place_id', place_id).is('claimed_by', null).select();
     if (error) throw error;
     if (data.length === 0) return res.status(409).json({ success: false, message: 'Already claimed' });
     return res.status(200).json({ success: true, message: 'Claimed' });
@@ -64,53 +121,25 @@ async function handleClaim(req, res) {
 
 async function handleLogVisit(req, res) {
     let { place_id, salesman_id, result, notes, photo_url, lat, lng } = req.body;
-    
-    // Normalize salesman_id
     if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
-
     let commission = 0;
     if (result === 'success') {
         const amountPaid = Number(req.body.amount_paid) || 0;
         commission = amountPaid * 0.5;
     }
-
-    // 2. Insert visit
-    const { error: visitError } = await supabase.from('visits').insert({ 
-        lead_id: place_id, 
-        salesman_id, 
-        result, 
-        notes, 
-        photo_url, 
-        lat, 
-        lng,
-        commission_earned: commission
-    });
+    const { error: visitError } = await supabase.from('visits').insert({ lead_id: place_id, salesman_id, result, notes, photo_url, lat, lng, commission_earned: commission });
     if (visitError) throw visitError;
-
-    // 3. Update salesman balance if commission earned
     if (commission > 0) {
-        // Atomic-ish update for balance
         const { data: salesman } = await supabase.from('salesmen').select('balance, total_earned').eq('id', salesman_id).single();
         if (salesman) {
-            await supabase.from('salesmen').update({ 
-                balance: (Number(salesman.balance) || 0) + commission,
-                total_earned: (Number(salesman.total_earned) || 0) + commission,
-                updated_at: new Date().toISOString()
-            }).eq('id', salesman_id);
+            await supabase.from('salesmen').update({ balance: (Number(salesman.balance) || 0) + commission, total_earned: (Number(salesman.total_earned) || 0) + commission, updated_at: new Date().toISOString() }).eq('id', salesman_id);
         }
     }
-
-    // 4. Update lead status
     let newStatus = 'scouted';
     if (result === 'success') newStatus = 'interest_confirmed';
     else if (result === 'followup') newStatus = 'warmed';
     else if (result === 'rejected') newStatus = 'rejected';
-    
-    const { error: leadError } = await supabase.from('leads').update({ 
-        status: newStatus, 
-        updated_at: new Date().toISOString() 
-    }).eq('place_id', place_id);
-    
+    const { error: leadError } = await supabase.from('leads').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('place_id', place_id);
     if (leadError) throw leadError;
     return res.status(200).json({ success: true, status: newStatus, commission });
 }
@@ -118,61 +147,23 @@ async function handleLogVisit(req, res) {
 async function handleGetProfile(req, res) {
     let { salesman_id } = req.query;
     if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
-
-    // Fetch salesman basic info
     const { data: profile, error: profileError } = await supabase.from('salesmen').select('*').eq('id', salesman_id).single();
     if (profileError) throw profileError;
-
-    // Fetch visit count
     const { count: visitCount } = await supabase.from('visits').select('*', { count: 'exact', head: true }).eq('salesman_id', salesman_id);
-    
-    // Fetch claim count
     const { count: claimCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('claimed_by', salesman_id);
-
-    // Fetch recent withdrawals
     const { data: withdrawals } = await supabase.from('withdrawal_requests').select('*').eq('salesman_id', salesman_id).order('created_at', { ascending: false }).limit(10);
-
-    return res.status(200).json({ 
-        success: true, 
-        profile: {
-            ...profile,
-            stats: {
-                total_visits: visitCount || 0,
-                total_claims: claimCount || 0,
-                total_earned: profile.total_earned || 0,
-                current_balance: profile.balance || 0
-            },
-            withdrawals: withdrawals || []
-        } 
-    });
+    return res.status(200).json({ success: true, profile: { ...profile, stats: { total_visits: visitCount || 0, total_claims: claimCount || 0, total_earned: profile.total_earned || 0, current_balance: profile.balance || 0 }, withdrawals: withdrawals || [] } });
 }
 
 async function handleRequestWithdrawal(req, res) {
     let { salesman_id, amount } = req.body;
     if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
     if (!amount || amount <= 0) return res.status(400).json({ error: 'Invalid amount' });
-
-    // 1. Verify balance
     const { data: salesman, error: fetchError } = await supabase.from('salesmen').select('balance').eq('id', salesman_id).single();
     if (fetchError || !salesman) return res.status(404).json({ error: 'Salesman not found' });
-
-    if (salesman.balance < amount) {
-        return res.status(400).json({ error: 'Insufficient balance' });
-    }
-
-    // 2. Create withdrawal request
-    const { data: withdrawal, error: withdrawError } = await supabase.from('withdrawal_requests').insert({
-        salesman_id,
-        amount,
-        status: 'pending'
-    }).select().single();
+    if (salesman.balance < amount) return res.status(400).json({ error: 'Insufficient balance' });
+    const { data: withdrawal, error: withdrawError } = await supabase.from('withdrawal_requests').insert({ salesman_id, amount, status: 'pending' }).select().single();
     if (withdrawError) throw withdrawError;
-
-    // 3. Deduct from balance
-    await supabase.from('salesmen').update({ 
-        balance: Number(salesman.balance) - amount,
-        updated_at: new Date().toISOString()
-    }).eq('id', salesman_id);
-
+    await supabase.from('salesmen').update({ balance: Number(salesman.balance) - amount, updated_at: new Date().toISOString() }).eq('id', salesman_id);
     return res.status(200).json({ success: true, withdrawal });
 }

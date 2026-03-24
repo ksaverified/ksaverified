@@ -359,7 +359,7 @@ class PublisherAgent {
             localStorage.setItem(STORAGE_KEY_FREE, Date.now().toString());
             document.getElementById('publisher-modal-overlay').classList.remove('show');
             document.body.classList.remove('modal-open');
-            fetch(\`/api/track?id=\${placeId}&action=free_preview_started\`).catch(e => console.error(e));
+            fetch(\`/api/system?action=track&id=\${placeId}&event=free_preview_started\`).catch(e => console.error(e));
         }
 
         (function() {
@@ -369,7 +369,7 @@ class PublisherAgent {
           
           function trackMetric(action) {
              if (!placeId || placeId === 'undefined') return;
-             fetch(\`/api/track?id=\${placeId}&action=\${action}\`).catch(e => console.error(e));
+             fetch(\`/api/system?action=track&id=\${placeId}&event=\${action}\`).catch(e => console.error(e));
           }
 
           trackMetric('view');

@@ -14,7 +14,7 @@ const LandingPage = () => {
     const handleLookup = async () => {
         setLoading(true);
         try {
-            const resp = await fetch(`/api/lookup?phone=${encodeURIComponent(phone)}`);
+            const resp = await fetch(`/api/leads?action=lookup&phone=${encodeURIComponent(phone)}`);
             if (resp.ok) {
                 const result = await resp.json();
                 setLookupResult(result.data);
@@ -35,7 +35,7 @@ const LandingPage = () => {
         setLoading(true);
         setStep(3);
         try {
-            await fetch('/api/register-lead', {
+            await fetch('/api/leads?action=register-lead', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ businessData })

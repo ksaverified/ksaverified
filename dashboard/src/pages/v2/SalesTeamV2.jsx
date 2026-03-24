@@ -25,8 +25,8 @@ const SalesTeamV2 = () => {
         setLoading(true);
         try {
             const [respTeam, respWithdrawals] = await Promise.all([
-                fetch('/api/admin_sfa?action=get-sales-team'),
-                fetch('/api/admin_sfa?action=get-withdrawals')
+                fetch('/api/sfa?action=get-sales-team'),
+                fetch('/api/sfa?action=get-withdrawals')
             ]);
             const dataTeam = await respTeam.json();
             const dataWithdrawals = await respWithdrawals.json();
@@ -43,7 +43,7 @@ const SalesTeamV2 = () => {
     const handleProcessWithdrawal = async (id, status) => {
         setProcessingId(id);
         try {
-            const resp = await fetch('/api/admin_sfa?action=process-withdrawal', {
+            const resp = await fetch('/api/sfa?action=process-withdrawal', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id, status })

@@ -77,7 +77,7 @@ const Layout = () => {
         if (triggering) return;
         setTriggering(true);
         try {
-            const res = await fetch('/api/trigger', { method: 'POST' });
+            const res = await fetch('/api/system?action=trigger', { method: 'POST' });
             if (!res.ok) throw new Error('Failed to trigger');
             alert('🚀 Pipeline cycle launched! Check Live Logs for progress.');
         } catch (e) {

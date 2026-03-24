@@ -19,6 +19,26 @@
     ],
     "rewrites": [
         {
+            "source": "/api/admin_sfa",
+            "destination": "/api/sfa"
+        },
+        {
+            "source": "/api/lookup",
+            "destination": "/api/leads?action=lookup"
+        },
+        {
+            "source": "/api/register-lead",
+            "destination": "/api/leads?action=register-lead"
+        },
+        {
+            "source": "/api/track",
+            "destination": "/api/system?action=track"
+        },
+        {
+            "source": "/api/trigger",
+            "destination": "/api/system?action=trigger"
+        },
+        {
             "source": "/api/(.*)",
             "destination": "/api/$1"
         },
