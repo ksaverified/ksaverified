@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List } from 'lucide-react';
 import { APIProvider, Map, Marker, useMap, useMapsLibrary, AdvancedMarker } from '@vis.gl/react-google-maps';
@@ -100,6 +101,7 @@ const PinIcon = ({ color = '#8b5cf6' }) => (
 );
 
 const SalesmanDashboard = () => {
+    const navigate = useNavigate();
     const markerLibrary = useMapsLibrary('marker');
     const [leads, setLeads] = useState([]);
     const [selectedLead, setSelectedLead] = useState(null);

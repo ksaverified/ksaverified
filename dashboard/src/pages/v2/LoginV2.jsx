@@ -51,8 +51,8 @@ export default function LoginV2() {
 
     return (
         <div className="min-h-screen bg-obsidian-dark flex font-['Inter',sans-serif] relative overflow-hidden">
-            {/* Grain/Noise overlay */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-50 transition-opacity duration-1000" />
+            {/* Grain/Noise overlay removed due to 403 error from external host */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-50 transition-opacity duration-1000" />
             
             {/* ── LEFT: LOGIN FORM ──────────────────────────────────────── */}
             <div className="flex flex-col justify-center px-16 w-full max-w-xl relative z-10 bg-obsidian-dark/50 backdrop-blur-3xl border-r border-white/5 shadow-[20px_0_50px_rgba(0,0,0,0.5)]">
