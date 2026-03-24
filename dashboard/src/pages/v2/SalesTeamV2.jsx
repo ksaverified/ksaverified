@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import V2Shell from './V2Shell';
 import { 
     Users, Wallet, History, Search, 
     Filter, ArrowUpRight, CheckCircle2, 
@@ -91,11 +92,11 @@ const SalesTeamV2 = () => {
     };
 
     return (
-        <div className="min-h-screen bg-obsidian-dark text-white font-['Inter',sans-serif]">
+        <V2Shell>
             {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-white/5 bg-obsidian-dark/80 backdrop-blur-2xl">
+            <header className="sticky top-0 z-50 border-b border-white/5 bg-obsidian-bg/80 backdrop-blur-2xl flex-shrink-0">
                 <div className="px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/admin-v2')}>
+                    <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.3)]">
                             <Shield className="w-5 h-5 text-black" />
                         </div>
@@ -330,7 +331,7 @@ const SalesTeamV2 = () => {
                     )}
                 </AnimatePresence>
             </main>
-        </div>
+        </V2Shell>
     );
 };
 
