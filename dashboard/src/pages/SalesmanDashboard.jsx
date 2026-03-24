@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List } from 'lucide-react';
-import { APIProvider, Map, Marker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, Marker, useMap, useMapsLibrary, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
@@ -26,21 +26,21 @@ const Directions = ({ origin, destination, onRouteFound, onError }) => {
         // Cleanup existing polyline
         if (polyline) polyline.setMap(null);
 
-        // Modern computeRoutes call
+        // [STABLE] Use lat/lng literals as numbers for the JS SDK ComputeRoutes
         routesLibrary.Route.computeRoutes({
             origin: { 
                 location: { 
                     latLng: {
-                        latitude: origin.lat,
-                        longitude: origin.lng
+                        lat: parseFloat(origin.lat),
+                        lng: parseFloat(origin.lng)
                     } 
                 } 
             },
             destination: { 
                 location: { 
                     latLng: {
-                        latitude: destination.lat,
-                        longitude: destination.lng
+                        lat: parseFloat(destination.lat),
+                        lng: parseFloat(destination.lng)
                     }
                 } 
             },
@@ -279,26 +279,28 @@ const SalesmanDashboard = () => {
                             options={{ disableDefaultUI: true }}
                         >
                             {userLocation && (
-                                <Marker position={userLocation} />
+                                <AdvancedMarker position={userLocation} />
                             )}
-
+ 
                             {leads.map(lead => {
                                 const lat = parseFloat(lead.lat), lng = parseFloat(lead.lng);
                                 if (isNaN(lat) || isNaN(lng)) return null;
                                 return (
-                                    <Marker 
+                                    <AdvancedMarker 
                                         key={lead.place_id} 
                                         position={{ lat, lng }}
                                         onClick={() => setSelectedLead(lead)}
-                                        icon={{
-                                            url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(PinIcon({ color: '#f59e0b' }))}`,
-                                            anchor: { x: 20, y: 30 },
-                                            scaledSize: { width: 40, height: 40 }
-                                        }}
-                                    />
+                                    >
+                                        <div 
+                                            dangerouslySetInnerHTML={{ 
+                                                __html: PinIcon({ color: '#f59e0b' }) 
+                                            }} 
+                                            style={{ transform: 'translate(-50%, -100%)' }}
+                                        />
+                                    </AdvancedMarker>
                                 );
                             })}
-
+ 
                             {selectedLead && userLocation && (
                                 <Directions 
                                     origin={userLocation}
