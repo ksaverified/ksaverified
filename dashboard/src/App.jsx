@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import LandingPage from './pages/LandingPage';
 import SalesmanOnboarding from './pages/SalesmanOnboarding';
 import SalesmanDashboard from './pages/SalesmanDashboard';
+import SalesmanProfile from './pages/SalesmanProfile';
 import { AuthProvider } from './components/AuthContext';
 import AuthGuard from './components/AuthGuard';
 // ── V2 Dashboard ─────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ import MapV2 from './pages/v2/MapV2';
 import AnswersV2 from './pages/v2/AnswersV2';
 import SettingsV2 from './pages/v2/SettingsV2';
 import LeadDetailV2 from './pages/v2/LeadDetailV2';
+import SalesTeamV2 from './pages/v2/SalesTeamV2';
 import AdminAssistantV2 from './pages/v2/AdminAssistantV2';
 
 function App() {
@@ -64,6 +66,11 @@ function App() {
               <SalesmanDashboard />
             </AuthGuard>
           } />
+          <Route path="/sales/profile" element={
+            <AuthGuard>
+              <SalesmanProfile />
+            </AuthGuard>
+          } />
 
           {/* ── Dashboard V2 Routes ── */}
           <Route path="/login-v2" element={<LoginV2 />} />
@@ -80,6 +87,7 @@ function App() {
           <Route path="/admin-v2/map" element={<AuthGuard allowedRoles={['admin']}><MapV2 /></AuthGuard>} />
           <Route path="/admin-v2/answers" element={<AuthGuard allowedRoles={['admin']}><AnswersV2 /></AuthGuard>} />
           <Route path="/admin-v2/pipeline/:placeId" element={<AuthGuard allowedRoles={['admin']}><LeadDetailV2 /></AuthGuard>} />
+          <Route path="/admin-v2/sales" element={<AuthGuard allowedRoles={['admin']}><SalesTeamV2 /></AuthGuard>} />
           <Route path="/admin-v2/assistant" element={<AuthGuard allowedRoles={['admin']}><AdminAssistantV2 /></AuthGuard>} />
           <Route path="/admin-v2/settings" element={<AuthGuard allowedRoles={['admin']}><SettingsV2 /></AuthGuard>} />
         </Routes>

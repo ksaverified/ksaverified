@@ -197,9 +197,13 @@ const SalesmanDashboard = () => {
                         <p className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Commission</p>
                         <p className="text-sm font-bold text-gold">{statData.earned} SAR</p>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-                        <img src="https://ui-avatars.com/api/?name=Sales+Agent&background=8b5cf6&color=fff" alt="Avatar" />
-                    </div>
+                    <button 
+                        onClick={() => navigate('/sales/profile')}
+                        className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden hover:border-amber-500 transition-colors"
+                        title="My Profile"
+                    >
+                        <img src="https://ui-avatars.com/api/?name=Sales+Agent&background=f59e0b&color=000" alt="Avatar" />
+                    </button>
                 </div>
             </header>
 

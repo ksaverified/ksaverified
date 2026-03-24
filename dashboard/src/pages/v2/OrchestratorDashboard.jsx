@@ -453,6 +453,7 @@ export default function OrchestratorDashboard() {
                         { label: 'Communications', icon: '💬', path: '/admin-v2/whatsapp', desc: 'WhatsApp CX Matrix' },
                         { label: 'System Analytics', icon: '📊', path: '/admin-v2/analytics', desc: 'Performance Metrics' },
                         { label: 'Geospatial Map', icon: '🗺️', path: '/admin-v2/map', desc: 'Visual Scouting' },
+                        { label: 'Sales Team', icon: '🤝', path: '/admin-v2/sales', desc: 'Workforce & Payouts' },
                         { label: 'Knowledge Base', icon: '🤖', path: '/admin-v2/answers', desc: 'AI Instruction Set' },
                         { label: 'Audit Logs', icon: '📋', path: '/admin-v2/logs', desc: 'Process Forensics' },
                         { label: 'Matrix Control', icon: '⚙️', path: '/admin-v2/settings', desc: 'Core Configuration' },
