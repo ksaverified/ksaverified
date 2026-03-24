@@ -25,6 +25,14 @@ module.exports = async function handler(req, res) {
                 return await handleGetWithdrawals(req, res);
             case 'process-withdrawal':
                 return await handleProcessWithdrawal(req, res);
+            case 'get-followups':
+                return await handleGetFollowups(req, res);
+            case 'report-payment':
+                return await handleReportPayment(req, res);
+            case 'get-payment-verifications':
+                return await handleGetPaymentVerifications(req, res);
+            case 'process-payment-verification':
+                return await handleProcessPaymentVerification(req, res);
             default:
                 return res.status(400).json({ error: 'Invalid SFA action' });
         }
@@ -91,6 +99,44 @@ async function handleProcessWithdrawal(req, res) {
     return res.status(200).json({ success: true, withdrawal: data });
 }
 
+async function handleGetPaymentVerifications(req, res) {
+    const { status } = req.query;
+    let query = supabase.from('payment_verifications').select('*, leads(name, phone), salesmen(name, phone)').order('created_at', { ascending: false });
+    if (status) query = query.eq('status', status);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return res.status(200).json({ success: true, verifications: data });
+}
+
+async function handleProcessPaymentVerification(req, res) {
+    const { id, status } = req.body;
+    if (!['approved', 'rejected'].includes(status)) return res.status(400).json({ error: 'Invalid status' });
+
+    const { data: pv, error: pvError } = await supabase.from('payment_verifications').update({ 
+        status, 
+        updated_at: new Date().toISOString() 
+    }).eq('id', id).select().single();
+    
+    if (pvError) throw pvError;
+
+    if (status === 'approved') {
+        const { data: salesman } = await supabase.from('salesmen').select('balance, total_earned').eq('id', pv.salesman_id).single();
+        if (salesman) {
+            await supabase.from('salesmen').update({ 
+                balance: (Number(salesman.balance) || 0) + Number(pv.commission_amount),
+                total_earned: (Number(salesman.total_earned) || 0) + Number(pv.commission_amount),
+                updated_at: new Date().toISOString()
+            }).eq('id', pv.salesman_id);
+        }
+        await supabase.from('leads').update({ status: 'interest_confirmed', updated_at: new Date().toISOString() }).eq('place_id', pv.lead_id);
+    } else if (status === 'rejected') {
+        await supabase.from('leads').update({ status: 'warmed', updated_at: new Date().toISOString() }).eq('place_id', pv.lead_id);
+    }
+
+    return res.status(200).json({ success: true, verification: pv });
+}
+
 // Keep existing local functions below
 async function handleJoin(req, res) {
     const { name, phone, email } = req.body;
@@ -124,25 +170,38 @@ async function handleLogVisit(req, res) {
     let { place_id, salesman_id, result, notes, photo_url, lat, lng } = req.body;
     if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
     let commission = 0;
+    let newStatus = 'scouted';
+    let isPendingVerification = false;
+
     if (result === 'success') {
         const amountPaid = Number(req.body.amount_paid) || 0;
         commission = amountPaid * 0.5;
+        isPendingVerification = true;
+        newStatus = 'pending_verification';
+    } else if (result === 'followup') {
+        newStatus = 'warmed';
+    } else if (result === 'rejected') {
+        newStatus = 'rejected';
     }
-    const { error: visitError } = await supabase.from('visits').insert({ lead_id: place_id, salesman_id, result, notes, photo_url, lat, lng, commission_earned: commission });
+
+    const { error: visitError } = await supabase.from('visits').insert({ lead_id: place_id, salesman_id, result, notes, photo_url, lat, lng, commission_earned: isPendingVerification ? 0 : commission });
     if (visitError) throw visitError;
-    if (commission > 0) {
-        const { data: salesman } = await supabase.from('salesmen').select('balance, total_earned').eq('id', salesman_id).single();
-        if (salesman) {
-            await supabase.from('salesmen').update({ balance: (Number(salesman.balance) || 0) + commission, total_earned: (Number(salesman.total_earned) || 0) + commission, updated_at: new Date().toISOString() }).eq('id', salesman_id);
-        }
+
+    if (isPendingVerification && commission > 0) {
+        const { error: pvError } = await supabase.from('payment_verifications').insert({
+            lead_id: place_id,
+            salesman_id,
+            amount_claimed: Number(req.body.amount_paid) || 0,
+            commission_amount: commission,
+            status: 'pending'
+        });
+        if (pvError) throw pvError;
     }
-    let newStatus = 'scouted';
-    if (result === 'success') newStatus = 'interest_confirmed';
-    else if (result === 'followup') newStatus = 'warmed';
-    else if (result === 'rejected') newStatus = 'rejected';
+
     const { error: leadError } = await supabase.from('leads').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('place_id', place_id);
     if (leadError) throw leadError;
-    return res.status(200).json({ success: true, status: newStatus, commission });
+
+    return res.status(200).json({ success: true, status: newStatus, commission_pending: isPendingVerification ? commission : 0 });
 }
 
 async function handleGetProfile(req, res) {
@@ -170,4 +229,43 @@ async function handleRequestWithdrawal(req, res) {
     if (withdrawError) throw withdrawError;
     await supabase.from('salesmen').update({ balance: Number(salesman.balance) - amount, updated_at: new Date().toISOString() }).eq('id', salesman_id);
     return res.status(200).json({ success: true, withdrawal });
+}
+
+async function handleGetFollowups(req, res) {
+    let { salesman_id } = req.query;
+    if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
+
+    const { data, error } = await supabase.from('leads').select('place_id, name, phone, address, status, updated_at, claimed_at').eq('claimed_by', salesman_id).in('status', ['scouted', 'warmed']).order('updated_at', { ascending: false });
+    if (error) throw error;
+    
+    return res.status(200).json({ success: true, leads: data || [] });
+}
+
+async function handleReportPayment(req, res) {
+    let { place_id, salesman_id, amount_paid } = req.body;
+    if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
+    
+    const amount = Number(amount_paid) || 0;
+    const commission = amount * 0.5;
+
+    if (commission <= 0) return res.status(400).json({ error: 'Invalid amount' });
+
+    const { error: visitError } = await supabase.from('visits').insert({
+        lead_id: place_id, salesman_id, result: 'remote_payment_claim', notes: 'Remote payment verification requested.', commission_earned: 0
+    });
+    if (visitError) throw visitError;
+
+    const { error: pvError } = await supabase.from('payment_verifications').insert({
+        lead_id: place_id,
+        salesman_id,
+        amount_claimed: amount,
+        commission_amount: commission,
+        status: 'pending'
+    });
+    if (pvError) throw pvError;
+
+    const { error: leadError } = await supabase.from('leads').update({ status: 'pending_verification', updated_at: new Date().toISOString() }).eq('place_id', place_id);
+    if (leadError) throw leadError;
+
+    return res.status(200).json({ success: true, status: 'pending_verification', commission_pending: commission });
 }

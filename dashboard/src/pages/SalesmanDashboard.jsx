@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List } from 'lucide-react';
+import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List, PhoneCall, Mail } from 'lucide-react';
 import { APIProvider, Map, Marker, useMap, useMapsLibrary, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
@@ -111,6 +111,9 @@ const SalesmanDashboard = () => {
     const [userLocation, setUserLocation] = useState(null);
     const [isVisiting, setIsVisiting] = useState(false);
     const [viewMode, setViewMode] = useState('list'); // 'list' or 'map'
+    const [activeTab, setActiveTab] = useState('nearby'); // 'nearby' or 'followups'
+    const [followups, setFollowups] = useState([]);
+    const [isReportingPayment, setIsReportingPayment] = useState(false);
     const [routeInfo, setRouteInfo] = useState(null);
     const [directionsError, setDirectionsError] = useState(false);
     const [amountPaid, setAmountPaid] = useState('');
@@ -124,6 +127,19 @@ const SalesmanDashboard = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user) {
                 setUserId(session.user.id);
+                fetchFollowups(session.user.id);
+            }
+        };
+
+        const fetchFollowups = async (id) => {
+            try {
+                const resp = await fetch(`/api/sfa?action=get-followups&salesman_id=${id}`);
+                const data = await resp.json();
+                if (data.success) {
+                    setFollowups(data.leads || []);
+                }
+            } catch (e) {
+                console.error('Failed to fetch followups', e);
             }
         };
         
@@ -170,6 +186,32 @@ const SalesmanDashboard = () => {
                 alert(data.message || 'Failed to claim lead');
             }
         } catch (e) {
+            alert('Connection error');
+        }
+    };
+
+    const handleRemotePayment = async () => {
+        if (!amountPaid || Number(amountPaid) <= 0) return;
+        try {
+            const resp = await fetch('/api/sfa?action=report-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    place_id: selectedLead.place_id,
+                    salesman_id: userId,
+                    amount_paid: amountPaid
+                })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                setIsReportingPayment(false);
+                setAmountPaid('');
+                setSelectedLead(null);
+                fetchFollowups(userId);
+            } else {
+                alert(data.error || 'Failed to report payment');
+            }
+        } catch(e) {
             alert('Connection error');
         }
     };
@@ -244,7 +286,25 @@ const SalesmanDashboard = () => {
                 </div>
             </div>
 
+            {/* Tabs */}
+            <div className="flex px-4 mt-2 mb-4 space-x-2">
+                <button 
+                    onClick={() => setActiveTab('nearby')}
+                    className={`flex-1 py-2 text-sm font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === 'nearby' ? 'bg-brand text-black' : 'bg-white/5 text-gray-500 hover:text-white'}`}
+                >
+                    Nearby
+                </button>
+                <button 
+                    onClick={() => setActiveTab('followups')}
+                    className={`flex-1 py-2 text-sm font-bold uppercase tracking-widest rounded-xl transition-all ${activeTab === 'followups' ? 'bg-brand text-black' : 'bg-white/5 text-gray-500 hover:text-white'}`}
+                >
+                    Follow-Ups ({followups.length})
+                </button>
+            </div>
+
             {/* Main Feed */}
+            {activeTab === 'nearby' && (
+            <>
             <div className="px-4 pb-4">
                 <div className="flex justify-between items-center mb-4 px-1">
                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest">Nearby Leads</h3>
@@ -423,6 +483,89 @@ const SalesmanDashboard = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            </>
+            )}
+
+            {activeTab === 'followups' && (
+
+                <div className="px-4 pb-4 space-y-4">
+                    {followups.map(lead => (
+                        <div key={lead.place_id} className="bg-white/[0.05] border border-white/10 p-5 rounded-3xl space-y-3">
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <h4 className="font-bold text-lg leading-tight">{lead.name}</h4>
+                                    <p className="text-sm text-gray-500 mt-1">{lead.address}</p>
+                                    <span className="inline-block px-2 py-0.5 mt-2 bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase tracking-wider rounded-md border border-yellow-500/20">
+                                        {lead.status === 'warmed' ? 'Follow Up Needed' : 'Scouted'}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div className="flex gap-2 pt-3 mt-3 border-t border-white/5">
+                                {lead.phone && (
+                                    <a href={`tel:${lead.phone}`} className="flex-1 py-3 bg-white/5 rounded-xl flex items-center justify-center gap-2 hover:bg-white/10 transition-colors">
+                                        <PhoneCall className="w-4 h-4 text-brand" />
+                                        <span className="text-xs font-bold uppercase tracking-widest">Call</span>
+                                    </a>
+                                )}
+                                <button 
+                                    onClick={() => { setSelectedLead(lead); setIsReportingPayment(true); }}
+                                    className="flex-[2] py-3 bg-brand/20 text-brand rounded-xl flex items-center justify-center gap-2 hover:bg-brand/30 transition-colors font-bold uppercase tracking-widest text-xs"
+                                >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Customer Paid
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {followups.length === 0 && (
+                        <div className="text-center py-20 text-gray-500 text-sm">
+                            <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                            No follow-ups pending.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Remote Payment Modal */}
+            <AnimatePresence>
+                {isReportingPayment && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[60] bg-black p-8 flex flex-col justify-center"
+                    >
+                        <header className="flex justify-between items-center text-white mb-8">
+                            <h2 className="text-xl font-bold">Report Payment</h2>
+                            <XCircle className="w-8 h-8 opacity-50" onClick={() => setIsReportingPayment(false)} />
+                        </header>
+
+                        <div className="space-y-8 bg-zinc-900 border border-white/10 p-6 rounded-3xl">
+                            <div className="text-center space-y-4">
+                                <p className="text-gray-400 font-medium text-sm">Enter the amount the customer agreed to pay.</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-[10px] text-zinc-500 uppercase font-bold tracking-widest mb-2">Subscription Amount (SAR)</label>
+                                <input 
+                                    type="number" 
+                                    placeholder="0.00"
+                                    value={amountPaid}
+                                    onChange={(e) => setAmountPaid(e.target.value)}
+                                    className="w-full bg-black border border-white/10 rounded-2xl p-4 text-white font-bold text-center text-xl outline-none focus:border-brand transition-colors"
+                                />
+                                <p className="text-[10px] text-brand text-center mt-2 font-bold tracking-tight">Agent Commission: {amountPaid ? (Number(amountPaid) * 0.5).toFixed(2) : '0.00'} SAR</p>
+                            </div>
+
+                            <button onClick={handleRemotePayment} className="w-full py-5 bg-brand text-black font-bold rounded-2xl flex items-center justify-center gap-3">
+                                <CheckCircle2 className="w-6 h-6" />
+                                Submit for Verification
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Visit flow overlay */}
             <AnimatePresence>
@@ -461,9 +604,12 @@ const SalesmanDashboard = () => {
                             </div>
 
                             <div className="grid gap-3">
-                                <button onClick={() => handleReport('success')} className="py-5 bg-emerald-500 text-white font-bold rounded-2xl flex items-center justify-center gap-3">
-                                    <CheckCircle2 className="w-6 h-6" />
-                                    Pitch Successful
+                                <button onClick={() => handleReport('success')} className="py-5 bg-emerald-500 text-white font-bold rounded-2xl flex flex-col items-center justify-center gap-1">
+                                    <div className="flex items-center gap-2">
+                                        <CheckCircle2 className="w-6 h-6" />
+                                        Pitch Successful
+                                    </div>
+                                    <span className="text-[10px] opacity-70 font-normal">Requires Admin Verification</span>
                                 </button>
                                 <button onClick={() => handleReport('followup')} className="py-5 bg-brand-light text-white font-bold rounded-2xl">
                                     Owner Not Present (Follow up)

@@ -13,8 +13,9 @@ const SalesTeamV2 = () => {
     const navigate = useNavigate();
     const [team, setTeam] = useState([]);
     const [withdrawals, setWithdrawals] = useState([]);
+    const [verifications, setVerifications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('team'); // 'team' or 'withdrawals'
+    const [activeTab, setActiveTab] = useState('team'); // 'team', 'withdrawals', 'verifications'
     const [processingId, setProcessingId] = useState(null);
 
     useEffect(() => {
@@ -24,15 +25,18 @@ const SalesTeamV2 = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [respTeam, respWithdrawals] = await Promise.all([
+            const [respTeam, respWithdrawals, respVerifications] = await Promise.all([
                 fetch('/api/sfa?action=get-sales-team'),
-                fetch('/api/sfa?action=get-withdrawals')
+                fetch('/api/sfa?action=get-withdrawals'),
+                fetch('/api/sfa?action=get-payment-verifications')
             ]);
             const dataTeam = await respTeam.json();
             const dataWithdrawals = await respWithdrawals.json();
+            const dataVerifications = await respVerifications.json();
             
             setTeam(dataTeam.team || []);
             setWithdrawals(dataWithdrawals.withdrawals || []);
+            setVerifications(dataVerifications.verifications || []);
         } catch (e) {
             console.error('Failed to fetch admin sfa data', e);
         } finally {
@@ -59,10 +63,30 @@ const SalesTeamV2 = () => {
         }
     };
 
+    const handleProcessVerification = async (id, status) => {
+        setProcessingId(`v_${id}`);
+        try {
+            const resp = await fetch('/api/sfa?action=process-payment-verification', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status })
+            });
+            const data = await resp.json();
+            if (data.success) {
+                fetchData();
+            }
+        } catch (e) {
+            console.error('Failed to process verification', e);
+        } finally {
+            setProcessingId(null);
+        }
+    };
+
     const stats = {
         totalReps: team.length,
         pendingPayouts: withdrawals.filter(w => w.status === 'pending').reduce((sum, w) => sum + Number(w.amount), 0),
         payoutCount: withdrawals.filter(w => w.status === 'pending').length,
+        pendingVerifications: verifications.filter(v => v.status === 'pending').length,
         totalEarned: team.reduce((sum, s) => sum + (Number(s.total_earned) || 0), 0)
     };
 
@@ -114,6 +138,12 @@ const SalesTeamV2 = () => {
                         className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'withdrawals' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-zinc-500 hover:text-zinc-300'}`}
                     >
                         Payout Queue {stats.payoutCount > 0 && `(${stats.payoutCount})`}
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('verifications')}
+                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${activeTab === 'verifications' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-zinc-500 hover:text-zinc-300'}`}
+                    >
+                        Verifications {stats.pendingVerifications > 0 && `(${stats.pendingVerifications})`}
                     </button>
                 </div>
 
@@ -180,7 +210,7 @@ const SalesTeamV2 = () => {
                                 </table>
                             </div>
                         </motion.div>
-                    ) : (
+                    ) : activeTab === 'withdrawals' ? (
                         <motion.div 
                             key="withdrawals"
                             initial={{ opacity: 0, scale: 0.98 }}
@@ -233,6 +263,67 @@ const SalesTeamV2 = () => {
                                 <div className="py-20 text-center flex flex-col items-center gap-4 opacity-30">
                                     <Clock className="w-12 h-12" />
                                     <p className="text-[10px] font-black uppercase tracking-[0.2em]">Queue Empty — No Active Requests</p>
+                                </div>
+                            )}
+                        </motion.div>
+                    ) : (
+                        <motion.div 
+                            key="verifications"
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="space-y-4"
+                        >
+                            {verifications.length > 0 ? (
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                                    {verifications.map(v => (
+                                        <div key={v.id} className="glass-card rounded-3xl p-6 border border-white/5 hover:border-amber-500/30 transition-all flex items-center justify-between group bg-obsidian-surface-high/30">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`p-3 rounded-2xl ${v.status === 'pending' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20' : v.status === 'approved' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                                                    <CheckCircle2 className="w-6 h-6" />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <p className="text-lg font-black text-white leading-none tracking-tight">{v.leads?.name || 'Unknown Lead'}</p>
+                                                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${v.status === 'pending' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-white/5 text-zinc-500'}`}>
+                                                            {v.status}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-2 flex gap-4">
+                                                        <span>Claimed: <strong className="text-white">{v.amount_claimed} SAR</strong></span>
+                                                        <span>Comm: <strong className="text-amber-500">{v.commission_amount} SAR</strong></span>
+                                                    </p>
+                                                    <p className="text-[10px] text-zinc-600 mt-1 uppercase tracking-widest">
+                                                        By <strong className="text-zinc-400">{v.salesmen?.name}</strong> • {new Date(v.created_at).toLocaleDateString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {v.status === 'pending' && (
+                                                <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <button 
+                                                        onClick={() => handleProcessVerification(v.id, 'approved')}
+                                                        disabled={processingId === `v_${v.id}`}
+                                                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                                                    >
+                                                        Approve
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleProcessVerification(v.id, 'rejected')}
+                                                        disabled={processingId === `v_${v.id}`}
+                                                        className="p-2 border border-red-500/30 text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+                                                        title="Reject & Revert to Warmed"
+                                                    >
+                                                        <XCircle className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="py-20 text-center flex flex-col items-center gap-4 opacity-30">
+                                    <CheckCircle2 className="w-12 h-12" />
+                                    <p className="text-[10px] font-black uppercase tracking-[0.2em]">Queue Empty — No Active Verifications</p>
                                 </div>
                             )}
                         </motion.div>
