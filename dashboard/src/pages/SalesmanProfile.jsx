@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+import { supabase } from '../lib/supabase';
+
 const SalesmanProfile = () => {
     const navigate = useNavigate();
     const [profile, setProfile] = useState(null);
@@ -15,20 +17,33 @@ const SalesmanProfile = () => {
     const [withdrawAmount, setWithdrawAmount] = useState('');
     const [withdrawing, setWithdrawing] = useState(false);
     const [message, setMessage] = useState(null);
-
-    // Mock/Hardcoded salesman_id for now - in production get from Auth
-    const salesmanId = 'default'; 
+    const [userId, setUserId] = useState(null);
 
     useEffect(() => {
-        fetchProfile();
+        const initAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+                fetchProfile(session.user.id);
+            } else {
+                setLoading(false);
+            }
+        };
+        initAuth();
     }, []);
 
-    const fetchProfile = async () => {
+    const fetchProfile = async (id) => {
+        const targetId = id || userId;
+        if (!targetId) return;
+        
+        setLoading(true);
         try {
-            const resp = await fetch(`/api/sfa?action=get-profile&salesman_id=${salesmanId}`);
+            const resp = await fetch(`/api/sfa?action=get-profile&salesman_id=${targetId}`);
             const data = await resp.json();
             if (data.success) {
                 setProfile(data.profile);
+            } else {
+                console.error('Profile fetch failed:', data.error);
             }
         } catch (e) {
             console.error('Failed to fetch profile', e);
@@ -47,7 +62,7 @@ const SalesmanProfile = () => {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    salesman_id: salesmanId,
+                    salesman_id: userId,
                     amount: Number(withdrawAmount)
                 })
             });

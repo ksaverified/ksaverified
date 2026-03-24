@@ -97,6 +97,7 @@ async function handleJoin(req, res) {
     if (!name || !phone) return res.status(400).json({ error: 'Name and Phone are required' });
     const { data, error } = await supabase.from('salesmen').upsert({ name, phone, email, status: 'active', updated_at: new Date().toISOString() }, { onConflict: 'phone' }).select();
     if (error) throw error;
+    if (!data || data.length === 0) return res.status(500).json({ error: 'Failed to join' });
     return res.status(200).json({ success: true, salesman: data[0] });
 }
 
@@ -148,7 +149,10 @@ async function handleGetProfile(req, res) {
     let { salesman_id } = req.query;
     if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
     const { data: profile, error: profileError } = await supabase.from('salesmen').select('*').eq('id', salesman_id).single();
-    if (profileError) throw profileError;
+    if (profileError) {
+        if (profileError.code === 'PGRST116') return res.status(404).json({ success: false, error: 'Profile not found' });
+        throw profileError;
+    }
     const { count: visitCount } = await supabase.from('visits').select('*', { count: 'exact', head: true }).eq('salesman_id', salesman_id);
     const { count: claimCount } = await supabase.from('leads').select('*', { count: 'exact', head: true }).eq('claimed_by', salesman_id);
     const { data: withdrawals } = await supabase.from('withdrawal_requests').select('*').eq('salesman_id', salesman_id).order('created_at', { ascending: false }).limit(10);

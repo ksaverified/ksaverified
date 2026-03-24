@@ -100,6 +100,8 @@ const PinIcon = ({ color = '#8b5cf6' }) => (
     </svg>`
 );
 
+import { supabase } from '../lib/supabase';
+
 const SalesmanDashboard = () => {
     const navigate = useNavigate();
     const markerLibrary = useMapsLibrary('marker');
@@ -113,9 +115,19 @@ const SalesmanDashboard = () => {
     const [directionsError, setDirectionsError] = useState(false);
     const [amountPaid, setAmountPaid] = useState('');
     const [statData] = useState({ visits: 0, pending: 0, earned: 0 });
+    const [userId, setUserId] = useState(null);
 
     useEffect(() => {
         document.title = 'Field Dashboard | KSA Verified';
+        
+        const initAuth = async () => {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user) {
+                setUserId(session.user.id);
+            }
+        };
+        
+        initAuth();
         fetchLeads();
         if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(pos => {
@@ -140,13 +152,14 @@ const SalesmanDashboard = () => {
     };
 
     const handleClaim = async (lead) => {
+        if (!userId) return;
         try {
             const resp = await fetch('/api/sfa?action=claim', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     place_id: lead.place_id, 
-                    salesman_id: 'default' // In real app, get from auth 
+                    salesman_id: userId
                 })
             });
             const data = await resp.json();
@@ -168,7 +181,7 @@ const SalesmanDashboard = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     place_id: selectedLead.place_id,
-                    salesman_id: 'default',
+                    salesman_id: userId || 'default',
                     result: result,
                     amount_paid: amountPaid || 0, // Include amount_paid
                     lat: userLocation?.lat,
