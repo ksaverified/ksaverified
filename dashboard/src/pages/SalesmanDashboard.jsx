@@ -26,28 +26,25 @@ const Directions = ({ origin, destination, onRouteFound, onError }) => {
         // Cleanup existing polyline
         if (polyline) polyline.setMap(null);
 
-        // [STABLE] Use lat/lng literals as numbers for the JS SDK ComputeRoutes
-        routesLibrary.Route.computeRoutes({
-            origin: { 
-                location: { 
-                    latLng: {
-                        lat: parseFloat(origin.lat),
-                        lng: parseFloat(origin.lng)
-                    } 
-                } 
-            },
-            destination: { 
-                location: { 
-                    latLng: {
-                        lat: parseFloat(destination.lat),
-                        lng: parseFloat(destination.lng)
-                    }
-                } 
-            },
-            travelMode: 'DRIVE',
-            routingPreference: 'TRAFFIC_AWARE',
-            polylineQuality: 'HIGH_QUALITY'
-        }).then(response => {
+        // [DEBUG] Log parameters to catch NaN or undefined
+        console.log('Routes Request:', { origin, destination });
+
+        // [STABLE] Try using LatLng instances for maximum compatibility
+        try {
+            const originLatLng = new google.maps.LatLng(Number(origin.lat), Number(origin.lng));
+            const destLatLng = new google.maps.LatLng(Number(destination.lat), Number(destination.lng));
+
+            routesLibrary.Route.computeRoutes({
+                origin: { 
+                    location: { latLng: originLatLng } 
+                },
+                destination: { 
+                    location: { latLng: destLatLng } 
+                },
+                travelMode: 'DRIVE',
+                routingPreference: 'TRAFFIC_AWARE',
+                polylineQuality: 'HIGH_QUALITY'
+            }).then(response => {
             const route = response.routes[0];
             if (!route) return;
 
@@ -81,6 +78,9 @@ const Directions = ({ origin, destination, onRouteFound, onError }) => {
             console.warn('Routes API restricted or failed. Fallback active.', e);
             if (onError) onError(e);
         });
+    } catch (err) {
+        console.error('Fatal Routes API Error:', err);
+    }
 
         return () => {
             if (polyline) polyline.setMap(null);
