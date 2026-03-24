@@ -15,10 +15,9 @@ module.exports = async function handler(request, response) {
     try {
         const db = new DatabaseService();
 
-        // 1. Send via local WhatsApp service (assuming it's reachable or running locally)
-        // In a real Vercel environment, this would need a tunnel like Ngrok or a fixed IP.
-        // For this local setup, we'll hit localhost:8080
-        const whatsappServiceUrl = process.env.WHATSAPP_SERVICE_URL || 'http://localhost:8080';
+        // 1. Send via local WhatsApp service
+        // Temporarily hardcoded for immediate stability due to Vercel env propagation lag
+        const whatsappServiceUrl = 'https://adelaida-ferulaceous-hypsometrically.ngrok-free.dev';
 
         await axios.post(`${whatsappServiceUrl}/send`, {
             to: phone,
