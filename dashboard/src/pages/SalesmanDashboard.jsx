@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List, PhoneCall, Mail } from 'lucide-react';
@@ -114,6 +114,8 @@ const SalesmanDashboard = () => {
     const [activeTab, setActiveTab] = useState('nearby'); // 'nearby' or 'followups'
     const [followups, setFollowups] = useState([]);
     const [isReportingPayment, setIsReportingPayment] = useState(false);
+    const [visitPhoto, setVisitPhoto] = useState(null);
+    const fileInputRef = useRef(null);
     const [routeInfo, setRouteInfo] = useState(null);
     const [directionsError, setDirectionsError] = useState(false);
     const [amountPaid, setAmountPaid] = useState('');
@@ -217,6 +219,15 @@ const SalesmanDashboard = () => {
     };
 
     const handleReport = async (result) => {
+        if (result === 'success' && (!amountPaid || Number(amountPaid) <= 0)) {
+            alert('Please enter a valid amount paid to report success.');
+            return;
+        }
+        if (!visitPhoto && result !== 'rejected') {
+            alert('Please take a photo of the storefront before logging the visit.');
+            return;
+        }
+
         try {
             const resp = await fetch('/api/sfa?action=log-visit', {
                 method: 'POST',
@@ -472,7 +483,10 @@ const SalesmanDashboard = () => {
                                     </div>
                                     <button 
                                         className="w-full py-5 bg-white text-black font-bold rounded-2xl flex items-center justify-center gap-3 text-lg"
-                                        onClick={() => setIsVisiting(true)}
+                                        onClick={() => {
+                                            setIsVisiting(true);
+                                            setVisitPhoto(null);
+                                        }}
                                     >
                                         <Camera className="w-6 h-6" />
                                         I am at the location
@@ -584,10 +598,32 @@ const SalesmanDashboard = () => {
                         <div className="space-y-12">
                             <div className="space-y-4">
                                 <div className="text-center space-y-4">
-                                    <div className="w-32 h-32 bg-white/5 border-2 border-dashed border-white/20 rounded-[40px] mx-auto flex items-center justify-center">
-                                        <Camera className="w-12 h-12 text-gray-600" />
+                                    <div 
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="w-32 h-32 bg-white/5 border-2 border-dashed border-white/20 rounded-[40px] mx-auto flex items-center justify-center cursor-pointer overflow-hidden relative"
+                                        title="Take Photo"
+                                    >
+                                        {visitPhoto ? (
+                                            <img src={URL.createObjectURL(visitPhoto)} alt="Storefront" className="w-full h-full object-cover" />
+                                        ) : (
+                                            <Camera className="w-12 h-12 text-gray-600" />
+                                        )}
                                     </div>
-                                    <p className="text-gray-400 font-medium">Please take a photo of the storefront</p>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        capture="environment" 
+                                        ref={fileInputRef}
+                                        className="hidden"
+                                        onChange={(e) => {
+                                            if (e.target.files && e.target.files[0]) {
+                                                setVisitPhoto(e.target.files[0]);
+                                            }
+                                        }}
+                                    />
+                                    <p className="text-gray-400 font-medium cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                        {visitPhoto ? 'Tap to retake photo' : 'Please take a photo of the storefront'}
+                                    </p>
                                 </div>
 
                                 <div className="px-4">
