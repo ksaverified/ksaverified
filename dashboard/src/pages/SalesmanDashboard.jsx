@@ -18,21 +18,21 @@ const Directions = ({ origin, destination, onRouteFound, onError }) => {
     const map = useMap();
     const routesLibrary = useMapsLibrary('routes');
     const geometryLibrary = useMapsLibrary('geometry');
+    const coreLibrary = useMapsLibrary('core');
     const [polyline, setPolyline] = React.useState(null);
 
     React.useEffect(() => {
-        if (!routesLibrary || !geometryLibrary || !map || !origin || !destination) return;
+        // [STABLE] Avoid 'google is not defined' crash by checking libraries & globals
+        if (!routesLibrary || !geometryLibrary || !coreLibrary || !map || !origin || !destination) return;
+        if (typeof google === 'undefined') return;
 
         // Cleanup existing polyline
         if (polyline) polyline.setMap(null);
 
-        // [DEBUG] Log parameters to catch NaN or undefined
-        console.log('Routes Request:', { origin, destination });
-
-        // [STABLE] Try using LatLng instances for maximum compatibility
+        // [STABLE] Use LatLng instances from the absolute global or library
         try {
-            const originLatLng = new google.maps.LatLng(Number(origin.lat), Number(origin.lng));
-            const destLatLng = new google.maps.LatLng(Number(destination.lat), Number(destination.lng));
+            const originLatLng = new coreLibrary.LatLng(Number(origin.lat), Number(origin.lng));
+            const destLatLng = new coreLibrary.LatLng(Number(destination.lat), Number(destination.lng));
 
             routesLibrary.Route.computeRoutes({
                 origin: { 
@@ -100,6 +100,7 @@ const PinIcon = ({ color = '#8b5cf6' }) => (
 );
 
 const SalesmanDashboard = () => {
+    const markerLibrary = useMapsLibrary('marker');
     const [leads, setLeads] = useState([]);
     const [selectedLead, setSelectedLead] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -278,11 +279,11 @@ const SalesmanDashboard = () => {
                             mapId="ksaverified_field_map" // Style must be controlled via Cloud Console
                             options={{ disableDefaultUI: true }}
                         >
-                            {userLocation && (
+                            {markerLibrary && userLocation && (
                                 <AdvancedMarker position={userLocation} />
                             )}
  
-                            {leads.map(lead => {
+                            {markerLibrary && leads.map(lead => {
                                 const lat = parseFloat(lead.lat), lng = parseFloat(lead.lng);
                                 if (isNaN(lat) || isNaN(lng)) return null;
                                 return (
