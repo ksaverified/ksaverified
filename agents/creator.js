@@ -1,15 +1,13 @@
-const axios = require('axios');
+const { generateText } = require('../services/ai');
 
 /**
  * Creator Agent
- * Generates a complete, single-file HTML website for a given business using Gemini 2.0 Flash via OpenRouter.
+ * Generates a complete, single-file HTML website using Gemini AI directly.
  */
 class CreatorAgent {
     constructor() {
-        this.apiKey = process.env.OPENROUTER_API_KEY;
-        this.model = process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
-        if (!this.apiKey) {
-            throw new Error('OPENROUTER_API_KEY is not defined in environment variables.');
+        if (!process.env.GEMINI_API_KEY) {
+            throw new Error('GEMINI_API_KEY is not defined in environment variables.');
         }
     }
 
@@ -78,34 +76,10 @@ class CreatorAgent {
     `;
 
         try {
-            const response = await axios.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                {
-                    model: this.model,
-                    messages: [
-                        {
-                            role: "user",
-                            content: prompt
-                        }
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 8192
-                },
-                {
-                    headers: {
-                        "Authorization": `Bearer ${this.apiKey}`,
-                        "HTTP-Referer": "https://ksaverified.com", // Optional, for OpenRouter rankings
-                        "X-Title": "KSA Verified Orchestrator", // Optional, for OpenRouter rankings
-                        "Content-Type": "application/json"
-                    },
-                    timeout: 120000 // 2 minute timeout
-                }
-            );
-
-            let htmlContent = response.data.choices[0].message.content || '';
+            let htmlContent = await generateText(prompt, { temperature: 0.7, maxOutputTokens: 8192 });
 
             if (!htmlContent) {
-                throw new Error("OpenRouter returned an empty response. This may be due to safety filters or a model failure.");
+                throw new Error('Gemini returned an empty response.');
             }
 
             // Clean up markdown block if the model included it despite the instruction
@@ -115,12 +89,12 @@ class CreatorAgent {
                 htmlContent = htmlContent.replace(/^```\n/, '').replace(/\n```$/, '');
             }
 
-            console.log(`[Creator] Website successfully generated for ${business.name} using OpenRouter.`);
+            console.log(`[Creator] Website successfully generated for ${business.name} using Gemini.`);
             return htmlContent.trim();
         } catch (error) {
-            const errorMsg = error.response?.data?.error?.message || error.message;
-            console.error(`[Creator] Error generating website via OpenRouter: ${errorMsg}`);
-            throw new Error(`OpenRouter Error: ${errorMsg}`);
+            const errorMsg = error.message;
+            console.error(`[Creator] Error generating website via Gemini: ${errorMsg}`);
+            throw new Error(`Gemini Error: ${errorMsg}`);
         }
     }
 }

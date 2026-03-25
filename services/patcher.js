@@ -1,17 +1,13 @@
-const axios = require('axios');
+const { generateText } = require('./ai');
 
 /**
  * Patcher Service
- * Uses a lightweight LLM call to intelligently update website HTML with new configuration data.
- * This preserves the custom AI-generated layout while swapping out the specific content.
+ * Uses Gemini AI to intelligently update website HTML with new configuration data.
  */
 class PatcherService {
     constructor() {
-        this.apiKey = process.env.OPENROUTER_API_KEY;
-        this.model = process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-001";
-        
-        if (!this.apiKey) {
-            console.warn('[Patcher] OPENROUTER_API_KEY missing. HTML patching will be limited.');
+        if (!process.env.GEMINI_API_KEY) {
+            console.warn('[Patcher] GEMINI_API_KEY missing. HTML patching will be limited.');
         }
     }
 
@@ -22,7 +18,7 @@ class PatcherService {
      * @returns {Promise<string>} The updated HTML string
      */
     async patchHtml(currentHtml, config) {
-        if (!this.apiKey) return currentHtml;
+        if (!process.env.GEMINI_API_KEY) return currentHtml;
 
         console.log('[Patcher] Patching website HTML with new configuration...');
 
@@ -52,30 +48,11 @@ ${JSON.stringify(config, null, 2)}
 `;
 
         try {
-            const response = await axios.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                {
-                    model: this.model,
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: userPrompt }
-                    ],
-                    temperature: 0.1, // Low temperature for precision
-                    max_tokens: 16000
-                },
-                {
-                    headers: {
-                        "Authorization": `Bearer ${this.apiKey}`,
-                        "Content-Type": "application/json"
-                    },
-                    timeout: 60000
-                }
-            );
-
-            let patchedHtml = response.data.choices[0].message.content || '';
+            const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+            let patchedHtml = await generateText(fullPrompt, { temperature: 0.1, maxOutputTokens: 8192 });
 
             if (!patchedHtml) {
-                throw new Error("Empty response from patcher LLM.");
+                throw new Error('Empty response from Gemini patcher.');
             }
 
             // Clean up markdown block if the model included it
@@ -100,7 +77,7 @@ ${JSON.stringify(config, null, 2)}
      * @returns {Promise<Object>} The extracted configuration object
      */
     async extractConfig(html) {
-        if (!this.apiKey) return null;
+        if (!process.env.GEMINI_API_KEY) return null;
 
         console.log('[Patcher] Extracting configuration from HTML...');
 
@@ -152,27 +129,9 @@ OUTPUT: Return ONLY the JSON object. No markdown.`;
         const userPrompt = `HTML CONTENT:\n${html.substring(0, 15000)}`;
 
         try {
-            const response = await axios.post(
-                "https://openrouter.ai/api/v1/chat/completions",
-                {
-                    model: this.model,
-                    messages: [
-                        { role: "system", content: systemPrompt },
-                        { role: "user", content: userPrompt }
-                    ],
-                    temperature: 0.1,
-                    max_tokens: 8000
-                },
-                {
-                    headers: {
-                        "Authorization": `Bearer ${this.apiKey}`,
-                        "Content-Type": "application/json"
-                    },
-                    timeout: 45000
-                }
-            );
-
-            let content = response.data.choices[0].message.content || '';
+            const fullPrompt = `${systemPrompt}\n\n${userPrompt}`;
+            let content = await generateText(fullPrompt, { temperature: 0.1, maxOutputTokens: 8192 });
+            if (!content) throw new Error('Empty response from Gemini.');
             
             // Clean up potentially included markdown
             if (content.startsWith('```json')) {

@@ -1,20 +1,14 @@
 const axios = require('axios');
+const { generateText } = require('../services/ai');
 require('dotenv').config();
 
 /**
  * Retoucher Agent
- * Acts as an aesthetic auditor and quality controller.
- * Migrated to OpenRouter to support advanced Vision models for UI/UX audits.
+ * Acts as an aesthetic auditor and quality controller. Uses Gemini AI directly.
  */
 class RetoucherAgent {
     constructor() {
-        this.apiKey = process.env.OPENROUTER_API_KEY;
-        this.model = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
         this.pexelsKey = process.env.PEXELS_API_KEY;
-        
-        if (!this.apiKey) {
-            throw new Error('OPENROUTER_API_KEY is not defined in environment variables.');
-        }
     }
 
     /**
@@ -74,17 +68,9 @@ Business Name: "${business.name}"
 Business Types: "${(business.types || []).join(', ')}"
 Output ONLY the 1-2 words in English, nothing else, no quotes.`;
 
-            const queryRes = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-                model: this.model,
-                messages: [{ role: 'user', content: pexelsPrompt }],
-                temperature: 0.1
-            }, {
-                headers: { 'Authorization': `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
-                timeout: 5000
-            });
-            const suggestedQuery = queryRes.data.choices[0].message.content.trim().replace(/['"]/g, '');
-            if (suggestedQuery && suggestedQuery.length < 30) {
-                searchQuery = suggestedQuery;
+            const suggestedQuery = await generateText(pexelsPrompt, { temperature: 0.1, maxOutputTokens: 20 });
+            if (suggestedQuery && suggestedQuery.trim().length < 30) {
+                searchQuery = suggestedQuery.trim().replace(/['"]/g, '');
             }
         } catch (e) {
             console.warn('[Retoucher] Failed to generate dynamic Pexels query, falling back to local business:', e.message);
@@ -290,25 +276,13 @@ ${cleanedHtml.substring(0, 15000)}
 `;
 
         try {
-            const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-                model: this.model,
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                ],
-                response_format: { type: 'json_object' }
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
-                    'Content-Type': 'application/json'
-                },
-                timeout: 50000 
-            });
+            const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
+            const content = await generateText(combinedPrompt, { temperature: 0.4, maxOutputTokens: 4096 });
+            if (!content) throw new Error('Gemini returned empty response for audit.');
 
-            const content = response.data.choices[0].message.content;
-            
-            // Extract the array from the JSON object if the model wrapped it
-            const parsed = typeof content === 'string' ? JSON.parse(content) : content;
+            // Extract JSON array
+            const jsonMatch = content.match(/\[([\s\S]*)\]/);
+            const parsed = jsonMatch ? JSON.parse('[' + jsonMatch[1] + ']') : JSON.parse(content);
             const edits = Array.isArray(parsed) ? parsed : (parsed.edits || Object.values(parsed)[0]);
 
             console.log(`[Retoucher] Received ${Array.isArray(edits) ? edits.length : 'invalid'} AI edits.`);

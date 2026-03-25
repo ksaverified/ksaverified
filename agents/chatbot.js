@@ -1,46 +1,23 @@
-const axios = require('axios');
+const { generateText } = require('../services/ai');
 const CloserAgent = require('./closer');
 
 /**
  * Chatbot Agent
- * Handles inbound WhatsApp messages, reads training data from Supabase, 
- * generates a contextual reply using OpenRouter, and sends it via Ultramsg.
+ * Handles inbound WhatsApp messages, reads training data from Supabase,
+ * generates a contextual reply using Gemini, and sends it via the WhatsApp service.
  */
 class ChatbotAgent {
     constructor() {
-        this.apiKey = process.env.OPENROUTER_API_KEY;
-        this.model = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001';
-        
-        if (!this.apiKey) {
-            console.warn('[Chatbot] OPENROUTER_API_KEY missing. Chatbot disabled.');
+        if (!process.env.GEMINI_API_KEY) {
+            console.warn('[Chatbot] GEMINI_API_KEY missing. Chatbot AI disabled.');
         }
     }
 
     /**
-     * Core AI generation method using OpenRouter
+     * Core AI generation method using Gemini
      */
-    async generateAI(prompt, customModel = null) {
-        if (!this.apiKey) return null;
-
-        try {
-            const response = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
-                model: customModel || this.model,
-                messages: [
-                    { role: 'user', content: prompt }
-                ]
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${this.apiKey}`,
-                    'HTTP-Referer': 'https://github.com/daviddegroeve-git/drop-servicing-pipeline', // Optional, for OpenRouter rankings
-                    'X-Title': 'KSA Verified Chatbot'
-                }
-            });
-
-            return response.data.choices[0].message.content;
-        } catch (err) {
-            console.error('[Chatbot] AI Generation error:', err.response?.data || err.message);
-            return null;
-        }
+    async generateAI(prompt) {
+        return generateText(prompt);
     }
 
     async translateText(text) {
