@@ -8,3 +8,7 @@ node_modules/
 wwebjs_auth.zip
 **/whatsapp-service/.wwebjs_auth
 **/whatsapp-service/wwebjs_auth.zip
+tmp/
+data/
+archive/
+tests/

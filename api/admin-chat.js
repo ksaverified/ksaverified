@@ -150,7 +150,7 @@ ${contextText}`
                         exec('node orchestrator.js', { cwd: process.cwd(), detached: true });
                         result = 'Successfully started the main pipeline (scraping leads) in the background.';
                     } else if (name === 'trigger_chatbot_mission') {
-                        exec('node scripts/chatbot_mission.js', { cwd: process.cwd(), detached: true });
+                        exec('node scripts/tools/chatbot_mission.js', { cwd: process.cwd(), detached: true });
                         result = 'Successfully started chatbot mission (sending greetings to up to 50 leads) in the background.';
                     } else if (name === 'send_whatsapp_message') {
                         const axios = require('axios');

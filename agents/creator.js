@@ -30,6 +30,13 @@ class CreatorAgent {
             };
         }
 
+        // Token Optimization: Map long Google Photo URLs to short aliases
+        // This prevents the generation from truncating due to 800-character URLs repeated multiple times.
+        const photoAliases = (business.photos || []).map((url, i) => ({
+            alias: `GPHOTO_${i}`,
+            url: url
+        }));
+
         const prompt = `
       ${promptConfig.system}
       
@@ -39,8 +46,8 @@ class CreatorAgent {
       - Address: ${business.address}
       - Industry/Types: ${(business.types || []).join(', ')}
       
-      Real Business Photos (USE THESE EXACT URLS IN YOUR IMG SRC ATTRIBUTES OR BACKGROUND URLS):
-      ${(business.photos && business.photos.length > 0) ? business.photos.map(p => `- ${p}`).join('\n      ') : 'No real photos available.'}
+      Real Business Photos (USE THESE ALIASES in your img src or background-image url() attributes):
+      ${(photoAliases.length > 0) ? photoAliases.map(p => `- ${p.alias} (This represents a real photo of the business)`).join('\n      ') : 'No real photos available.'}
       
       Real Customer Reviews (Incorporate these into a Testimonials section to build trust):
       ${(business.reviews && business.reviews.length > 0) ? business.reviews.map(r => `"${r}"`).join('\n      ') : 'No recent reviews available.'}
@@ -63,9 +70,9 @@ class CreatorAgent {
       
       *CRITICAL INSTRUCTION FOR VISUALS*:
       1. The website MUST be visually stunning. The Hero section MUST include a large, beautiful background image or a looping background video.
-      2. CRITICAL: You MUST use the "Real Business Photos" URLs provided above for the images on the site. DO NOT use generic placeholders unless no real photos are available. These photos are already fully-qualified URLs and are ready to be used inside your \`<img src="...">\` tags or CSS \`url(...)\`.
-      3. Distribute the real business photos throughout the Hero and Service sections to make the website feel authentic and built specifically for them. 
-      4. If real photos run out or are missing, you may use \`https://loremflickr.com/w/h/keyword?random=X\` as a fallback. If using the fallback, use simple 1-word generic keywords and append a unique random number to prevent duplicate cats from appearing.
+      2. CRITICAL: You MUST use the "Real Business Photos" ALIASES provided above (e.g. GPHOTO_0, GPHOTO_1) for the key images on the site.
+      3. Distribute the real business photos (GPHOTO_n) throughout the Hero and Service sections to make the website feel authentic.
+      4. If real photo aliases run out or are missing, you may use \`https://loremflickr.com/w/h/keyword?random=X\` as a fallback. If using the fallback, use simple 1-word generic keywords and append a unique random number to prevent duplicate cats from appearing.
       5. Do not just leave blank colored boxes. Use rich imagery throughout the design to make it feel premium.
       
       *CRITICAL INSTRUCTION FOR BILINGUAL SUPPORT*:
@@ -73,10 +80,17 @@ class CreatorAgent {
       2. Keep it simple: use CSS logic. Example: Hide \`[data-lang="ar"]\` when \`html[lang="en"]\` is active, and vice versa using CSS. The Javascript switcher button should literally just toggle \`document.documentElement.lang\`.
       
       Output ONLY the raw HTML string. No markdown formatting like \`\`\`html at the top or bottom. Just the pure HTML source code starting with <!DOCTYPE html>.
+      
+      *SUPER CRITICAL: DO NOT STOP GENERATING UNTIL YOU REACH </html>.*
+      You MUST finish the entire page down to the closing </html> tag. Do not output truncated code under any circumstance.
     `;
 
         try {
-            let htmlContent = await generateText(prompt, { temperature: 0.7, maxOutputTokens: 8192 });
+            let htmlContent = await generateText(prompt, { 
+                temperature: 0.7, 
+                maxOutputTokens: 16384, 
+                model: 'gemini-2.5-pro' 
+            });
 
             if (!htmlContent) {
                 throw new Error('Gemini returned an empty response.');
@@ -92,6 +106,7 @@ class CreatorAgent {
             console.log(`[Creator] Website successfully generated for ${business.name} using Gemini.`);
             return htmlContent.trim();
         } catch (error) {
+
             const errorMsg = error.message;
             console.error(`[Creator] Error generating website via Gemini: ${errorMsg}`);
             throw new Error(`Gemini Error: ${errorMsg}`);

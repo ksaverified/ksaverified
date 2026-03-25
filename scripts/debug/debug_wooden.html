@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wooden Bakery | Riyadh - Freshly Baked Goods | مخبز خشبي | الرياض</title>
+    <meta name="description" content="Experience the taste of tradition at Wooden Bakery in Riyadh. We offer a wide range of freshly baked breads, manakish, pastries, and custom cakes, all made with the finest ingredients.">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-color: #8B4513; /* SaddleBrown */
+            --brand-light: #D2B48C; /* Tan */
+            --brand-dark: #3a1d04;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            color: #333;
+        }
+        h1, h2, h3, h4, h5, h6, .font-display {
+            font-family: 'Playfair Display', serif;
+        }
+        [lang="en"] [data-lang="ar"] { display: none; }
+        [lang="ar"] [data-lang="en"] { display: none; }
+        html[lang="ar"] {
+            direction: rtl;
+        }
+        .hero-bg {
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('https://images.pexels.com/photos/7661071/pexels-photo-7661071.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940');
+            background-size: cover;
+            background-position: center;
+        }
+        .section-bg {
+            background-color: #fdfaf6;
+        }
+    
+        /* Global language toggle visibility */
+        html[lang="ar"] .lang-en, html[lang="ar"] [data-lang="en"] { display: none !important; }
+        html[lang="en"] .lang-ar, html[lang="en"] [data-lang="ar"] { display: none !important; }
+
+        /* Mobile-only language toggle: show only the other language */
+        @media (max-width: 768px) {
+            html[lang="en"] .lang-en-btn { display: none !important; }
+            html[lang="ar"] .lang-ar-btn { display: none !important; }
+        }
+        .mobile-menu-active {  
+            display: flex !important; 
+            flex-direction: column !important; 
+            align-items: center !important; 
+            justify-content: center !important; 
+            position: fixed !important; 
+            inset: 0 !important; 
+            width: 100% !important; 
+            height: 100vh !important; 
+            background: rgba(17, 24, 39, 0.98) !important; 
+            z-index: 100 !important; 
+        }
+        .mobile-menu-active li, .mobile-menu-active a {
+            margin: 1.5rem 0 !important;
+            font-size: 2.25rem !important; /* text-4xl */
+            font-weight: 700 !important;
+            text-align: center !important;
+            display: block !important;
+        }
+        #mobile-menu-btn { z-index: 101; position: relative; }
+        
+    </style>
+</head>
+<body class="bg-white">
+
+    <!-- Header -->
+    <header class="sticky top-0 w-full z-50 bg-black text-white shadow-2xl flex justify-between items-center px-6 py-4">
+        <!-- Logo/Brand -->
+        <a href="#home" class="flex items-center space-x-2 rtl:space-x-reverse">
+            <span class="text-3xl font-extrabold tracking-tight text-white hover:text-primary-light transition-colors">
+                <span data-lang="en">Wooden Bakery</span>
+                <span data-lang="ar">Wooden Bakery</span>
+            </span>
+        </a>
+
+        <!-- Desktop Navigation -->
+        <nav id="desktop-nav" class="hidden md:flex space-x-6 lg:space-x-8 text-lg ml-auto mr-8">
+            <a href="#home" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Home</span><span data-lang="ar">الرئيسية</span></a>
+            <a href="#about" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">About</span><span data-lang="ar">من نحن</span></a>
+            <a href="#services" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Services</span><span data-lang="ar">الخدمات</span></a>
+            <a href="#contact" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Contact</span><span data-lang="ar">اتصل بنا</span></a>
+        </nav>
+
+        <!-- Dynamic Controls -->
+        <div class="flex items-center space-x-4 md:space-x-6 rtl:space-x-reverse">
+            <button onclick="toggleLanguage()" class="lang-en-btn text-white hover:text-primary-light font-bold hidden md:block">EN</button>
+            <button onclick="toggleLanguage()" class="lang-ar-btn text-white hover:text-primary-light font-bold hidden md:block">عربي</button>
+            
+            <div class="md:hidden flex items-center">
+                <input type="checkbox" id="mobile-menu-toggle" class="hidden peer">
+                <label for="mobile-menu-toggle" class="cursor-pointer text-white text-3xl peer-checked:text-primary-light transition-colors duration-200">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path class="hidden peer-checked:block" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        <path class="block peer-checked:hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </label>
+            </div>
+        </div>
+    </header>
+        
+
+    <!-- Header & Navigation -->
+    
+
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero-bg h-screen flex items-center justify-center text-white text-center">
+            <div class="container mx-auto px-6">
+                <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold font-display mb-4 leading-tight">
+                    <span data-lang="en">The Art of Baking, Perfected.</span>
+                    <span data-lang="ar">فن الخبز، بإتقان.</span>
+                </h1>
+                <p class="text-lg md:text-2xl mb-8 max-w-3xl mx-auto">
+                    <span data-lang="en">Discover the warmth of freshly baked goods, crafted with passion in the heart of Riyadh.</span>
+                    <span data-lang="ar">اكتشف دفء المخبوزات الطازجة، المصنوعة بشغف في قلب الرياض.</span>
+                </p>
+                <a href="#products" class="bg-[var(--brand-color)] text-white font-bold py-3 px-8 rounded-full hover:bg-[var(--brand-dark)] transition-all duration-300 transform hover:scale-105">
+                    <span data-lang="en">Explore Our Menu</span>
+                    <span data-lang="ar">استكشف قائمتنا</span>
+                </a>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="py-16 md:py-24 section-bg">
+            <div class="container mx-auto px-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-3xl md:text-4xl font-bold font-display text-[var(--brand-dark)] mb-4">
+                            <span data-lang="en">Our Story, Baked with Love</span>
+                            <span data-lang="ar">قصتنا، مخبوزة بالحب</span>
+                        </h2>
+                        <p class="text-gray-600 mb-4 leading-relaxed">
+                            <span data-lang="en">Wooden Bakery was born from a simple passion: to bring authentic, high-quality baked goods to our community in Riyadh. We believe in tradition, using time-honored recipes and the finest local ingredients to create products that warm the heart and delight the senses.</span>
+                            <span data-lang="ar">وُلد مخبز خشبي من شغف بسيط: تقديم مخبوزات أصيلة وعالية الجودة لمجتمعنا في الرياض. نؤمن بالتقاليد، ونستخدم وصفات عريقة وأجود المكونات المحلية لإنشاء منتجات تدفئ القلب وتُسعد الحواس.</span>
+                        </p>
+                        <p class="text-gray-600 leading-relaxed">
+                            <span data-lang="en">From the crackle of a fresh loaf of bread to the rich aroma of our savory manakish, every item we bake is a testament to our commitment to quality and craftsmanship. Welcome to our family.</span>
+                            <span data-lang="ar">من قرمشة رغيف الخبز الطازج إلى الرائحة الغنية لمناقيشنا اللذيذة، كل قطعة نخبزها هي شهادة على التزامنا بالجودة والحرفية. أهلاً بكم في عائلتنا.</span>
+                        </p>
+                    </div>
+                    <div class="rounded-lg overflow-hidden shadow-xl">
+                        <img src="https://images.pexels.com/photos/4568196/pexels-photo-4568196.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" alt="Interior of Wooden Bakery" class="w-full h-full object-cover">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Our Products Section -->
+        <section id="products" class="py-16 md:py-24 bg-white">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-bold font-display text-[var(--brand-dark)] mb-2">
+                    <span data-lang="en">Our Daily Baked Specialties</span>
+                    <span data-lang="ar">مخبوزاتنا اليومية المميزة</span>
+                </h2>
+                <p class="text-gray-600 mb-12 max-w-2xl mx-auto">
+                    <span data-lang="en">Handcrafted every day with the freshest ingredients for an unforgettable taste.</span>
+                    <span data-lang="ar">مصنوعة يدوياً كل يوم بأجود المكونات لطعم لا يُنسى.</span>
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Product Card 1: Savory Manakish & Fatayer -->
+                    <div class="bg-white rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300">
+                        <img src="https://images.pexels.com/photos/5697257/pexels-photo-5697257.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" alt="Savory Manakish" class="w-full h-56 object-cover">
+                        <div class="p-6 text-start">
+                            <h3 class="text-xl font-bold font-display text-[var(--brand-dark)] mb-2">
+                                <span data-lang="en">Savory Manakish & Fatayer</span>
+                                <span data-lang="ar">المناقيش والفطائر اللذيذة</span>
+                            </h3>
+                            <p class="text-gray-600">
+                                <span data-lang="en">A taste of the Levant with our classic za'atar, cheese, and meat manakish, baked to golden perfection.</span>
+                                <span data-lang="ar">مذاق الشام مع مناقيش الزعتر والجبن واللحم الكلاسيكية، المخبوزة بإتقان حتى تصبح ذهبية اللون.</span>
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Product Card 2: Artisan Breads -->
+                    <div class="bg-white rounded-lg overflow-hidden shadow-lg transform hover:-translate-y-2 transition-transform duration-300">
+                        <img src="https://images.pexels.com/photos/7563558/pexels-photo-7563558.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940" alt="Artisan Breads" class="w-full h-56 object-cover">
+                        <div class="p-6 text-start">
+                            <h3 class="text-xl font-bold font-display text-[var(--brand-dark)] mb-2">
+                                <span data-lang="en">Artisan Breads</span>
+                                <span data-lang="ar">الخبز الحرفي</span>
+                            </h3>
+                            <p class="text-gray-600">
+                                <span data-lang="en">From crusty sourdough to soft brioche and traditional Arabic bread, find the perfect loaf for any meal.</span>
+                                <span data-lang="ar">من خبز الساوردو المقرمش إلى البريوش الطري والخبز العربي التقليدي، جد الرغيف المثالي لكل وجبة.</span>
+                            </p>
+                        </div>
+                    </div>
+                    <!-- Product Card 3: Sweet Pastries

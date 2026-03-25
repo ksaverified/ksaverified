@@ -4,7 +4,8 @@ require('dotenv').config();
 
 /**
  * Retoucher Agent
- * Acts as an aesthetic auditor and quality controller. Uses Gemini AI directly.
+ * Acts as an aesthetic auditor and quality controller. 
+ * Resolves image placeholders with high-quality Pexels photos or real business photos.
  */
 class RetoucherAgent {
     constructor() {
@@ -23,14 +24,13 @@ class RetoucherAgent {
         }
         
         try {
-            console.log(`[Retoucher] Fetching Pexels photos for: ${query}...`);
-            // Increased to 40 for much better variety and to avoid duplicates on large pages
+            console.log(`[Retoucher] Fetching Pexels photos for query: "${query}"...`);
             const res = await axios.get(`https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=40&orientation=landscape`, {
                 headers: { Authorization: this.pexelsKey }
             });
             
             if (res.data && res.data.photos) {
-                // Shuffle the photos to ensure different sites for the same category look unique
+                // Return randomized URLs to ensure variety across different sites
                 return res.data.photos
                     .map(p => p.src.large2x || p.src.large)
                     .sort(() => Math.random() - 0.5);
@@ -43,85 +43,117 @@ class RetoucherAgent {
     }
 
     /**
-     * Refines and polishes the raw HTML using targeted edits.
+     * Refines and polishes the raw HTML using targeted edits and image resolution.
      * @param {string} rawHtml - The HTML string
      * @param {Object} business - The business details
-     * @param {string[]} [photos] - Real photos from Google Maps
+     * @param {string[]} [photos] - Real photos from Google/Place APIs
      * @returns {Promise<string>} Polished HTML string
      */
     async retouchWebsite(rawHtml, business, photos = []) {
         console.log(`[Retoucher] Auditing website for: ${business.name} with ${photos.length} real photos...`);
 
-        // PHASE 1: Programmatic Purge (Deterministic)
-        // LLMs struggle with exact string replacement of 800-character URLs. We do it via Regex first.
         let cleanedHtml = rawHtml;
-        
-        // PHASE 1: Programmatic Purge (Deterministic)
-        // Select images dynamically using a fast LLM request to get the best Pexels search term
+        const realPhotos = photos || business.photos || [];
+
+        // PHASE 1: Generate Optimal Pexels Query
         let searchQuery = 'local business';
         try {
-            const pexelsPrompt = `Analyze this business name and types, and reply with EXACTLY 1 OR 2 ENGLISH WORDS best describing their core visual product or service for a stock photo search.
-Example 1: Name: "Pizza Bar IOI", Types: "restaurant, food" -> "pizza"
-Example 2: Name: "Elite Dental", Types: "health, dentist" -> "dentist clinic"
-Example 3: Name: "Super Car Wash", Types: "car_repair" -> "car wash"
+            const pexelsPrompt = `Analyze this business and provide a Pexels search query (2-3 words).
+RULES:
+1. Focus on the CORE PRODUCT or PHYSICAL ENVIRONMENT.
+2. If it's a "Bakery", search for "fresh bread bakery" or "pastry oven".
+3. If it's a "Car Wash", search for "car detailing service".
+4. AVOID generic words like "service", "office", "business", "sign".
+5. AVOID mixing categories (e.g., if it's a bakery, don't show a restaurant dining room).
+
 Business Name: "${business.name}"
 Business Types: "${(business.types || []).join(', ')}"
-Output ONLY the 1-2 words in English, nothing else, no quotes.`;
+Output ONLY the 2-3 words search query.`;
 
-            const suggestedQuery = await generateText(pexelsPrompt, { temperature: 0.1, maxOutputTokens: 20 });
-            if (suggestedQuery && suggestedQuery.trim().length < 30) {
-                searchQuery = suggestedQuery.trim().replace(/['"]/g, '');
+            const suggestedQuery = await generateText(pexelsPrompt, { temperature: 0.1, maxOutputTokens: 50, model: 'gemini-2.5-pro' });
+            if (suggestedQuery) {
+                searchQuery = suggestedQuery.replace(/```[a-z]*|```|\*\*|['"]/gi, '').trim().substring(0, 50);
             }
         } catch (e) {
-            console.warn('[Retoucher] Failed to generate dynamic Pexels query, falling back to local business:', e.message);
+            console.warn('[Retoucher] Failed to generate query, using fallback:', e.message);
         }
 
-        // Fetch dynamic images from Pexels
-        let businessImages = await this.fetchPexelsPhotos(searchQuery);
-
-        // Fallback to high-quality abstract / corporate / local business if Pexels fails or returns empty
-        if (businessImages.length === 0) {
-            businessImages = [
-                "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000&auto=format&fit=crop", // Office
-                "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop", // Team
-                "https://images.unsplash.com/photo-1556761175-4b46a572b786?q=80&w=1000&auto=format&fit=crop", // Service
-                "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=1000&auto=format&fit=crop"  // Planning
+        // PHASE 2: Fetch Stock Images
+        let stockImages = await this.fetchPexelsPhotos(searchQuery);
+        if (stockImages.length === 0) {
+            stockImages = [
+                "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000&auto=format&fit=crop",
+                "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=1000&auto=format&fit=crop"
             ];
         }
 
+        // PHASE 3: Prioritize Real Photos for GPHOTO_n placeholders
+        // We use real photos for the specific placeholders generated by CreatorAgent
+        const allAvailableImages = [...realPhotos, ...stockImages];
         let imgIndex = 0;
-        const getNextImage = () => businessImages[imgIndex++ % businessImages.length];
+        const getNextImage = () => allAvailableImages[imgIndex++ % allAvailableImages.length];
 
-        // 0. Inject Mobile Logic Styles & Scripts
+        // Replace GPHOTO_n aliases first (prioritizing real photos by order of allAvailableImages)
+        for (let i = 0; i < 20; i++) {
+            const placeholder = `GPHOTO_${i}`;
+            if (cleanedHtml.includes(placeholder)) {
+                // Use real photo if available for this index, else fallback to looping through all
+                const specificImage = realPhotos[i] || getNextImage();
+                cleanedHtml = cleanedHtml.split(placeholder).join(specificImage);
+            }
+        }
+
+        // PHASE 4: Purge remaining generic/Maps URLs
+        cleanedHtml = cleanedHtml.replace(/https:\/\/(maps\.googleapis\.com\/maps\/api\/place\/photo\?|places\.googleapis\.com\/v1\/places\/[^\/]+\/photos\/)[^"'\s)]+/g, () => getNextImage());
+        cleanedHtml = cleanedHtml.replace(/https:\/\/loremflickr\.com\/[^"'\s)]+/g, () => getNextImage());
+        cleanedHtml = cleanedHtml.replace(/https:\/\/images\.unsplash\.com\/photo-[^"'\s)]+/g, () => getNextImage());
+
+        // PHASE 5: Premium Header & Navigation Enforcement
+        const brandNameEn = business.name || 'Brand';
+        const brandNameAr = business.name || 'العلامة التجارية';
+
+        const premiumHeader = `
+    <!-- Sticky Header -->
+    <header class="sticky top-0 w-full z-50 bg-black text-white shadow-2xl flex justify-between items-center px-6 py-4">
+        <a href="#home" class="flex items-center space-x-2 rtl:space-x-reverse">
+            <span class="text-3xl font-extrabold tracking-tight text-white">
+                <span data-lang="en">${brandNameEn}</span>
+                <span data-lang="ar">${brandNameAr}</span>
+            </span>
+        </a>
+        <nav id="desktop-nav" class="hidden md:flex space-x-8 text-lg ml-auto mr-8">
+            <a href="#home" class="hover:text-amber-400 transition-colors"><span data-lang="en">Home</span><span data-lang="ar">الرئيسية</span></a>
+            <a href="#about" class="hover:text-amber-400 transition-colors"><span data-lang="en">About</span><span data-lang="ar">من نحن</span></a>
+            <a href="#services" class="hover:text-amber-400 transition-colors"><span data-lang="en">Services</span><span data-lang="ar">الخدمات</span></a>
+            <a href="#contact" class="hover:text-amber-400 transition-colors"><span data-lang="en">Contact</span><span data-lang="ar">اتصل بنا</span></a>
+        </nav>
+        <div class="flex items-center space-x-4">
+            <button onclick="toggleLanguage()" class="lang-en-btn font-bold hidden md:block">EN</button>
+            <button onclick="toggleLanguage()" class="lang-ar-btn font-bold hidden md:block">عربي</button>
+            <div class="md:hidden">
+                <button id="mobile-menu-btn" class="text-white text-3xl">☰</button>
+            </div>
+        </div>
+    </header>
+    <div id="mobile-menu" class="hidden">
+        <nav class="flex flex-col items-center py-8">
+            <a href="#home" class="text-2xl mb-4 text-white"><span data-lang="en">Home</span><span data-lang="ar">الرئيسية</span></a>
+            <a href="#about" class="text-2xl mb-4 text-white"><span data-lang="en">About</span><span data-lang="ar">من نحن</span></a>
+            <a href="#services" class="text-2xl mb-4 text-white"><span data-lang="en">Services</span><span data-lang="ar">الخدمات</span></a>
+            <a href="#contact" class="text-2xl mb-4 text-white"><span data-lang="en">Contact</span><span data-lang="ar">اتصل بنا</span></a>
+            <button onclick="toggleLanguage()" class="text-xl text-amber-400 font-bold mt-4">EN / عربي</button>
+        </nav>
+    </div>`;
+
         const mobileStyles = `
-        /* Global language toggle visibility */
         html[lang="ar"] .lang-en, html[lang="ar"] [data-lang="en"] { display: none !important; }
         html[lang="en"] .lang-ar, html[lang="en"] [data-lang="ar"] { display: none !important; }
-
-        /* Mobile-only language toggle: show only the other language */
         @media (max-width: 768px) {
             html[lang="en"] .lang-en-btn { display: none !important; }
             html[lang="ar"] .lang-ar-btn { display: none !important; }
         }
-        .mobile-menu-active {  
-            display: flex !important; 
-            flex-direction: column !important; 
-            align-items: center !important; 
-            justify-content: center !important; 
-            position: fixed !important; 
-            inset: 0 !important; 
-            width: 100% !important; 
-            height: 100vh !important; 
-            background: rgba(17, 24, 39, 0.98) !important; 
-            z-index: 100 !important; 
-        }
-        .mobile-menu-active li, .mobile-menu-active a {
-            margin: 1.5rem 0 !important;
-            font-size: 2.25rem !important; /* text-4xl */
-            font-weight: 700 !important;
-            text-align: center !important;
-            display: block !important;
-        }
+        .mobile-menu-active { display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: center !important; position: fixed !important; inset: 0 !important; background: rgba(17, 24, 39, 0.98) !important; z-index: 100 !important; }
+        .mobile-menu-active a { margin: 1.5rem 0 !important; font-size: 2.25rem !important; font-weight: 700 !important; }
         #mobile-menu-btn { z-index: 101; position: relative; }
         `;
 
@@ -147,164 +179,52 @@ Output ONLY the 1-2 words in English, nothing else, no quotes.`;
                         document.body.style.overflow = menu.classList.contains('mobile-menu-active') ? 'hidden' : '';
                     };
                     menuBtn.addEventListener('click', toggleMenu);
-                    // Close menu when a link is clicked
                     menu.querySelectorAll('a').forEach(link => {
-                        link.addEventListener('click', () => {
-                            if (menu.classList.contains('mobile-menu-active')) {
-                                toggleMenu();
-                            }
-                        });
+                        link.addEventListener('click', () => { if (menu.classList.contains('mobile-menu-active')) toggleMenu(); });
                     });
                 }
             });
-        </script>
-        `;
+        </script>`;
 
-        // Inject CSS (Cleanup old versions first to allow updates)
-        // Match both the new multi-line version and the old single-line version
-        cleanedHtml = cleanedHtml.replace(/\/\* Global language toggle visibility \*\/[\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
-        cleanedHtml = cleanedHtml.replace(/\/\* Mobile-only language toggle[\s\S]*?#mobile-menu-btn \{[^\}]*\}(?:\s*)?/g, '');
-        cleanedHtml = cleanedHtml.replace(/\.mobile-menu-active \{ display: flex !important; flex-direction: column;[\s\S]*? \}(?:\s*)?/g, '');
-        cleanedHtml = cleanedHtml.replace('</style>', `${mobileStyles}\n    </style>`);
-
-        // Inject JS (Cleanup old versions first)
-        // Match various versions of the mobile menu script
-        cleanedHtml = cleanedHtml.replace(/<script>\s*document\.addEventListener\('DOMContentLoaded', \(\) => \{\s*const menuBtn = document\.getElementById\('mobile-menu-btn'\);[\s\S]*?<\/script>\s*\n/g, '');
+        // Remove any existing header/nav attempts and inject the premium one
+        cleanedHtml = cleanedHtml.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
+        cleanedHtml = cleanedHtml.replace(/<body[^>]*>/i, (match) => match + '\n' + premiumHeader);
+        
+        // Inject styles/scripts
+        cleanedHtml = cleanedHtml.replace('</style>', `${mobileStyles}\n</style>`);
         cleanedHtml = cleanedHtml.replace('</body>', `${mobileScript}\n</body>`);
 
-        // 1. Purge all Google Maps photos (they render as Red X due to billing)
-        cleanedHtml = cleanedHtml.replace(/https:\/\/maps\.googleapis\.com\/maps\/api\/place\/photo\?[^"'\s)]+/g, () => getNextImage());
-        
-        // 2. Purge all loremflickr placeholders (often fetch irrelevant cats/statues)
-        cleanedHtml = cleanedHtml.replace(/https:\/\/loremflickr\.com\/[^"'\s)]+/g, () => getNextImage());
-
-        // 3. Purge all existing Unsplash images to guarantee a completely fresh, unbroken, and unique set.
-        // This solves the missing hero image bug and the duplicate image bugs.
-        cleanedHtml = cleanedHtml.replace(/https:\/\/images\.unsplash\.com\/photo-[^"'\s)]+/g, () => getNextImage());
-
-        // 4. Programmatic Structural Cleanup & Header Enforcement
-        // Identify the brand name and remove image logos
-        let brandNameEn = business.name || 'Brand';
-        let brandNameAr = business.name || 'العلامة التجارية';
-
-        // Enforce solid black premium header
-        const premiumHeader = `
-    <!-- Header -->
-    <header class="sticky top-0 w-full z-50 bg-black text-white shadow-2xl flex justify-between items-center px-6 py-4">
-        <!-- Logo/Brand -->
-        <a href="#home" class="flex items-center space-x-2 rtl:space-x-reverse">
-            <span class="text-3xl font-extrabold tracking-tight text-white hover:text-primary-light transition-colors">
-                <span data-lang="en">${brandNameEn}</span>
-                <span data-lang="ar">${brandNameAr}</span>
-            </span>
-        </a>
-
-        <!-- Desktop Navigation -->
-        <nav id="desktop-nav" class="hidden md:flex space-x-6 lg:space-x-8 text-lg ml-auto mr-8">
-            <a href="#home" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Home</span><span data-lang="ar">الرئيسية</span></a>
-            <a href="#about" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">About</span><span data-lang="ar">من نحن</span></a>
-            <a href="#services" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Services</span><span data-lang="ar">الخدمات</span></a>
-            <a href="#contact" class="hover:text-primary-light transition-colors duration-200"><span data-lang="en">Contact</span><span data-lang="ar">اتصل بنا</span></a>
-        </nav>
-
-        <!-- Dynamic Controls -->
-        <div class="flex items-center space-x-4 md:space-x-6 rtl:space-x-reverse">
-            <button onclick="toggleLanguage()" class="lang-en-btn text-white hover:text-primary-light font-bold hidden md:block">EN</button>
-            <button onclick="toggleLanguage()" class="lang-ar-btn text-white hover:text-primary-light font-bold hidden md:block">عربي</button>
-            
-            <div class="md:hidden flex items-center">
-                <input type="checkbox" id="mobile-menu-toggle" class="hidden peer">
-                <label for="mobile-menu-toggle" class="cursor-pointer text-white text-3xl peer-checked:text-primary-light transition-colors duration-200">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path class="hidden peer-checked:block" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        <path class="block peer-checked:hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
-                    </svg>
-                </label>
-            </div>
-        </div>
-    </header>
-        `;
-
-        // Strip ALL existing headers and mobile nav controls robustly
-        cleanedHtml = cleanedHtml.replace(/<!-- Header -->\s*<header[^>]*>[\s\S]*?<\/header>/gi, '');
-        cleanedHtml = cleanedHtml.replace(/<header[^>]*>[\s\S]*?<\/header>/gi, '');
-        cleanedHtml = cleanedHtml.replace(/<div class="mobile-nav-menu[\s\S]*?<\/div>\s*<\/div>/gi, '');
-        cleanedHtml = cleanedHtml.replace(/<button id="mobile-menu-btn"[\s\S]*?<\/button>/gi, '');
-        cleanedHtml = cleanedHtml.replace(/<label for="mobile-menu-toggle"[^>]*>[\s\S]*?<\/label>/gi, '');
-        cleanedHtml = cleanedHtml.replace(/<div class="overlay[^>]*>[\s\S]*?<\/div>/gi, '');
-        
-        // Remove orphand residuals like "s=overlay"
-        cleanedHtml = cleanedHtml.replace(/s="overlay"[^>]*><\/label>/gi, '');
-        cleanedHtml = cleanedHtml.replace(/<button[^>]*mobile-menu-btn[^>]*>[\s\S]*?<\/button>/gi, '');
-
-        // Inject our new consolidated header after <body> starts
-        cleanedHtml = cleanedHtml.replace(/<body[^>]*>/, (match) => match + '\n' + premiumHeader);
-
-        // Cleanup double header tags just in case
-        cleanedHtml = cleanedHtml.replace(/<\/header>\s*<\/header>/g, '</header>');
-
-
-        // Removed redundant injections as they are now consolidated in the premiumHeader above.
-
-
-        // PHASE 2: AI Aesthetic Polish
-        const systemPrompt = `You are a world-class UI/UX Designer and Frontend Auditor.
-Your job is to audit HTML/Tailwind code to ensure extremely high aesthetic quality and professional "premium" feel.
-
-CRITICAL AESTHETIC RULES:
-1. **SIDEBAR LANGUAGE SWITCHER**: Keep the language buttons (EN / عربي) INSIDE the mobile navigation menu ('#mobile-menu') and desktop header. 
-2. **LAYOUT & SPACING**: Ensure generous white space (use p-8, py-20, gap-12). All sections MUST have consistent vertical spacing.
-3. **TYPOGRAPHY**: Ensure text contrast is perfect. Use 'tracking-tight' for headers and 'leading-relaxed' for body text.
-4. **GLASSMORPHISM**: Use 'backdrop-blur-xl' and 'bg-white/10' or 'bg-black/40' for modern, sleek cards. Add subtle borders: 'border border-white/10'.
-5. **COLOR HARMONY**: Stick to a premium palette. If the business is luxury, use golds/blacks. If tech, use deep blues/slates.
-6. **INTERACTIONS**: Add hover effects to all buttons (e.g., 'hover:scale-105 transition-transform', 'hover:shadow-2xl').
-7. **FOOTER**: Ensure the footer is elegant, with clear links and social placeholders.
-8. **DO NOT MODIFY** the '#mobile-menu' logic or the main header structure we just injected. Focus on refining the INNER content of the sections.
-
-BUSINESS CONTEXT:
-${business.name} operates in: ${(business.types || []).join(', ')}.
-
-OUTPUT FORMAT:
-Return ONLY a valid JSON array of edits. No markdown.
-[
-  { "old": "exact_html_string_to_find", "new": "improved_html_string_to_replace_it" }
-]`;
-
-        const userPrompt = `
-HTML to Audit:
-${cleanedHtml.substring(0, 15000)}
-`;
+        // PHASE 6: AI Aesthetic Audit
+        const systemPrompt = `You are a world-class UI/UX Designer. Audit this HTML for a premium, high-conversion feel.
+RULES:
+1. Don't touch header/mobile-menu.
+2. Ensure generous whitespace (py-20).
+3. Use glassmorphism and backdrop-blur.
+4. Provide a JSON array of edits: [{ "old": "...", "new": "..." }]`;
 
         try {
-            const combinedPrompt = `${systemPrompt}\n\n${userPrompt}`;
-            const content = await generateText(combinedPrompt, { temperature: 0.4, maxOutputTokens: 4096 });
-            if (!content) throw new Error('Gemini returned empty response for audit.');
-
-            // Extract JSON array
-            const jsonMatch = content.match(/\[([\s\S]*)\]/);
-            const parsed = jsonMatch ? JSON.parse('[' + jsonMatch[1] + ']') : JSON.parse(content);
-            const edits = Array.isArray(parsed) ? parsed : (parsed.edits || Object.values(parsed)[0]);
-
-            console.log(`[Retoucher] Received ${Array.isArray(edits) ? edits.length : 'invalid'} AI edits.`);
-
-            if (!Array.isArray(edits)) {
-                console.warn("[Retoucher] Model didn't return an array. Skipping aesthetic enhancements.");
-                return cleanedHtml; // Return the regex-cleaned version if AI edits are invalid
-            }
-
-            let finalHtml = cleanedHtml;
-            for (const edit of edits) {
-                if (edit.old && edit.new) {
-                    // Using split/join for global replace of exact strings safely
-                    finalHtml = finalHtml.split(edit.old).join(edit.new);
+            const auditRes = await generateText(`${systemPrompt}\n\nHTML:\n${cleanedHtml.substring(0, 50000)}`, { temperature: 0.2, maxOutputTokens: 2048, model: 'gemini-2.5-pro' });
+            if (auditRes) {
+                const jsonMatch = auditRes.match(/\[[\s\S]*\]/);
+                if (jsonMatch) {
+                    const edits = JSON.parse(jsonMatch[0]);
+                    for (const edit of edits) {
+                        if (edit.old && edit.new) cleanedHtml = cleanedHtml.split(edit.old).join(edit.new);
+                    }
                 }
             }
-
-            return finalHtml;
-        } catch (error) {
-            console.error(`[Retoucher] Audit failed: ${error.message}`);
-            return cleanedHtml; // Return at least the regex-cleaned version
+        } catch (e) {
+            console.warn('[Retoucher] Audit failed:', e.message);
         }
+
+        // PHASE 7: Final Polarity & Attributes
+        if (!cleanedHtml.match(/<html[^>]*lang=/i)) {
+            cleanedHtml = cleanedHtml.replace(/<html/i, '<html lang="en" dir="ltr"');
+        }
+        if (!cleanedHtml.includes('</body>')) cleanedHtml += '\n</body>';
+        if (!cleanedHtml.includes('</html>')) cleanedHtml += '\n</html>';
+
+        return cleanedHtml;
     }
 }
 

@@ -6,8 +6,7 @@ const axios = require('axios');
  */
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-const BASE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const DEFAULT_GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 /**
  * Generate text using Gemini.
@@ -23,10 +22,12 @@ async function generateText(prompt, options = {}) {
 
     const temperature = options.temperature ?? 0.7;
     const maxOutputTokens = options.maxOutputTokens ?? 8192;
+    const model = options.model || DEFAULT_GEMINI_MODEL;
+    const baseUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     try {
         const response = await axios.post(
-            `${BASE_URL}?key=${GEMINI_API_KEY}`,
+            `${baseUrl}?key=${GEMINI_API_KEY}`,
             {
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
