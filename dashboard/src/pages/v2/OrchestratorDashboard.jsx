@@ -450,6 +450,7 @@ export default function OrchestratorDashboard() {
                     {[
                         { label: 'Intelligence & Pipeline', icon: '🔍', path: '/admin-v2/pipeline', desc: 'Leads & Acquisitions' },
                         { label: 'Published Assets', icon: '🌐', path: '/admin-v2/websites', desc: 'Website Deployments' },
+                        { label: 'Global SEO Manager', icon: '📈', path: '/admin-v2/seo', desc: 'Search Visibility' },
                         { label: 'Communications', icon: '💬', path: '/admin-v2/whatsapp', desc: 'WhatsApp CX Matrix' },
                         { label: 'System Analytics', icon: '📊', path: '/admin-v2/analytics', desc: 'Performance Metrics' },
                         { label: 'Geospatial Map', icon: '🗺️', path: '/admin-v2/map', desc: 'Visual Scouting' },

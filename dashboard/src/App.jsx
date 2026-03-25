@@ -31,6 +31,7 @@ import SettingsV2 from './pages/v2/SettingsV2';
 import LeadDetailV2 from './pages/v2/LeadDetailV2';
 import SalesTeamV2 from './pages/v2/SalesTeamV2';
 import AdminAssistantV2 from './pages/v2/AdminAssistantV2';
+import SEOManagerV2 from './pages/v2/SEOManagerV2';
 
 function App() {
   return (
@@ -90,6 +91,7 @@ function App() {
           <Route path="/admin-v2/sales" element={<AuthGuard allowedRoles={['admin']}><SalesTeamV2 /></AuthGuard>} />
           <Route path="/admin-v2/assistant" element={<AuthGuard allowedRoles={['admin']}><AdminAssistantV2 /></AuthGuard>} />
           <Route path="/admin-v2/settings" element={<AuthGuard allowedRoles={['admin']}><SettingsV2 /></AuthGuard>} />
+          <Route path="/admin-v2/seo" element={<AuthGuard allowedRoles={['admin']}><SEOManagerV2 /></AuthGuard>} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

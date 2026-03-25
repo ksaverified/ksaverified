@@ -9,6 +9,44 @@ class PublisherAgent {
   }
 
   /**
+   * Injects SEO tags (title and description) into the <head>
+   * @param {string} htmlString 
+   * @param {string} title 
+   * @param {string} description 
+   * @returns {string}
+   */
+  injectSEOTags(htmlString, title, description) {
+    if (!htmlString) return '';
+    let processedHtml = htmlString;
+
+    if (title) {
+      // Replace existing title or add new one
+      if (/<title>.*<\/title>/i.test(processedHtml)) {
+        processedHtml = processedHtml.replace(/<title>.*<\/title>/i, `<title>${title}</title>`);
+      } else {
+        processedHtml = processedHtml.replace(/<head[^>]*>/i, `$& \n<title>${title}</title>`);
+      }
+    }
+
+    if (description) {
+      // Replace existing meta description or add new one
+      const descTag = `<meta name="description" content="${description}">`;
+      if (/<meta[^>]*name=["']description["'][^>]*>/i.test(processedHtml)) {
+        processedHtml = processedHtml.replace(/<meta[^>]*name=["']description["'][^>]*>/i, descTag);
+      } else {
+         // Fallback: Add to head
+         const headMatch = processedHtml.match(/<head[^>]*>/i);
+         if (headMatch) {
+            const index = processedHtml.indexOf(headMatch[0]) + headMatch[0].length;
+            processedHtml = processedHtml.substring(0, index) + '\n' + descTag + processedHtml.substring(index);
+         }
+      }
+    }
+
+    return processedHtml;
+  }
+
+  /**
    * Injects the payment modal snippet at the start of the <body>
    * @param {string} htmlString - Original website HTML
    * @param {string} placeId - The ID of the lead for tracking

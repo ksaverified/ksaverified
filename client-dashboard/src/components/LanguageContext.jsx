@@ -10,7 +10,8 @@ const translations = {
             payment: "Payment",
             signOut: "Sign Out",
             portal: "Client Portal",
-            editor: "Edit Website"
+            editor: "Edit Website",
+            seo: "SEO Optimization"
         },
         editor: {
             title: "Website Editor",
@@ -127,7 +128,8 @@ const translations = {
             payment: "الدفع",
             signOut: "تسجيل الخروج",
             portal: "بوابة العملاء",
-            editor: "تعديل الموقع"
+            editor: "تعديل الموقع",
+            seo: "تحسين محركات البحث"
         },
         editor: {
             title: "محرر الموقع",

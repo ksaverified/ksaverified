@@ -21,9 +21,14 @@ module.exports = async function handler(request, response) {
         let finalHtml = lead.website_html;
         const isDashboardView = request.query.dashboard === 'true';
 
+        // Inject SEO Tags if available
+        const publisher = new PublisherAgent();
+        if (lead.seo_title || lead.seo_description) {
+            finalHtml = publisher.injectSEOTags(finalHtml, lead.seo_title, lead.seo_description);
+        }
+
         if (lead.status !== 'completed' && !isDashboardView) {
-            const publisher = new PublisherAgent();
-            finalHtml = publisher.injectModal(lead.website_html, lead.place_id);
+            finalHtml = publisher.injectModal(finalHtml, lead.place_id);
         }
 
         // Serve raw HTML

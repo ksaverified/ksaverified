@@ -10,7 +10,8 @@ import {
     Menu,
     X,
     Globe,
-    Languages
+    Languages,
+    Search
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +24,7 @@ export default function Layout() {
     const navigation = [
         { name: t('nav.website'), href: '/my-website', icon: Globe },
         { name: t('nav.editor'), href: '/editor', icon: Menu }, // Using Menu icon for editor for now
+        { name: t('nav.seo'), href: '/seo', icon: Search },
         { name: t('nav.profile'), href: '/profile', icon: User },
         { name: t('nav.payment'), href: '/payment', icon: CreditCard },
     ];
