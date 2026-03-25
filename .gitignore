@@ -12,3 +12,5 @@ tmp/
 data/
 archive/
 tests/
+.wwebjs_cache/
+**/whatsapp-service/.wwebjs_cache/
