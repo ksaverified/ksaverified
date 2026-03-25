@@ -13,8 +13,8 @@ module.exports = async function handler(request, response) {
         const db = new DatabaseService();
         const { data: lead, error } = await db.supabase
             .from('leads')
-            .select('website_html')
-            .eq('slug', slug.toLowerCase())
+            .select('website_html, place_id, status')
+            .ilike('slug', slug)
             .single();
 
         if (error && error.code !== 'PGRST116') {
