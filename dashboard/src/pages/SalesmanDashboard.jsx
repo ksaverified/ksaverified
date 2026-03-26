@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List, PhoneCall, Mail } from 'lucide-react';
+import { MapPin, Navigation, Camera, CheckCircle2, XCircle, Clock, Award, Star, Map as MapIcon, List, PhoneCall, Mail, Globe } from 'lucide-react';
 import { APIProvider, Map, Marker, useMap, useMapsLibrary, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
@@ -351,12 +351,19 @@ const SalesmanDashboard = () => {
                                         <div>
                                             <h4 className="font-bold text-lg leading-tight">{lead.name}</h4>
                                             <p className="text-sm text-gray-500 mt-1">{lead.address}</p>
-                                            <div className="flex items-center gap-2 mt-3">
+                                            <div className="flex items-center gap-2 mt-3 flex-wrap">
                                                 <div className="px-2 py-0.5 bg-brand/10 text-brand text-[10px] font-bold rounded-md">
                                                     50% Commission
                                                 </div>
                                                 <span className="text-[10px] text-gray-600">•</span>
                                                 <span className="text-[10px] text-gray-500 font-medium">{lead.distance || 'Calculated...'}</span>
+                                                {lead.vercel_url && (
+                                                    <a href={lead.vercel_url} target="_blank" rel="noreferrer"
+                                                        onClick={e => e.stopPropagation()}
+                                                        className="flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[10px] font-bold rounded-md border border-amber-500/20 hover:bg-amber-500/20 transition-colors">
+                                                        <Globe className="w-3 h-3" /> Website
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -432,6 +439,12 @@ const SalesmanDashboard = () => {
                             <div>
                                 <h2 className="text-2xl font-bold">{selectedLead.name}</h2>
                                 <p className="text-gray-500">{selectedLead.address}</p>
+                                {selectedLead.vercel_url && (
+                                    <a href={selectedLead.vercel_url} target="_blank" rel="noreferrer"
+                                        className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-amber-500/10 text-amber-500 text-xs font-bold rounded-xl border border-amber-500/20 hover:bg-amber-500/20 transition-colors">
+                                        <Globe className="w-3.5 h-3.5" /> View Generated Website
+                                    </a>
+                                )}
                             </div>
 
                             {!selectedLead.claimed ? (
@@ -509,9 +522,17 @@ const SalesmanDashboard = () => {
                                 <div>
                                     <h4 className="font-bold text-lg leading-tight">{lead.name}</h4>
                                     <p className="text-sm text-gray-500 mt-1">{lead.address}</p>
-                                    <span className="inline-block px-2 py-0.5 mt-2 bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase tracking-wider rounded-md border border-yellow-500/20">
-                                        {lead.status === 'warmed' ? 'Follow Up Needed' : 'Scouted'}
-                                    </span>
+                                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                                        <span className="inline-block px-2 py-0.5 bg-yellow-500/10 text-yellow-500 text-[10px] font-bold uppercase tracking-wider rounded-md border border-yellow-500/20">
+                                            {lead.status === 'warmed' ? 'Follow Up Needed' : 'Scouted'}
+                                        </span>
+                                        {lead.vercel_url && (
+                                            <a href={lead.vercel_url} target="_blank" rel="noreferrer"
+                                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 text-amber-500 text-[10px] font-bold rounded-md border border-amber-500/20 hover:bg-amber-500/20 transition-colors">
+                                                <Globe className="w-3 h-3" /> Website
+                                            </a>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             

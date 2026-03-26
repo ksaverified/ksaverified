@@ -148,7 +148,7 @@ async function handleJoin(req, res) {
 }
 
 async function handleGetLeads(req, res) {
-    const { data, error } = await supabase.from('leads').select('place_id, name, phone, address, lat, lng, status, updated_at, claimed_by, claimed_at').or('status.eq.published,status.eq.invalid').is('claimed_by', null).order('updated_at', { ascending: false }).limit(50);
+    const { data, error } = await supabase.from('leads').select('place_id, name, phone, address, lat, lng, status, updated_at, claimed_by, claimed_at, vercel_url').or('status.eq.published,status.eq.invalid').is('claimed_by', null).order('updated_at', { ascending: false }).limit(50);
     if (error) throw error;
     const filteredLeads = data.filter(l => {
         if (!l.claimed_at) return true;
@@ -235,7 +235,7 @@ async function handleGetFollowups(req, res) {
     let { salesman_id } = req.query;
     if (salesman_id === 'default') salesman_id = '00000000-0000-0000-0000-000000000000';
 
-    const { data, error } = await supabase.from('leads').select('place_id, name, phone, address, status, updated_at, claimed_at').eq('claimed_by', salesman_id).in('status', ['scouted', 'warmed']).order('updated_at', { ascending: false });
+    const { data, error } = await supabase.from('leads').select('place_id, name, phone, address, status, updated_at, claimed_at, vercel_url').eq('claimed_by', salesman_id).in('status', ['scouted', 'warmed']).order('updated_at', { ascending: false });
     if (error) throw error;
     
     return res.status(200).json({ success: true, leads: data || [] });
