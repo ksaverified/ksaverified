@@ -160,10 +160,24 @@ class Orchestrator {
           let currentHtml = activeDbLead.website_html || '';
           let vercelUrl = activeDbLead.vercel_url || '';
 
+          // Self-Healing: If a lead slipped into advanced pipeline stages without HTML, roll it back
+          if (!currentHtml && ['created', 'retouched', 'published', 'pitched'].includes(activeDbLead.status)) {
+              console.warn(`[Orchestrator] 🛑 Lead ${activeLead.name} status is '${activeDbLead.status}' but missing HTML. Rolling back to 'scouted'.`);
+              await this.db.addLog('orchestrator', 'rollback_to_scouted', activeLead.place_id, { reason: 'Missing HTML' }, 'warning');
+              await this.db.updateLeadStatus(activeLead.place_id, 'scouted', { website_html: null, vercel_url: null, is_validated: false });
+              activeDbLead.status = 'scouted';
+          }
+
           if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed') {
             await this.db.addLog('creator', 'generation_started', activeLead.place_id, { name: activeLead.name }, 'info');
             currentHtml = await this.creator.createWebsite(activeLead, this.db);
+            
+            if (!currentHtml || currentHtml.length < 500) {
+                 throw new Error("Generated HTML is empty or dangerously short");
+            }
+            
             await this.db.updateLeadStatus(activeLead.place_id, 'created', { website_html: currentHtml });
+            activeDbLead.status = 'created';
           }
 
           if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created') {
@@ -190,6 +204,11 @@ class Orchestrator {
           }
 
           if (activeDbLead.status !== 'pitched') {
+            if (!activeDbLead.is_validated) {
+              console.log(`[Orchestrator] 🛑 Skipping pitch for ${activeLead.name}. Status: Published but NOT VALIDATED.`);
+              activeDbLead = await this.db.getPendingLead();
+              continue;
+            }
             await this.db.addLog('closer', 'pitch_started', activeLead.placeId, { phone: activeLead.phone }, 'info');
             await this.closer.pitchLead(activeLead.name, activeLead.phone, vercelUrl, this.db);
             await this.db.updateLeadStatus(activeLead.placeId, 'pitched');
@@ -239,6 +258,10 @@ class Orchestrator {
 
     const leads = await this.db.getScoutedLeads(30);
     for (const lead of leads) {
+      if (!lead.is_validated) {
+        console.log(`[Orchestrator] Skipping warming for ${lead.name} (Not Validated)`);
+        continue;
+      }
       try {
         const result = await this.closer.warmLead(lead.name, lead.phone);
         if (result === 'local_sent' || result === true) {
@@ -270,6 +293,10 @@ class Orchestrator {
 
     const leads = await this.db.getPitchedLeads(30);
     for (const lead of leads) {
+      if (!lead.is_validated) {
+        console.log(`[Orchestrator] Skipping promotion for ${lead.name} (Not Validated)`);
+        continue;
+      }
       try {
         const result = await this.closer.sendPromotion(lead.name, lead.phone, lead.vercel_url);
         if (result === 'local_sent' || result === true) {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Globe, ExternalLink, Code, Search, Eye, X, RefreshCcw, Sparkles, ChevronDown } from 'lucide-react';
+import { Globe, ExternalLink, Code, Search, Eye, X, RefreshCcw, Sparkles, ChevronDown, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import V2Shell from './V2Shell';
 
@@ -66,11 +66,24 @@ export default function WebsitesV2() {
         try {
             const { data } = await supabase
                 .from('leads')
-                .select('place_id, name, status, vercel_url, website_html, photos, updated_at')
+                .select('place_id, name, status, vercel_url, website_html, photos, updated_at, is_validated')
                 .not('vercel_url', 'is', null)
                 .order('updated_at', { ascending: false });
             if (data) setLeads(data);
         } catch (e) { console.error(e); } finally { setLoading(false); }
+    }
+
+    async function validateLead(placeId) {
+        if (!confirm("Are you sure? Validating this site will allow the Orchestrator to instantly pitch it to the customer via WhatsApp.")) return;
+        const { error } = await supabase
+            .from('leads')
+            .update({ is_validated: true, validated_at: new Date().toISOString() })
+            .eq('place_id', placeId);
+        if (!error) {
+            setLeads(prev => prev.map(l => l.place_id === placeId ? { ...l, is_validated: true } : l));
+        } else {
+            alert("Error validating lead: " + error.message);
+        }
     }
 
     async function shuffleImages(lead) {
@@ -261,16 +274,22 @@ export default function WebsitesV2() {
                                             <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-widest">{getCategory(lead)}</span>
                                         </div>
                                     </div>
-                                    <div className="flex gap-3 mt-6">
+                                    <div className="flex gap-2 mt-6">
                                         {lead.website_html && (
                                             <button onClick={() => { setPreviewHtml(lead.website_html); setPreviewName(lead.name); }}
-                                                className="flex-1 flex items-center justify-center gap-2 py-3 bg-obsidian-surface-high/50 hover:bg-obsidian-surface-highest text-zinc-400 hover:text-zinc-100 text-[10px] font-black uppercase tracking-widest rounded-xl border border-white/5 transition-all shadow-sm">
-                                                <Eye className="w-4 h-4 opacity-60" /> Preview
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-obsidian-surface-high/50 hover:bg-obsidian-surface-highest text-zinc-400 hover:text-zinc-100 text-[10px] font-black uppercase tracking-widest rounded-xl border border-white/5 transition-all shadow-sm">
+                                                <Eye className="w-3.5 h-3.5 opacity-60" /> Preview
+                                            </button>
+                                        )}
+                                        {['published', 'retouched'].includes(lead.status) && !lead.is_validated && (
+                                            <button onClick={() => validateLead(lead.place_id)}
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 hover:text-emerald-400 border border-emerald-500/20 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-sm">
+                                                <CheckCircle className="w-3.5 h-3.5" /> Validate
                                             </button>
                                         )}
                                         <a href={lead.vercel_url} target="_blank" rel="noreferrer"
-                                            className="flex-1 flex items-center justify-center gap-2 py-3 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.05)]">
-                                            <ExternalLink className="w-4 h-4" /> Live Site
+                                            className="flex-1 flex items-center justify-center gap-1.5 py-3 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(245,158,11,0.05)]">
+                                            <ExternalLink className="w-3.5 h-3.5" /> Live Site
                                         </a>
                                     </div>
                                 </div>
