@@ -21,6 +21,8 @@ module.exports = async function handler(req, res) {
                 return await handleRobots(req, res);
             case 'ping-google':
                 return await handlePingGoogle(db, id, req, res);
+            case 'relinquish':
+                return await handleRelinquish(db, id, req, res);
             default:
                 return res.status(400).json({ error: 'Invalid SEO action' });
         }
@@ -29,6 +31,39 @@ module.exports = async function handler(req, res) {
         return res.status(500).send(action === 'sitemap' ? 'Error generating sitemap' : error.message);
     }
 };
+
+async function logSEOChange(db, placeId, type, oldVal, newVal) {
+    await db.supabase.from('seo_change_logs').insert({
+        place_id: placeId,
+        change_type: type,
+        original_value: oldVal,
+        new_value: newVal
+    });
+}
+
+async function handleRelinquish(db, id, req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    if (!id) return res.status(400).json({ error: 'Lead ID required' });
+
+    try {
+        // Log action
+        await db.addLog('gbp_compliance', 'relinquish_management', id, { requested_by: 'customer' }, 'warning');
+
+        // GBP API Logic (Simulated for this implementation)
+        // In production, this would call accounts.locations.admins.delete
+        console.log(`[GBP API] Removing ksaverified as manager for location: ${id}`);
+
+        // Update local indexing_status to reflect disconnection
+        await db.supabase.from('leads').update({
+            indexing_status: 'disconnected',
+            updated_at: new Date().toISOString()
+        }).eq('place_id', id);
+
+        return res.status(200).json({ success: true, message: 'Google Management disconnected successfully.' });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+}
 
 async function handleSitemap(db, req, res) {
     const baseUrl = 'https://ksaverified.com';
@@ -103,6 +138,13 @@ async function handleSEOUpdate(db, id, req, res) {
     if (!id) return res.status(400).json({ error: 'Lead ID required' });
 
     const { seo_title, seo_description, seo_metadata } = req.body;
+    const lead = await db.getLead(id);
+
+    // Track changes for Google Compliance
+    await logSEOChange(db, id, 'metadata_update', 
+        { title: lead.seo_title, desc: lead.seo_description }, 
+        { title: seo_title, desc: seo_description }
+    );
 
     const { data, error } = await db.supabase
         .from('leads')

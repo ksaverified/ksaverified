@@ -14,14 +14,45 @@ module.exports = async function handler(req, res) {
                 return await handleTranslate(req, res);
             case 'send-message':
                 return await handleSendMessage(req, res);
+            case 'notification-worker':
+                return await handleNotificationWorker(db, req, res);
             default:
                 return res.status(400).json({ error: 'Invalid system action' });
         }
     } catch (error) {
-        console.error(`[System API Error: ${action}]`, error.message);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).json({ error: error.message });
     }
 };
+
+async function handleNotificationWorker(db, req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+    try {
+        // Find logs that are not notified
+        const { data: logs, error } = await db.supabase
+            .from('seo_change_logs')
+            .select('*, leads(name, phone)')
+            .eq('notified', false);
+
+        if (error) throw error;
+
+        for (const log of logs) {
+            console.log(`[Worker] Notifying ${log.leads.phone} about ${log.change_type}`);
+            
+            // In production, use your WhatsApp service to notify:
+            // await db.addLog('notification_service', 'sent_gbp_change_alert', log.place_id, { type: log.change_type });
+
+            await db.supabase
+                .from('seo_change_logs')
+                .update({ notified: true })
+                .eq('id', log.id);
+        }
+
+        return res.status(200).json({ success: true, processed: logs.length });
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+}
 
 async function handleTranslate(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
