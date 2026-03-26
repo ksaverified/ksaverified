@@ -366,9 +366,18 @@ class DatabaseService {
             whatsapp_msg_id: whatsappMsgId
         };
 
-        const { error } = await this.supabase
-            .from('chat_logs')
-            .upsert(payload, { onConflict: 'whatsapp_msg_id', ignoreDuplicates: true });
+        // Cannot upsert on a NULL whatsapp_msg_id — Postgres unique constraints ignore NULLs.
+        // Fall back to a plain insert when no message ID is available.
+        let error;
+        if (whatsappMsgId) {
+            ({ error } = await this.supabase
+                .from('chat_logs')
+                .upsert(payload, { onConflict: 'whatsapp_msg_id', ignoreDuplicates: true }));
+        } else {
+            ({ error } = await this.supabase
+                .from('chat_logs')
+                .insert(payload));
+        }
 
         if (error) {
             console.error('[DB] Error saving outbound chat log:', error.message);
