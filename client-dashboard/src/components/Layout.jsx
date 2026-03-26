@@ -11,7 +11,8 @@ import {
     X,
     Globe,
     Languages,
-    Search
+    Search,
+    Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
