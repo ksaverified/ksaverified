@@ -8,6 +8,7 @@ const BillerAgent = require('./agents/biller');
 const DatabaseService = require('./services/db');
 const ScoutAgent = require('./agents/scout');
 const AuditorAgent = require('./agents/auditor');
+const systemApi = require('./api/system');
 
 class Orchestrator {
   constructor() {
@@ -67,6 +68,9 @@ class Orchestrator {
     try {
       // Step 0: Check Subscriptions
       await this.biller.checkSubscriptions();
+
+      // Step 0.1: Google Compliance Notifications (48-hour rule)
+      await this.runNotificationCycle();
 
       // Step 1: Scouting or Warming/Promotion
       if (!promotionMode) {
@@ -360,6 +364,21 @@ class Orchestrator {
       } catch (e) {
         console.error(`[Orchestrator] Trial reminder failed for ${lead.name}:`, e.message);
       }
+    }
+  }
+
+  async runNotificationCycle() {
+    console.log('[Orchestrator] Running Google Compliance Notification Cycle (48h Rule)...');
+    try {
+      // Create a mock req/res for the API handler
+      const req = { query: { action: 'notification-worker' } };
+      const res = {
+        json: (data) => console.log(`[Orchestrator] Notification Worker:`, data),
+        status: (code) => ({ json: (data) => console.log(`[Orchestrator] Notification Worker Error (${code}):`, data) })
+      };
+      await systemApi(req, res);
+    } catch (e) {
+      console.error(`[Orchestrator] Notification Cycle failed:`, e.message);
     }
   }
 

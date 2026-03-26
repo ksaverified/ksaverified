@@ -83,182 +83,187 @@ export default function MyWebsite() {
     const isUnlocked = lead.unlocked;
 
     return (
-        <div className="h-full flex flex-col space-y-6">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="h-full flex flex-col space-y-8 font-sans">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                    <h1 className="text-3xl font-black text-white italic tracking-tighter flex items-center gap-3">
-                        <Globe className="h-8 w-8 text-blue-500" />
-                        {lead.name}
+                    <h1 className="text-4xl font-black text-white italic tracking-tighter flex items-center gap-4 uppercase leading-tight">
+                        <div className="p-2.5 bg-amber-500/10 rounded-2xl border border-amber-500/20 amber-glow">
+                            <Globe className="h-7 w-7 text-amber-500" />
+                        </div>
+                        <span className="text-gradient-amber">{lead.name}</span>
                     </h1>
-                    <p className="text-zinc-500 mt-1 uppercase tracking-widest text-[10px] font-bold">{t('website.title')}</p>
+                    <p className="text-zinc-500 mt-2 uppercase tracking-[0.3em] text-[10px] font-black">{t('website.title')}</p>
                 </div>
                 <a
                     href={lead.vercel_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-blue-500/20 group text-xs"
+                    className="inline-flex items-center gap-3 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-[0.2em] rounded-2xl transition-all shadow-lg shadow-amber-500/20 group text-[11px] active:scale-95"
                 >
                     <span>{t('website.openLive')}</span>
-                    <ExternalLink className={`h-4 w-4 transition-transform group-hover:scale-110`} />
+                    <ExternalLink className={`h-4 w-4 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1`} />
                 </a>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0">
                 
                 {/* LEFT COLUMN: Iframe Preview */}
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="lg:col-span-2 bg-[#0a0c10]/80 backdrop-blur-3xl border border-white/5 rounded-3xl overflow-hidden flex flex-col relative group h-[600px] lg:h-auto shadow-2xl"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="lg:col-span-2 glass-card rounded-[2.5rem] overflow-hidden flex flex-col relative border border-white/5 shadow-2xl h-[600px] lg:h-auto group"
                 >
-                    <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10" />
-                    <div className="h-10 border-b border-white/5 bg-[#11141b]/80 flex items-center px-4 gap-2">
-                        <div className="flex gap-1.5">
-                            <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                            <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                            <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                    <div className="h-12 border-b border-white/5 bg-obsidian-surface-highest/40 flex items-center px-6 gap-3">
+                        <div className="flex gap-2">
+                            <div className="w-3 h-3 rounded-full bg-red-400/20 border border-red-400/40" />
+                            <div className="w-3 h-3 rounded-full bg-amber-400/20 border border-amber-400/40" />
+                            <div className="w-3 h-3 rounded-full bg-emerald-400/20 border border-emerald-400/40" />
                         </div>
-                        <div className="flex-1 text-center font-mono text-[10px] text-zinc-500 font-bold truncate px-4">
-                            {lead.vercel_url}
+                        <div className="flex-1 text-center font-black text-[10px] text-zinc-500 tracking-[0.2em] truncate px-4">
+                            {lead.vercel_url?.replace('https://', '')}
                         </div>
+                        <div className="w-16 h-1 bg-white/5 rounded-full" />
                     </div>
-                    <iframe
-                        src={`${lead.vercel_url}${lead.vercel_url.includes('?') ? '&' : '?'}dashboard=true`}
-                        className="w-full flex-1 border-none bg-white"
-                        title="Website Preview"
-                    />
+                    <div className="relative flex-1 bg-white">
+                        <iframe
+                            src={`${lead.vercel_url}${lead.vercel_url.includes('?') ? '&' : '?'}dashboard=true`}
+                            className="w-full h-full border-none"
+                            title="Website Preview"
+                        />
+                        <div className="absolute inset-0 pointer-events-none border-[12px] border-obsidian-dark/5 shadow-inner" />
+                    </div>
                 </motion.div>
 
                 {/* RIGHT COLUMN: Data Cards */}
-                <div className="space-y-6 overflow-y-auto pr-2 pb-6 custom-scrollbar">
+                <div className="space-y-8 overflow-y-auto pr-2 pb-8 custom-scrollbar">
                     
                     {/* Access & Subscription Profile */}
-                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="bg-[#0a0c10]/80 backdrop-blur-3xl border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-[50px] rounded-full pointer-events-none" />
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }} className="glass-card rounded-[2rem] p-8 border border-white/5 shadow-xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] rounded-full pointer-events-none group-hover:bg-amber-500/10 transition-colors" />
                         
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className={`p-2 rounded-xl flex items-center justify-center ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'} border`}>
-                                {isUnlocked ? <Unlock className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className={`p-3.5 rounded-[1.25rem] flex items-center justify-center transition-all ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'} border`}>
+                                {isUnlocked ? <Unlock className="w-6 h-6" /> : <Lock className="w-6 h-6" />}
                             </div>
                             <div>
-                                <h3 className="text-white font-bold">{lang === 'ar' ? 'حالة البوابة' : 'Portal Status'}</h3>
-                                <p className={`text-[10px] uppercase tracking-widest font-black ${isUnlocked ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                <h3 className="text-white font-black uppercase text-[11px] tracking-[0.2em]">{lang === 'ar' ? 'حالة البوابة' : 'Portal Status'}</h3>
+                                <p className={`text-[13px] font-black mt-1 tracking-widest ${isUnlocked ? 'text-emerald-500' : 'text-red-500'}`}>
                                     {isUnlocked ? (lang === 'ar' ? 'مفتوح' : 'UNLOCKED') : (lang === 'ar' ? 'مقفل' : 'LOCKED')}
                                 </p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4 mt-6">
-                            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">{t('website.plan')}</p>
+                        <div className="grid grid-cols-2 gap-5">
+                            <div className="bg-obsidian-surface-highest/30 border border-white/5 rounded-2xl p-5 hover:border-amber-500/20 transition-all">
+                                <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em] mb-2">{t('website.plan')}</p>
                                 <div className="flex items-center gap-2">
-                                    <Zap className="w-4 h-4 text-purple-400" />
-                                    <span className="text-sm font-bold text-white">{t('website.starter')}</span>
+                                    <Zap className="w-3.5 h-3.5 text-amber-500" />
+                                    <span className="text-[11px] font-black text-white uppercase tracking-wider">{t('website.starter')}</span>
                                 </div>
                             </div>
-                            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-1">{lang === 'ar' ? 'تم الإنشاء' : 'Created'}</p>
+                            <div className="bg-obsidian-surface-highest/30 border border-white/5 rounded-2xl p-5 hover:border-amber-500/20 transition-all">
+                                <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em] mb-2">{lang === 'ar' ? 'تم الإنشاء' : 'Created'}</p>
                                 <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-blue-400" />
-                                    <span className="text-sm font-bold text-white">{formatDate(lead.created_at)}</span>
+                                    <Calendar className="w-3.5 h-3.5 text-amber-500/60" />
+                                    <span className="text-[11px] font-black text-white tracking-widest">{formatDate(lead.created_at)}</span>
                                 </div>
                             </div>
                         </div>
                     </motion.div>
 
                     {/* Business Profile */}
-                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="bg-[#0a0c10]/80 backdrop-blur-3xl border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[50px] rounded-full pointer-events-none" />
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 border-b border-white/5 pb-4">{lang === 'ar' ? 'ملف العمل' : 'Business Profile'}</h3>
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }} className="glass-card rounded-[2rem] p-8 border border-white/5 shadow-xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] rounded-full pointer-events-none" />
+                        <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                            <span className="w-4 h-[1px] bg-amber-500/40" />
+                            {lang === 'ar' ? 'ملف العمل' : 'Business Profile'}
+                        </h3>
                         
-                        <div className="space-y-4">
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20 mt-0.5">
-                                    <ShieldCheck className="w-4 h-4 text-blue-400" />
+                        <div className="space-y-6">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-amber-500/5 rounded-xl border border-white/5 mt-0.5">
+                                    <ShieldCheck className="w-4 h-4 text-amber-500/60" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-0.5">{t('website.status')}</p>
-                                    <p className="text-sm font-bold text-zinc-200 capitalize">{lead.status}</p>
+                                    <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.2em] mb-1">{t('website.status')}</p>
+                                    <p className="text-[12px] font-black text-white uppercase tracking-widest">{lead.status}</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20 mt-0.5">
-                                    <MapPin className="w-4 h-4 text-emerald-400" />
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-amber-500/5 rounded-xl border border-white/5 mt-0.5">
+                                    <MapPin className="w-4 h-4 text-amber-500/60" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-0.5">{lang === 'ar' ? 'المنطقة' : 'Area'}</p>
-                                    <p className="text-sm font-bold text-zinc-200">{lead.area || 'Riyadh, KSA'}</p>
+                                    <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.2em] mb-1">{lang === 'ar' ? 'المنطقة' : 'Area'}</p>
+                                    <p className="text-[12px] font-black text-white tracking-wider">{lead.area || 'Riyadh, KSA'}</p>
                                 </div>
                             </div>
-                            <div className="flex items-start gap-3">
-                                <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20 mt-0.5">
-                                    <Globe className="w-4 h-4 text-amber-400" />
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-amber-500/5 rounded-xl border border-white/5 mt-0.5">
+                                    <Globe className="w-4 h-4 text-amber-500/60" />
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mb-0.5">{t('website.businessName')}</p>
-                                    <p className="text-sm font-bold text-zinc-200 truncate">{lead.name}</p>
+                                    <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.2em] mb-1">{t('website.businessName')}</p>
+                                    <p className="text-[12px] font-black text-white tracking-widest truncate">{lead.name}</p>
                                 </div>
                             </div>
                         </div>
                     </motion.div>
 
                     {/* Real-time Analytics */}
-                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="bg-[#0a0c10]/80 backdrop-blur-3xl border border-white/5 rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }} className="glass-card rounded-[2rem] p-8 border border-white/5 shadow-xl relative overflow-hidden group">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none" />
-                        <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 border-b border-white/5 pb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                        <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] mb-8 flex items-center gap-3">
+                            <span className="w-4 h-[1px] bg-emerald-500/40" />
                             {lang === 'ar' ? 'التحليلات الحية' : 'Live Analytics'}
                         </h3>
                         
-                        <div className="grid grid-cols-2 gap-4 mb-6">
-                            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Eye className="w-4 h-4 text-emerald-400" />
-                                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{lang === 'ar' ? 'الزيارات' : 'Total Visits'}</span>
+                        <div className="grid grid-cols-2 gap-5 mb-8">
+                            <div className="bg-obsidian-surface-highest/30 border border-white/5 rounded-2xl p-5 hover:border-emerald-500/20 transition-all">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <Eye className="w-3.5 h-3.5 text-emerald-500" />
+                                    <span className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.15em]">{lang === 'ar' ? 'الزيارات' : 'Visitors'}</span>
                                 </div>
-                                <p className="text-2xl font-black text-white">{lead.visits || 0}</p>
+                                <p className="text-3xl font-black text-white tracking-tight">{lead.visits || 0}</p>
                             </div>
-                            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <MousePointerClick className="w-4 h-4 text-amber-400" />
-                                    <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{lang === 'ar' ? 'النقرات' : 'Clicks'}</span>
+                            <div className="bg-obsidian-surface-highest/30 border border-white/5 rounded-2xl p-5 hover:border-amber-500/20 transition-all">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <MousePointerClick className="w-3.5 h-3.5 text-amber-500" />
+                                    <span className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.15em]">{lang === 'ar' ? 'النقرات' : 'Clicks'}</span>
                                 </div>
-                                <p className="text-2xl font-black text-white">{(lead.visits || 0) * 2}</p>
+                                <p className="text-3xl font-black text-white tracking-tight">{(lead.visits || 0) * 2}</p>
                             </div>
                         </div>
 
                         {/* Recent Visitors Table */}
-                        {pageViews.length > 0 && (
-                            <div className="space-y-3 mt-6">
-                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest px-2">{lang === 'ar' ? 'الزوار الأخيرين' : 'Recent Visitors'}</p>
-                                {pageViews.map((view, index) => (
-                                    <div key={view.id || index} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-zinc-800/50 flex items-center justify-center border border-zinc-700/50">
-                                                <Smartphone className="w-4 h-4 text-zinc-400" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-zinc-300">{view.city || 'Private User'}</p>
-                                                <p className="text-[10px] text-zinc-500 font-mono">
-                                                    {view.user_agent?.substring(0, 15) || 'Web Browser'}...
-                                                </p>
-                                            </div>
+                        <div className="space-y-4">
+                            <p className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.2em] px-2">{lang === 'ar' ? 'النشاط الأخير' : 'Recent Activity'}</p>
+                            
+                            {pageViews.length > 0 ? pageViews.map((view, index) => (
+                                <div key={view.id || index} className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-colors">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-obsidian-surface flex items-center justify-center border border-white/5">
+                                            <Smartphone className="w-4 h-4 text-zinc-500" />
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-zinc-500">
-                                            <Clock className="w-3 h-3" />
-                                            <span className="text-[10px] font-mono">{formatDate(view.created_at)}</span>
+                                        <div>
+                                            <p className="text-[11px] font-black text-zinc-300 uppercase tracking-wider">{view.city || 'Private User'}</p>
+                                            <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest mt-0.5">
+                                                {view.user_agent?.includes('iPhone') ? 'iPhone' : 'Web User'}
+                                            </p>
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                        {pageViews.length === 0 && (
-                            <div className="text-center p-6 border border-dashed border-white/5 rounded-2xl">
-                                <p className="text-xs text-zinc-500 font-bold">{lang === 'ar' ? 'في انتظار الزوار الجدد...' : 'Awaiting new visitors...'}</p>
-                            </div>
-                        )}
+                                    <div className="flex items-center gap-2 text-zinc-600">
+                                        <Clock className="w-3 h-3" />
+                                        <span className="text-[9px] font-black uppercase tracking-widest">{formatDate(view.created_at)}</span>
+                                    </div>
+                                </div>
+                            )) : (
+                                <div className="text-center p-8 border border-dashed border-white/5 rounded-3xl">
+                                    <p className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.3em]">{lang === 'ar' ? 'في انتظار الزوار الجدد...' : 'Pulse Monitoring...'}</p>
+                                </div>
+                            )}
+                        </div>
                     </motion.div>
-
                 </div>
             </div>
         </div>

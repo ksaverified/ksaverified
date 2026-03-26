@@ -36,19 +36,21 @@ export default function Layout() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0a0c10] flex relative overflow-hidden">
+        <div className="min-h-screen bg-obsidian-dark flex relative overflow-hidden font-sans">
             {/* Ambient Background */}
-            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-500/10 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none" />
             
             {/* Sidebar - Desktop */}
-            <aside className="hidden lg:flex w-72 flex-col bg-[#0a0c10]/80 backdrop-blur-3xl border-r border-white/5 p-6 overflow-y-auto z-10">
-                <div className="flex items-center gap-3 px-2 mb-10">
-                    <img src="/logo.png" alt="KSA Verified" className="h-10 w-10 object-contain" />
-                    <div className="flex-1">
-                        <h2 className="text-xl font-black text-white italic tracking-tighter">KSA Verified</h2>
-                        <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-bold">{t('nav.portal')}</p>
+            <aside className="hidden lg:flex w-72 flex-col glass-sidebar p-6 overflow-y-auto z-10">
+                <Link to="/my-website" className="flex items-center gap-3 px-2 mb-10 transition-opacity hover:opacity-80">
+                    <img src="/logo.png" alt="KSA Verified" className="h-9 w-9 object-contain mb-0.5" />
+                    <div>
+                        <h1 className="text-lg font-black bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent leading-none">
+                            KSA Verified
+                        </h1>
+                        <p className="text-[10px] text-amber-500/60 uppercase tracking-[0.3em] font-black mt-1">Portal</p>
                     </div>
-                </div>
+                </Link>
 
                 <nav className="flex-1 space-y-1.5">
                     {navigation.map((item) => (
@@ -56,66 +58,68 @@ export default function Layout() {
                             key={item.href}
                             to={item.href}
                             className={({ isActive }) =>
-                                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                                    : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+                                `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
+                                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 font-black italic uppercase text-[11px] tracking-widest'
+                                    : 'text-zinc-500 hover:text-white hover:bg-white/5 font-bold text-[11px] uppercase tracking-widest'
                                 }`
                             }
                         >
-                            <item.icon className="h-5 w-5" />
-                            <span className="font-medium">{item.name}</span>
+                            <item.icon className={`h-4 w-4 ${isActive ? 'text-black' : 'text-zinc-500 group-hover:text-amber-500'}`} />
+                            <span>{item.name}</span>
                         </NavLink>
                     ))}
                 </nav>
 
-                <div className="mt-8 pt-6 border-t border-zinc-800/60 space-y-4">
+                <div className="mt-8 pt-6 border-t border-white/5 space-y-4">
                     {/* Language Switcher */}
                     <button
                         onClick={toggleLanguage}
-                        className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-zinc-800/40 border border-zinc-700/50 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-all group"
+                        className="w-full flex items-center justify-between px-4 py-3 rounded-2xl bg-white/5 border border-white/5 text-zinc-400 hover:text-white hover:border-amber-500/30 transition-all group"
                     >
                         <div className="flex items-center gap-3">
-                            <Languages className="h-5 w-5 text-blue-500" />
-                            <span className="font-medium">{lang === 'ar' ? 'English' : 'العربية'}</span>
+                            <Languages className="h-4 w-4 text-amber-500" />
+                            <span className="text-[10px] font-black uppercase tracking-widest">{lang === 'ar' ? 'English' : 'العربية'}</span>
                         </div>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 uppercase">
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
                             {lang.toUpperCase()}
                         </span>
                     </button>
 
-                    <div className="bg-black/20 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-zinc-800 flex items-center justify-center border border-zinc-700 flex-shrink-0">
-                            <User className="h-5 w-5 text-zinc-400" />
+                    <div className="bg-obsidian-surface-highest/30 rounded-2xl p-4 flex items-center gap-3 border border-white/5">
+                        <div className="h-9 w-9 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 flex-shrink-0">
+                            <User className="h-4 w-4 text-amber-500" />
                         </div>
                         <div className="overflow-hidden">
-                            <p className="text-sm font-bold text-zinc-100 truncate">{user?.email?.split('@')[0]}</p>
-                            <p className="text-xs text-zinc-500 truncate">{user?.email}</p>
+                            <p className="text-[10px] font-black text-white uppercase tracking-tight truncate">{user?.email?.split('@')[0]}</p>
+                            <p className="text-[9px] text-zinc-500 font-bold truncate tracking-tighter">{user?.email}</p>
                         </div>
                     </div>
 
                     <button 
                         onClick={() => window.location.href = '/admin-v2'}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 transition-all text-xs font-black uppercase tracking-widest mt-auto mb-4 border border-dashed border-white/5"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 transition-all text-[10px] font-black uppercase tracking-widest mt-auto mb-2 border border-dashed border-white/5"
                     >
-                        <Shield className="w-4 h-4" /> Back to Admin
+                        <Shield className="w-3.5 h-3.5" /> Back to Admin
                     </button>
 
                     <button
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group"
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-500 hover:text-red-500 hover:bg-red-500/5 transition-all duration-200 group border border-transparent hover:border-red-500/10"
                     >
-                        <LogOut className={`h-5 w-5 transition-transform group-hover:${lang === 'ar' ? 'translate-x-1' : '-translate-x-1'}`} />
-                        <span className="font-medium">{t('nav.signOut')}</span>
+                        <LogOut className="h-4 w-4" />
+                        <span className="text-[10px] font-black uppercase tracking-widest">{t('nav.signOut')}</span>
                     </button>
                 </div>
             </aside>
 
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 z-50 px-4 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <img src="/logo.png" alt="KSA Verified" className="h-8 w-8 object-contain" />
-                    <span className="font-bold text-white tracking-tighter italic">KSA Verified</span>
-                </div>
+                <Link to="/my-website" className="flex items-center gap-2.5">
+                    <img src="/logo.png" alt="KSA Verified" className="h-7 w-7 object-contain mb-0.5" />
+                    <div>
+                        <span className="text-sm font-black bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent leading-none">KSA Verified</span>
+                    </div>
+                </Link>
                 <div className="flex items-center gap-2">
                     <button
                         onClick={toggleLanguage}

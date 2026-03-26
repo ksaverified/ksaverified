@@ -127,11 +127,14 @@ function Layout({ children, lang, toggleLang, t }) {
     <div className={`min-h-screen bg-zinc-950 flex flex-col font-sans text-zinc-300 ${lang === 'ar' ? 'font-arabic' : ''}`}>
       <header className="fixed top-0 inset-x-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-black text-white tracking-tighter">
-              KSA<span className="text-amber-500">Verified</span>
-            </span>
-            <span className="bg-white/10 text-zinc-400 text-xs px-2 py-0.5 rounded-full font-medium ml-2">Corporate</span>
+          <Link to="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+            <img src="/logo.png" alt="KSA Verified" className="h-8 w-8 object-contain mb-0.5" />
+            <div>
+                <h1 className="text-base font-black bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent leading-none">
+                    KSA Verified
+                </h1>
+                <p className="text-[9px] text-amber-500/60 uppercase tracking-[0.3em] font-black mt-1">Corporate</p>
+            </div>
           </Link>
           <nav className="flex items-center space-x-6 text-sm font-medium">
             <Link to="/about" className="hidden sm:block hover:text-white transition-colors">{t.about}</Link>

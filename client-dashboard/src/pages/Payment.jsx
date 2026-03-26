@@ -15,50 +15,57 @@ export default function Payment() {
     };
 
     return (
-        <div className="max-w-4xl mx-auto space-y-8 pb-12">
+        <div className="max-w-5xl mx-auto space-y-12 pb-24 animate-in fade-in duration-700">
             <header className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                    <CreditCard className="h-8 w-8 text-blue-500" />
-                    {t('payment.title')}
+                <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase flex items-center gap-4">
+                    <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20 amber-glow">
+                        <CreditCard className="h-8 w-8 text-amber-500" />
+                    </div>
+                    <span className="text-gradient-amber">{t('payment.title')}</span>
                 </h1>
-                <p className="text-zinc-500 mt-1">{t('payment.subtitle')}</p>
+                <p className="text-zinc-500 mt-2 font-bold tracking-[0.2em] uppercase text-[10px]">{t('payment.subtitle')}</p>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                 <motion.div
                     initial={{ opacity: 0, x: lang === 'ar' ? 20 : -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="bg-surface border border-zinc-800/60 p-8 rounded-3xl h-fit shadow-2xl"
+                    className="glass-card rounded-[2rem] p-10 border border-white/5 h-fit relative luminous-card"
                 >
-                    <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-xl font-bold text-white">{t('payment.currentPlan')}</h2>
-                        <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold rounded-full uppercase tracking-widest">
+                    <div className="flex items-center justify-between mb-10">
+                        <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">{t('payment.currentPlan')}</h2>
+                        <div className="px-4 py-1.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-black rounded-full uppercase tracking-[0.2em]">
                             {t('payment.active')}
                         </div>
                     </div>
 
-                    <div className="space-y-4 mb-8">
-                        <div className={`flex justify-between items-end border-b border-zinc-800 pb-4 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <div className="space-y-6 mb-10">
+                        <div className={`flex justify-between items-end border-b border-white/5 pb-6 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
                             <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                                <p className="text-2xl font-black text-white">{t('payment.starterPlan')}</p>
-                                <p className="text-sm text-zinc-500">{t('payment.monthly')}</p>
+                                <p className="text-3xl font-black text-white tracking-tighter italic uppercase">{t('payment.starterPlan')}</p>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">{t('payment.monthly')}</p>
                             </div>
-                            <p className="text-xl font-bold text-blue-500"> {t('payment.sar')} {t('payment.price')} <span className="text-xs text-zinc-600">{t('payment.perMo')}</span></p>
+                            <div className={lang === 'ar' ? 'text-left' : 'text-right'}>
+                                <p className="text-3xl font-black text-amber-500 leading-none tracking-tighter italic">
+                                    {t('payment.sar')} {t('payment.price')}
+                                </p>
+                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest mt-1">{t('payment.perMo')}</p>
+                            </div>
                         </div>
                     </div>
 
-                    <ul className="space-y-4 mb-8">
+                    <ul className="space-y-5 mb-10">
                         {t('payment.features').map((feature, i) => (
-                            <li key={i} className={`flex items-center gap-3 text-zinc-400 text-sm font-medium ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                <div className="h-2 w-2 rounded-full bg-blue-500" />
+                            <li key={i} className={`flex items-center gap-4 text-zinc-400 text-[11px] font-black uppercase tracking-widest ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
+                                <div className="h-1.5 w-1.5 rounded-full bg-amber-500 amber-glow flex-shrink-0" />
                                 <span className={lang === 'ar' ? 'text-right' : 'text-left'}>{feature}</span>
                             </li>
                         ))}
                     </ul>
 
-                    <div className={`p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-start gap-3 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
-                        <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <p className={`text-xs text-blue-200/80 leading-relaxed font-medium ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+                    <div className={`p-6 bg-amber-500/5 border border-amber-500/10 rounded-2xl flex items-start gap-4 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
+                        <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <p className={`text-[10px] text-zinc-400 leading-relaxed font-bold uppercase tracking-widest ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
                             {t('payment.onlineSoon')}
                         </p>
                     </div>
@@ -69,32 +76,32 @@ export default function Payment() {
                     animate={{ opacity: 1, x: 0 }}
                     className="relative group"
                 >
-                    <div className="absolute inset-x-4 -top-4 bottom-4 bg-blue-600/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="bg-[#5c2d91]/10 border border-[#5c2d91]/30 p-8 rounded-3xl shadow-2xl relative z-10 backdrop-blur-sm px-6 md:px-8">
-                        <div className={`flex items-center gap-4 mb-6 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
-                            <div className="h-14 w-14 rounded-2xl bg-[#5c2d91] flex items-center justify-center shadow-lg shadow-[#5c2d91]/20">
-                                <span className="text-white font-black text-xl italic uppercase font-serif tracking-tighter leading-none select-none">STC</span>
+                    <div className="absolute inset-x-4 -top-4 bottom-4 bg-amber-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="glass-card border border-white/5 rounded-[2rem] p-10 relative z-10 luminous-card">
+                        <div className={`flex items-center gap-5 mb-8 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
+                            <div className="h-16 w-16 rounded-2xl bg-obsidain-surface-highest/60 border border-white/10 flex items-center justify-center shadow-lg shadow-black/40">
+                                <span className="text-white font-black text-2xl italic uppercase font-serif tracking-tighter leading-none select-none text-gradient-amber">STC</span>
                             </div>
                             <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                                <p className="text-sm font-bold text-white uppercase tracking-widest opacity-50">{t('payment.stcGateway')}</p>
-                                <h2 className="text-2xl font-black text-white">{t('payment.manualPay')}</h2>
+                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.3em] opacity-50">{t('payment.stcGateway')}</p>
+                                <h2 className="text-2xl font-black text-white italic uppercase tracking-tight">{t('payment.manualPay')}</h2>
                             </div>
                         </div>
 
-                        <div className="space-y-6">
-                            <p className="text-zinc-300 font-medium leading-relaxed">
+                        <div className="space-y-8">
+                            <p className="text-zinc-400 font-bold text-xs uppercase tracking-widest leading-relaxed">
                                 {t('payment.transferDesc')}
                             </p>
 
-                            <div className="bg-black/40 border border-zinc-800 p-6 rounded-2xl space-y-4">
-                                <p className={`text-[10px] text-zinc-500 font-bold uppercase tracking-widest ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t('payment.stcNumberLabel')}</p>
-                                <div className={`flex items-center justify-between gap-4 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
-                                    <span className="text-2xl font-black text-white tracking-widest">{stcNumber}</span>
+                            <div className="bg-black/20 border border-white/5 p-8 rounded-3xl space-y-4">
+                                <p className={`text-[10px] text-zinc-500 font-black uppercase tracking-widest ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t('payment.stcNumberLabel')}</p>
+                                <div className={`flex flex-col sm:flex-row items-center justify-between gap-6 ${lang === 'ar' ? 'sm:flex-row-reverse' : ''}`}>
+                                    <span className="text-3xl font-black text-white tracking-[0.2em] italic">{stcNumber}</span>
                                     <button
                                         onClick={handleCopy}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${copied
-                                            ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'
-                                            : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                                        className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${copied
+                                            ? 'bg-emerald-500 text-black shadow-lg shadow-emerald-500/20'
+                                            : 'bg-white/5 text-zinc-300 hover:text-white hover:bg-white/10 border border-white/5'
                                             }`}
                                     >
                                         {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
@@ -103,8 +110,8 @@ export default function Payment() {
                                 </div>
                             </div>
 
-                            <div className="space-y-4">
-                                <p className={`text-sm text-zinc-400 font-medium ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t('payment.shareReceipt')}</p>
+                            <div className="space-y-5">
+                                <p className={`text-[10px] text-zinc-500 font-black uppercase tracking-widest ${lang === 'ar' ? 'text-right' : 'text-left'}`}>{t('payment.shareReceipt')}</p>
                                 <button
                                     onClick={() => {
                                         const msg = lang === 'ar'
@@ -112,7 +119,7 @@ export default function Payment() {
                                             : "I just paid for my KSA Verified plan, here is the screenshot";
                                         window.open(`https://wa.me/${stcNumber}?text=${encodeURIComponent(msg)}`, '_blank');
                                     }}
-                                    className="w-full flex items-center justify-center gap-3 py-4 bg-[#25D366] hover:bg-[#128C7E] text-white font-bold rounded-2xl transition-all shadow-lg shadow-[#25D366]/20 group px-4"
+                                    className="w-full flex items-center justify-center gap-4 py-5 bg-[#25D366] hover:bg-[#128C7E] text-white font-black rounded-2xl transition-all shadow-lg shadow-[#25D366]/20 group px-6 active:scale-95 uppercase tracking-[0.2em] text-[11px]"
                                 >
                                     <MessageSquare className="h-5 w-5 transition-transform group-hover:scale-110" />
                                     {t('payment.sendWhatsApp')}
@@ -120,21 +127,22 @@ export default function Payment() {
                             </div>
 
                             <div className="text-center pt-4">
-                                <p className="text-xs font-black text-[#5c2d91] uppercase tracking-[0.2em] animate-pulse">{t('payment.comingSoon')}</p>
+                                <p className="text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] animate-pulse">{t('payment.comingSoon')}</p>
                             </div>
                         </div>
                     </div>
                 </motion.div>
             </div>
 
-            <div className={`bg-surface border border-zinc-800/60 p-8 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border-dashed ${lang === 'ar' ? 'md:flex-row-reverse' : ''}`}>
-                <div className={`flex items-center gap-6 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
-                    <div className="h-16 w-16 rounded-full bg-zinc-800 flex items-center justify-center text-4xl shadow-inner border border-zinc-700">
+            <div className={`glass-card p-10 rounded-[2.5rem] flex flex-col lg:flex-row items-center justify-between gap-10 shadow-2xl border-dashed border-white/10 ${lang === 'ar' ? 'lg:flex-row-reverse' : ''} relative overflow-hidden`}>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
+                <div className={`flex items-center gap-8 ${lang === 'ar' ? 'flex-row-reverse' : ''}`}>
+                    <div className="h-20 w-20 rounded-full bg-amber-500/10 flex items-center justify-center text-5xl shadow-inner border border-amber-500/20 amber-glow">
                         🇸🇦
                     </div>
                     <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                        <h3 className="text-xl font-black text-white">{t('payment.localSupport')}</h3>
-                        <p className="text-sm text-zinc-500 font-medium">{t('payment.supportDesc')}</p>
+                        <h3 className="text-2xl font-black text-white italic uppercase tracking-tight">{t('payment.localSupport')}</h3>
+                        <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mt-1">{t('payment.supportDesc')}</p>
                     </div>
                 </div>
                 <button
@@ -144,7 +152,7 @@ export default function Payment() {
                             : "I need support with my account";
                         window.open(`https://wa.me/${stcNumber}?text=${encodeURIComponent(msg)}`, '_blank');
                     }}
-                    className="px-10 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-black rounded-2xl transition-all border border-zinc-700 uppercase tracking-widest text-xs"
+                    className="px-12 py-5 bg-white/5 hover:bg-white/10 text-white font-black rounded-2xl transition-all border border-white/5 uppercase tracking-[0.3em] text-[10px] active:scale-95"
                 >
                     {t('payment.contactSupport')}
                 </button>

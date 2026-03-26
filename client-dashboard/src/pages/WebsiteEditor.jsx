@@ -181,29 +181,31 @@ export default function WebsiteEditor() {
     ];
 
     return (
-        <div className="h-full flex flex-col space-y-6 max-w-5xl mx-auto">
+        <div className="h-full flex flex-col space-y-8 max-w-5xl mx-auto font-sans">
             {/* Header */}
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
-                    <h1 className="text-3xl font-black text-white italic tracking-tighter flex items-center gap-3">
-                        <Save className="h-8 w-8 text-blue-500" />
-                        {t('editor.title')}
+                    <h1 className="text-4xl font-black text-white italic tracking-tighter flex items-center gap-4 uppercase leading-tight">
+                        <div className="p-2.5 bg-amber-500/10 rounded-2xl border border-amber-500/20 amber-glow">
+                            <Save className="h-7 w-7 text-amber-500" />
+                        </div>
+                        <span className="text-gradient-amber">{t('editor.title')}</span>
                     </h1>
-                    <p className="text-zinc-500 mt-1 uppercase tracking-widest text-[10px] font-bold">{t('editor.subtitle')}</p>
+                    <p className="text-zinc-500 mt-2 uppercase tracking-[0.3em] text-[10px] font-black">{t('editor.subtitle')}</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                     <button
                         onClick={handleSave}
                         disabled={saving}
-                        className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs transition-all shadow-lg ${
-                            saving ? 'bg-zinc-800 text-zinc-500' : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/20'
+                        className={`inline-flex items-center gap-3 px-8 py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] transition-all shadow-lg active:scale-95 ${
+                            saving ? 'bg-obsidian-surface-highest/40 text-zinc-500' : 'bg-amber-500 hover:bg-amber-400 text-black shadow-amber-500/20'
                         }`}
                     >
                         {saving ? <RotateCcw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                         {saving ? t('editor.saving') : t('editor.save')}
                     </button>
                     {lead?.vercel_url && (
-                        <a href={lead.vercel_url} target="_blank" className="p-3 bg-white/5 border border-white/10 rounded-xl text-zinc-400 hover:text-white transition-colors">
+                        <a href={lead.vercel_url} target="_blank" className="p-4 bg-white/5 border border-white/5 rounded-2xl text-zinc-400 hover:text-amber-500 hover:border-amber-500/30 transition-all backdrop-blur-md">
                             <Globe className="w-5 h-5" />
                         </a>
                     )}
@@ -217,47 +219,49 @@ export default function WebsiteEditor() {
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className={`p-4 rounded-2xl border flex items-center gap-3 ${
-                            message.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                        className={`p-5 rounded-2xl border flex items-center gap-4 ${
+                            message.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-red-500/10 border-red-500/30 text-red-400'
                         }`}
                     >
                         {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                        <span className="text-sm font-bold">{message.text}</span>
+                        <span className="text-[11px] font-black uppercase tracking-widest leading-none">{message.text}</span>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <div className="flex flex-col lg:flex-row gap-6 flex-1 min-h-0">
+            <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-0">
                 {/* Left: Tab Navigation */}
-                <div className="lg:w-64 space-y-2">
+                <div className="lg:w-72 space-y-3">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`w-full flex items-center gap-3 px-5 py-4 rounded-2xl border transition-all ${
+                            className={`w-full flex items-center gap-4 px-6 py-5 rounded-[1.5rem] border transition-all active:scale-95 ${
                                 activeTab === tab.id
-                                    ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-500/20'
-                                    : 'bg-[#0a0c10]/50 border-white/5 text-zinc-500 hover:text-zinc-300 hover:bg-white/5'
+                                    ? 'bg-amber-500 border-amber-400 text-black shadow-lg shadow-amber-500/20'
+                                    : 'glass-card border-white/5 text-zinc-500 hover:text-white hover:border-amber-500/30'
                             }`}
                         >
-                            <tab.icon className="h-5 w-5" />
-                            <span className="font-bold text-sm">{tab.label}</span>
+                            <tab.icon className={`h-5 w-5 ${activeTab === tab.id ? 'text-black' : 'text-amber-500/60'}`} />
+                            <span className="font-black text-[11px] uppercase tracking-widest">{tab.label}</span>
                             {activeTab === tab.id && <ChevronRight className={`h-4 w-4 ml-auto ${lang === 'ar' ? 'rotate-180' : ''}`} />}
                         </button>
                     ))}
 
-                    <div className="mt-8 p-6 bg-blue-500/5 border border-blue-500/10 rounded-3xl">
-                        <h4 className="text-blue-400 text-[10px] font-black uppercase tracking-widest mb-3 flex items-center gap-2">
-                            <MessageCircle className="w-3.5 h-3.5" />
-                            {lang === 'ar' ? 'دعم المصمم' : 'Retoucher Support'}
+                    <div className="mt-10 p-8 glass-card rounded-[2rem] border border-white/5 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 blur-[40px] rounded-full pointer-events-none" />
+                        <h4 className="text-amber-500 text-[10px] font-black uppercase tracking-[0.3em] mb-4 flex items-center gap-3">
+                            <span className="w-4 h-[1px] bg-amber-500/40" />
+                            {lang === 'ar' ? 'دعم المصمم' : 'Designer Hub'}
                         </h4>
-                        <p className="text-zinc-500 text-[11px] leading-relaxed mb-4">
-                            {lang === 'ar' ? 'هل تحتاج لمساعدة في إضافة صور أو تعديلات خاصة؟' : 'Need help with custom photos or special layout edits?'}
+                        <p className="text-zinc-500 text-[11px] leading-relaxed mb-6 font-black uppercase tracking-widest flex flex-col gap-1">
+                            <span>{lang === 'ar' ? 'تحتاج تعديلات' : 'Custom edit'}</span>
+                            <span className="text-zinc-600 font-bold normal-case opacity-60 tracking-normal">{lang === 'ar' ? 'تواصل مع خبير التصميم لدينا' : 'Connect with our design crew.'}</span>
                         </p>
                         <a 
                             href="https://wa.me/966507913514?text=Hi! I need help retouching my website." 
                             target="_blank"
-                            className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600/20 text-emerald-500 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/10 transition-colors text-[10px] font-black uppercase tracking-tighter"
+                            className="w-full inline-flex items-center justify-center gap-3 px-5 py-3.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-xl hover:bg-amber-500/20 transition-all text-[10px] font-black uppercase tracking-widest amber-glow"
                         >
                             <MessageCircle className="w-4 h-4" />
                             {lang === 'ar' ? 'دردشة حية' : 'Live Chat'}
@@ -266,23 +270,25 @@ export default function WebsiteEditor() {
                 </div>
 
                 {/* Right: Content Area */}
-                <div className="flex-1 bg-[#0a0c10]/50 border border-white/5 rounded-3xl overflow-hidden flex flex-col min-h-0">
+                <div className="flex-1 glass-card rounded-[2.5rem] border border-white/5 overflow-hidden flex flex-col min-h-0 relative shadow-2xl">
+                    <div className="absolute top-0 left-0 right-0 h-1 text-gradient-amber opacity-30" />
+                    
                     {/* Sub-header with Language Toggle */}
                     {['content', 'services', 'testimonials'].includes(activeTab) && (
-                        <div className="px-6 py-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
-                            <h3 className="text-sm font-black text-white uppercase tracking-widest">
+                        <div className="px-8 py-5 border-b border-white/5 bg-obsidian-surface-highest/20 flex items-center justify-between">
+                            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.3em]">
                                 {tabs.find(t => t.id === activeTab).label}
                             </h3>
-                            <div className="flex bg-zinc-900 rounded-lg p-1 border border-white/5">
+                            <div className="flex bg-obsidian-dark/40 rounded-xl p-1.5 border border-white/5">
                                 <button
                                     onClick={() => setActiveLang('en')}
-                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase transition-all ${activeLang === 'en' ? 'bg-blue-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeLang === 'en' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-zinc-600 hover:text-zinc-400'}`}
                                 >
                                     English
                                 </button>
                                 <button
                                     onClick={() => setActiveLang('ar')}
-                                    className={`px-3 py-1 rounded-md text-[10px] font-black uppercase transition-all ${activeLang === 'ar' ? 'bg-blue-600 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+                                    className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeLang === 'ar' ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20' : 'text-zinc-600 hover:text-zinc-400'}`}
                                 >
                                     العربية
                                 </button>
@@ -290,49 +296,49 @@ export default function WebsiteEditor() {
                         </div>
                     )}
 
-                    <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                    <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
                         <AnimatePresence mode="wait">
                             {/* TAB: CONTENT */}
                             {activeTab === 'content' && (
                                 <motion.div 
                                     key={`content-${activeLang}`}
-                                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                                    className="space-y-6"
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                                    className="space-y-8"
                                 >
-                                    <div>
-                                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.title')}</label>
+                                    <div className="space-y-3">
+                                        <label className="block text-[10px] font-black text-amber-500/60 uppercase tracking-[0.2em] px-2">{t('editor.fields.title')}</label>
                                         <input 
                                             type="text" 
                                             value={config[activeLang].title} 
                                             onChange={(e) => updateNestedConfig(`${activeLang}.title`, e.target.value)}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-colors outline-none font-bold"
+                                            className="w-full bg-obsidian-surface-highest/20 border border-white/5 rounded-2xl px-6 py-4 text-white focus:border-amber-500/50 outline-none font-black text-lg transition-all"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.subtitle')}</label>
+                                    <div className="space-y-3">
+                                        <label className="block text-[10px] font-black text-amber-500/60 uppercase tracking-[0.2em] px-2">{t('editor.fields.subtitle')}</label>
                                         <input 
                                             type="text" 
                                             value={config[activeLang].subtitle} 
                                             onChange={(e) => updateNestedConfig(`${activeLang}.subtitle`, e.target.value)}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-colors outline-none"
+                                            className="w-full bg-obsidian-surface-highest/20 border border-white/5 rounded-2xl px-6 py-4 text-zinc-300 focus:border-amber-500/50 outline-none font-bold transition-all"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.hero')}</label>
+                                    <div className="space-y-3">
+                                        <label className="block text-[10px] font-black text-amber-500/60 uppercase tracking-[0.2em] px-2">{t('editor.fields.hero')}</label>
                                         <textarea 
                                             rows="3"
                                             value={config[activeLang].hero_text} 
                                             onChange={(e) => updateNestedConfig(`${activeLang}.hero_text`, e.target.value)}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-colors outline-none resize-none"
+                                            className="w-full bg-obsidian-surface-highest/20 border border-white/5 rounded-2xl px-6 py-4 text-zinc-400 focus:border-amber-500/50 outline-none resize-none font-medium leading-relaxed transition-all"
                                         />
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.about')}</label>
+                                    <div className="space-y-3">
+                                        <label className="block text-[10px] font-black text-amber-500/60 uppercase tracking-[0.2em] px-2">{t('editor.fields.about')}</label>
                                         <textarea 
-                                            rows="5"
+                                            rows="6"
                                             value={config[activeLang].about} 
                                             onChange={(e) => updateNestedConfig(`${activeLang}.about`, e.target.value)}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition-colors outline-none resize-none"
+                                            className="w-full bg-obsidian-surface-highest/20 border border-white/5 rounded-2xl px-6 py-4 text-zinc-400 focus:border-amber-500/50 outline-none resize-none font-medium leading-relaxed transition-all"
                                         />
                                     </div>
                                 </motion.div>
@@ -342,21 +348,21 @@ export default function WebsiteEditor() {
                             {activeTab === 'services' && (
                                 <motion.div 
                                     key={`services-${activeLang}`}
-                                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                                     className="space-y-8"
                                 >
                                     {config[activeLang].services.map((service, idx) => (
-                                        <div key={idx} className="relative group bg-white/[0.02] border border-white/5 p-6 rounded-2xl">
+                                        <div key={idx} className="relative group glass-card border border-white/5 p-8 rounded-[2rem] hover:border-amber-500/20 transition-all">
                                             <button 
                                                 onClick={() => removeListItem('services', idx)}
-                                                className="absolute -top-3 -right-3 p-2 bg-rose-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="absolute -top-3 -right-3 p-2.5 bg-red-500 text-black rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
                                             >
-                                                <Trash2 className="w-4 h-4" />
+                                                <Trash2 className="w-3.5 h-3.5" />
                                             </button>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.serviceTitle')}</label>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                <div className="space-y-6">
+                                                    <div className="space-y-3">
+                                                        <label className="block text-[9px] font-black text-amber-500/50 uppercase tracking-[0.2em]">{t('editor.fields.serviceTitle')}</label>
                                                         <input 
                                                             type="text" 
                                                             value={service.title} 
@@ -365,30 +371,30 @@ export default function WebsiteEditor() {
                                                                 newSvcs[idx].title = e.target.value;
                                                                 updateNestedConfig(`${activeLang}.services`, newSvcs);
                                                             }}
-                                                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none text-sm font-bold"
+                                                            className="w-full bg-obsidian-surface-highest/10 border border-white/5 rounded-xl px-5 py-3 text-white focus:border-amber-500/40 outline-none text-[13px] font-black tracking-wide"
                                                         />
                                                     </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.serviceDesc')}</label>
+                                                    <div className="space-y-3">
+                                                        <label className="block text-[9px] font-black text-amber-500/50 uppercase tracking-[0.2em]">{t('editor.fields.serviceDesc')}</label>
                                                         <textarea 
-                                                            rows="2"
+                                                            rows="3"
                                                             value={service.text} 
                                                             onChange={(e) => {
                                                                 const newSvcs = [...config[activeLang].services];
                                                                 newSvcs[idx].text = e.target.value;
                                                                 updateNestedConfig(`${activeLang}.services`, newSvcs);
                                                             }}
-                                                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none text-xs resize-none"
+                                                            className="w-full bg-obsidian-surface-highest/10 border border-white/5 rounded-xl px-5 py-3 text-zinc-400 focus:border-amber-500/40 outline-none text-xs leading-relaxed resize-none"
                                                         />
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-xl bg-black/20 p-4 relative">
+                                                <div className="flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-2xl bg-black/20 p-6 relative group/upload hover:border-amber-500/30 transition-all">
                                                     {service.photo ? (
-                                                        <img src={service.photo} className="w-full h-32 object-cover rounded-lg mb-3" />
+                                                        <img src={service.photo} className="w-full h-40 object-cover rounded-xl mb-4 grayscale group-hover/upload:grayscale-0 transition-all duration-500 shadow-xl" />
                                                     ) : (
-                                                        <ImageIcon className="w-8 h-8 text-zinc-700 mb-2" />
+                                                        <ImageIcon className="w-10 h-10 text-zinc-800 mb-3 group-hover/upload:text-amber-500/40 transition-colors" />
                                                     )}
-                                                    <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest text-center">
+                                                    <p className="text-[9px] text-zinc-600 font-black uppercase tracking-[0.3em] text-center max-w-[150px] leading-relaxed">
                                                         {t('editor.fields.servicePhoto')} (600x400)
                                                     </p>
                                                     <input 
@@ -405,11 +411,11 @@ export default function WebsiteEditor() {
                                     <button 
                                         disabled={config[activeLang].services.length >= MAX_SERVICES}
                                         onClick={() => addListItem('services')}
-                                        className="w-full py-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-3 text-zinc-500 hover:text-blue-500 hover:border-blue-500 transition-all group"
+                                        className="w-full py-6 border-2 border-dashed border-white/5 rounded-[2rem] flex items-center justify-center gap-4 text-zinc-600 hover:text-amber-500 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all group active:scale-[0.99] disabled:opacity-30 disabled:pointer-events-none"
                                     >
-                                        <Plus className="w-5 h-5 group-hover:scale-125 transition-transform" />
-                                        <span className="font-bold text-sm uppercase tracking-widest">{t('editor.actions.addService')}</span>
-                                        <span className="text-[10px] bg-white/5 px-2 py-0.5 rounded ml-2">
+                                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                                        <span className="font-black text-[12px] uppercase tracking-[0.3em]">{t('editor.actions.addService')}</span>
+                                        <span className="text-[10px] font-black bg-white/5 px-3 py-1 rounded-lg ml-2 opacity-40">
                                             {config[activeLang].services.length} / {MAX_SERVICES}
                                         </span>
                                     </button>
@@ -420,17 +426,17 @@ export default function WebsiteEditor() {
                             {activeTab === 'testimonials' && (
                                 <motion.div 
                                     key={`testimonials-${activeLang}`}
-                                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
                                     className="space-y-6"
                                 >
                                     {config[activeLang].testimonials.map((testi, idx) => (
-                                        <div key={idx} className="relative group bg-white/[0.02] border border-white/5 p-6 rounded-2xl flex gap-6 items-start">
-                                            <div className="w-12 h-12 rounded-full bg-zinc-800 border border-white/5 flex items-center justify-center flex-shrink-0 text-zinc-500 font-black text-xl italic uppercase">
+                                        <div key={idx} className="relative group glass-card border border-white/5 p-8 rounded-[2rem] flex gap-8 items-start hover:border-amber-500/20 transition-all">
+                                            <div className="w-16 h-16 rounded-2xl bg-amber-500/5 border border-white/5 flex items-center justify-center flex-shrink-0 text-amber-500 font-black text-2xl italic uppercase amber-glow">
                                                 {testi.name ? testi.name.charAt(0) : '?'}
                                             </div>
-                                            <div className="flex-1 space-y-4">
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">{t('editor.fields.testiName')}</label>
+                                            <div className="flex-1 space-y-6">
+                                                <div className="space-y-3">
+                                                    <label className="block text-[9px] font-black text-amber-500/50 uppercase tracking-[0.2em]">{t('editor.fields.testiName')}</label>
                                                     <input 
                                                         type="text" 
                                                         value={testi.name} 
@@ -439,26 +445,26 @@ export default function WebsiteEditor() {
                                                             newTestis[idx].name = e.target.value;
                                                             updateNestedConfig(`${activeLang}.testimonials`, newTestis);
                                                         }}
-                                                        className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-blue-500 outline-none text-sm font-bold"
+                                                        className="w-full bg-obsidian-surface-highest/10 border border-white/5 rounded-xl px-5 py-3 text-white focus:border-amber-500/40 outline-none text-[13px] font-black tracking-wide"
                                                     />
                                                 </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">{t('editor.fields.testiText')}</label>
+                                                <div className="space-y-3">
+                                                    <label className="block text-[9px] font-black text-amber-500/50 uppercase tracking-[0.2em]">{t('editor.fields.testiText')}</label>
                                                     <textarea 
-                                                        rows="2"
+                                                        rows="3"
                                                         value={testi.text} 
                                                         onChange={(e) => {
                                                             const newTestis = [...config[activeLang].testimonials];
                                                             newTestis[idx].text = e.target.value;
                                                             updateNestedConfig(`${activeLang}.testimonials`, newTestis);
                                                         }}
-                                                        className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2 text-white focus:border-blue-500 outline-none text-xs"
+                                                        className="w-full bg-obsidian-surface-highest/10 border border-white/5 rounded-xl px-5 py-3 text-zinc-400 focus:border-amber-500/40 outline-none text-xs leading-relaxed resize-none"
                                                     />
                                                 </div>
                                             </div>
                                             <button 
                                                 onClick={() => removeListItem('testimonials', idx)}
-                                                className="p-2 bg-rose-500 text-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                                className="p-2.5 bg-red-500 text-black rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:scale-110"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </button>
@@ -467,10 +473,10 @@ export default function WebsiteEditor() {
 
                                     <button 
                                         onClick={() => addListItem('testimonials')}
-                                        className="w-full py-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-3 text-zinc-500 hover:text-blue-500 hover:border-blue-500 transition-all group"
+                                        className="w-full py-6 border-2 border-dashed border-white/5 rounded-[2rem] flex items-center justify-center gap-4 text-zinc-600 hover:text-amber-500 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all group active:scale-[0.99]"
                                     >
-                                        <Plus className="w-5 h-5 group-hover:scale-125 transition-transform" />
-                                        <span className="font-bold text-sm uppercase tracking-widest">{t('editor.actions.addTesti')}</span>
+                                        <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                                        <span className="font-black text-[12px] uppercase tracking-[0.3em]">{t('editor.actions.addTesti')}</span>
                                     </button>
                                 </motion.div>
                             )}
@@ -478,52 +484,56 @@ export default function WebsiteEditor() {
                             {/* TAB: CONTACT */}
                             {activeTab === 'contact' && (
                                 <motion.div 
-                                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                                    className="space-y-6"
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                    className="space-y-10"
                                 >
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div>
-                                            <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.phone')}</label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-3">
+                                            <label className="block text-[10px] font-black text-amber-500/50 uppercase tracking-[0.3em] px-2">{t('editor.fields.phone')}</label>
                                             <input 
                                                 type="text" 
                                                 placeholder="+966..."
                                                 value={config.contact.phone} 
                                                 onChange={(e) => updateNestedConfig(`contact.phone`, e.target.value)}
-                                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none font-mono text-sm"
+                                                className="w-full bg-obsidian-surface-highest/20 border border-white/5 rounded-2xl px-6 py-4 text-white focus:border-amber-500/50 outline-none font-black text-[13px] tracking-widest transition-all"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.email')}</label>
+                                        <div className="space-y-3">
+                                            <label className="block text-[10px] font-black text-amber-500/50 uppercase tracking-[0.3em] px-2">{t('editor.fields.email')}</label>
                                             <input 
                                                 type="email" 
                                                 placeholder="info@yourbrand.com"
                                                 value={config.contact.email} 
                                                 onChange={(e) => updateNestedConfig(`contact.email`, e.target.value)}
-                                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none text-sm"
+                                                className="w-full bg-obsidian-surface-highest/20 border border-white/5 rounded-2xl px-6 py-4 text-white focus:border-amber-500/50 outline-none font-bold text-[13px] transition-all"
                                             />
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t('editor.fields.address')}</label>
+                                    <div className="space-y-3">
+                                        <label className="block text-[10px] font-black text-amber-500/50 uppercase tracking-[0.3em] px-2">{t('editor.fields.address')}</label>
                                         <textarea 
-                                            rows="2"
+                                            rows="3"
                                             value={config.contact.address} 
                                             onChange={(e) => updateNestedConfig(`contact.address`, e.target.value)}
-                                            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none resize-none"
+                                            className="w-full bg-obsidian-surface-highest/20 border border-white/5 rounded-2xl px-6 py-4 text-zinc-400 focus:border-amber-500/50 outline-none resize-none font-medium leading-relaxed transition-all"
                                         />
                                     </div>
-                                    <div className="p-6 bg-amber-500/5 border border-amber-500/10 rounded-3xl">
-                                        <label className="flex items-center gap-2 text-[10px] font-black text-amber-500 uppercase tracking-widest mb-3">
-                                            <Info className="w-3 h-3" />
+                                    <div className="p-8 glass-card border border-amber-500/20 rounded-[2.5rem] relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] rounded-full pointer-events-none" />
+                                        <label className="flex items-center gap-3 text-[10px] font-black text-amber-500 uppercase tracking-[0.4em] mb-6">
+                                            <Info className="w-4 h-4" />
                                             {t('editor.fields.maps')}
                                         </label>
                                         <textarea 
-                                            rows="3"
+                                            rows="4"
                                             placeholder="<iframe src='...'></iframe>"
                                             value={config.contact.google_maps_iframe} 
                                             onChange={(e) => updateNestedConfig(`contact.google_maps_iframe`, e.target.value)}
-                                            className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3 text-emerald-500/80 font-mono text-[10px] outline-none resize-none"
+                                            className="w-full bg-obsidian-dark/60 border border-white/5 rounded-2xl px-6 py-5 text-amber-200/40 font-mono text-[10px] outline-none resize-none leading-relaxed transition-all focus:border-amber-500/30"
                                         />
+                                        <p className="mt-4 text-[9px] text-zinc-600 font-bold uppercase tracking-widest px-1 italic">
+                                            {lang === 'ar' ? 'الصق كود iframe من خرائط جوجل هنا' : 'Paste the Google Maps iframe code here for active location tracking.'}
+                                        </p>
                                     </div>
                                 </motion.div>
                             )}
@@ -531,24 +541,24 @@ export default function WebsiteEditor() {
                             {/* TAB: PHOTOS */}
                             {activeTab === 'photos' && (
                                 <motion.div 
-                                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
-                                    className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                    className="grid grid-cols-1 md:grid-cols-2 gap-10"
                                 >
                                     {[
                                         { id: 'hero', label: t('editor.fields.heroPhoto'), dim: '1920x1080' },
                                         { id: 'about', label: t('editor.fields.aboutPhoto'), dim: '800x600' }
                                     ].map(item => (
-                                        <div key={item.id} className="bg-white/[0.02] border border-white/5 p-6 rounded-3xl">
-                                            <label className="block text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">{item.label}</label>
-                                            <div className="aspect-video w-full rounded-2xl bg-black/40 border-2 border-dashed border-white/5 flex flex-col items-center justify-center relative overflow-hidden group">
+                                        <div key={item.id} className="glass-card border border-white/5 p-8 rounded-[2.5rem] group hover:border-amber-500/20 transition-all flex flex-col h-full">
+                                            <label className="block text-[10px] font-black text-amber-500/60 uppercase tracking-[0.3em] mb-6">{item.label}</label>
+                                            <div className="aspect-video w-full rounded-[1.5rem] bg-black/40 border-2 border-dashed border-white/5 flex flex-col items-center justify-center relative overflow-hidden group-hover:border-amber-500/20 transition-all">
                                                 {config.photos[item.id] ? (
-                                                    <img src={config.photos[item.id]} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                                                    <img src={config.photos[item.id]} className="w-full h-full object-cover grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 scale-105 group-hover:scale-100" />
                                                 ) : (
-                                                    <ImageIcon className="w-10 h-10 text-zinc-800" />
+                                                    <ImageIcon className="w-12 h-12 text-zinc-800" />
                                                 )}
-                                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4">
-                                                    <button className="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg text-xs shadow-xl mb-4 relative overflow-hidden">
-                                                        Upload File
+                                                <div className="absolute inset-0 bg-obsidian-dark/80 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-center p-6 backdrop-blur-sm">
+                                                    <button className="px-8 py-4 bg-amber-500 text-black font-black uppercase tracking-[0.2em] text-[10px] rounded-xl shadow-2xl mb-5 relative overflow-hidden active:scale-95 transition-transform">
+                                                        {lang === 'ar' ? 'رفع صورة' : 'Upload Asset'}
                                                         <input 
                                                             type="file" 
                                                             className="absolute inset-0 opacity-0 cursor-pointer" 
@@ -556,16 +566,19 @@ export default function WebsiteEditor() {
                                                             accept="image/*"
                                                         />
                                                     </button>
-                                                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest italic">{item.dim} recommended</p>
+                                                    <p className="text-[9px] text-zinc-400 font-black uppercase tracking-[0.3em] opacity-60">{item.dim} OPTIMIZED</p>
                                                 </div>
                                             </div>
-                                            <div className="mt-4 flex justify-between items-center">
-                                                <p className="text-[10px] text-zinc-500 font-mono truncate max-w-[150px]">{config.photos[item.id] || 'default.jpg'}</p>
+                                            <div className="mt-8 pt-6 border-t border-white/5 flex justify-between items-center mt-auto">
+                                                <div className="flex flex-col">
+                                                    <p className="text-[9px] text-zinc-600 font-black uppercase tracking-widest leading-none mb-1">Source Path</p>
+                                                    <p className="text-[10px] text-zinc-400 font-black tracking-tighter truncate max-w-[140px] lowercase">{config.photos[item.id] ? config.photos[item.id].split('/').pop() : 'default_v2.png'}</p>
+                                                </div>
                                                 <button 
                                                     onClick={() => updateNestedConfig(`photos.${item.id}`, '')}
-                                                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-zinc-800 border border-white/5 rounded-lg text-zinc-400 hover:text-rose-400 transition-colors text-[10px] font-bold uppercase"
+                                                    className="inline-flex items-center gap-2.5 px-4 py-2.5 glass-card border border-white/5 rounded-xl text-zinc-500 hover:text-red-400 hover:border-red-500/20 transition-all text-[9px] font-black uppercase tracking-widest"
                                                 >
-                                                    <RotateCcw className="w-3 h-3" />
+                                                    <RotateCcw className="w-3.5 h-3.5" />
                                                     {t('editor.actions.reset')}
                                                 </button>
                                             </div>

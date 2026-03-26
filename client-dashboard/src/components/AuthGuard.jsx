@@ -6,9 +6,10 @@ export default function AuthGuard({ children }) {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-black flex items-center justify-center">
-                <div className="animate-pulse text-zinc-500 text-sm tracking-widest uppercase">
-                    Authenticating...
+            <div className="min-h-screen bg-black flex flex-col items-center justify-center space-y-6">
+                <div className="w-16 h-16 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin amber-glow" />
+                <div className="animate-pulse text-amber-500/60 text-[10px] font-black tracking-[0.4em] uppercase">
+                    Authenticating Portal
                 </div>
             </div>
         );

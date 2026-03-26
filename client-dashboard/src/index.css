@@ -1,17 +1,68 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #080a0f;
+  --color-surface: #111319;
+  --color-primary: #f59e0b;
+  
+  --color-obsidian-bg: #111319;
+  --color-obsidian-dark: #0c0e13;
+  --color-obsidian-surface-lowest: #0c0e13;
+  --color-obsidian-surface-low: #191b21;
+  --color-obsidian-surface: #1e1f25;
+  --color-obsidian-surface-high: #282a30;
+  --color-obsidian-surface-highest: #33353a;
+
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+}
+
 @layer base {
   body {
-    @apply bg-[#0a0c10] text-gray-100 font-sans antialiased;
+    @apply bg-obsidian-dark text-zinc-100 font-sans antialiased;
   }
 }
 
 @layer components {
-  .bg-surface {
-    @apply bg-[#11141b]/90 backdrop-blur-md;
+  .glass-card {
+    @apply bg-obsidian-surface-highest/60 backdrop-blur-[12px];
+    border: 1px solid rgba(255, 193, 116, 0.08);
+    box-shadow: 0 32px 64px -12px rgba(12, 14, 19, 0.4);
   }
 
-  .text-primary {
-    @apply text-blue-500;
+  .glass-sidebar {
+    @apply bg-obsidian-surface-lowest/80 backdrop-blur-[20px] border-r border-obsidian-surface-high/20;
+  }
+
+  .amber-glow {
+    box-shadow: 0 0 24px rgba(245, 158, 11, 0.15);
+  }
+
+  .text-gradient-amber {
+    @apply bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 bg-clip-text text-transparent;
+  }
+
+  .luminous-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .luminous-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #ffc174, #f59e0b);
+    opacity: 0.3;
   }
 }
