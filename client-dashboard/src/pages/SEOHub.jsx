@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../components/AuthContext';
 import { useLanguage } from '../components/LanguageContext';
 import { 
-    Layout, Eye, CloudLightning, Shield, ChevronRight, 
-    CheckCircle, AlertCircle, RefreshCw, BarChart2,
+    Layout as LayoutIcon, Eye, CloudLightning, Shield, ChevronRight, 
+    CheckCircle, AlertCircle, RotateCcw, BarChart2,
     Settings, LogOut, PlusCircle, Trash2, Plus, Search, Globe, Save
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import ComplianceOnboarding from '../components/ComplianceOnboarding';
 
 export default function SEOHub() {
     const { user } = useAuth();
-    const { language, translations: t } = useLanguage();
+    const { lang, t } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [indexing, setIndexing] = useState(false);
@@ -136,7 +137,7 @@ export default function SEOHub() {
                         disabled={indexing}
                         className="flex items-center gap-3 px-6 py-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 transition-all text-[11px] font-black uppercase tracking-widest disabled:opacity-50 active:scale-95"
                     >
-                        {indexing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
+                        {indexing ? <RotateCcw className="w-4 h-4 animate-spin" /> : <Globe className="w-4 h-4" />}
                         {indexing ? 'Indexing...' : 'Index Website'}
                     </button>
                     <button 

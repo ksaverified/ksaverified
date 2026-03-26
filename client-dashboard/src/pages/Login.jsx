@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/AuthContext';
 import { useLanguage } from '../components/LanguageContext';
 import { Navigate } from 'react-router-dom';
-import { Lock, Phone, MessageCircle, Languages, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Lock, Phone, MessageCircle, Languages, ArrowLeft, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Login() {
@@ -234,7 +234,7 @@ export default function Login() {
                                     onClick={goBack}
                                     className="w-full py-3 text-zinc-500 hover:text-amber-500 font-black flex items-center justify-center gap-3 transition-colors text-[10px] uppercase tracking-widest"
                                 >
-                                    <RefreshCw className="w-3.5 h-3.5" />
+                                    <RotateCcw className="w-3.5 h-3.5" />
                                     {t('login.backToPhone')}
                                 </button>
                             </motion.form>

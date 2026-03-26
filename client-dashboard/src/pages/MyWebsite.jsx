@@ -3,7 +3,17 @@ import { useAuth } from '../components/AuthContext';
 import { useLanguage } from '../components/LanguageContext';
 import { supabase } from '../lib/supabase';
 import { Globe, ExternalLink, ShieldCheck, Zap, Calendar, MapPin, Eye, MousePointerClick, Smartphone, Clock, CreditCard, Lock, Unlock } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const formatDate = (dateString) => {
+    if (!dateString) return '...';
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    }).format(date);
+};
 
 export default function MyWebsite() {
     const { user } = useAuth();
