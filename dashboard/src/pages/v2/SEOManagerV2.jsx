@@ -1,12 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { 
-    Globe, Shield, Search, Filter, ArrowUpDown, 
+    Globe, Search, Filter, ArrowUpDown, 
     ExternalLink, Edit3, CheckCircle, AlertCircle, 
-    BarChart, Activity, ChevronRight, RefreshCw,
-    Layout, Eye, CloudLightning
+    BarChart, Activity, RefreshCw, Eye, CloudLightning
 } from 'lucide-react';
+import V2Shell from './V2Shell';
 
 export default function SEOManagerV2() {
     const navigate = useNavigate();
@@ -16,6 +15,7 @@ export default function SEOManagerV2() {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterIndexing, setFilterIndexing] = useState('all');
     const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+    const [indexing, setIndexing] = useState(false);
 
     const fetchSEOData = useCallback(async () => {
         setLoading(true);
@@ -31,8 +31,6 @@ export default function SEOManagerV2() {
             setLoading(false);
         }
     }, []);
-
-    const [indexing, setIndexing] = useState(false);
 
     const handlePingGoogle = async () => {
         if (!confirm('This will notify Google to re-crawl the entire platform sitemap. Continue?')) return;
@@ -90,37 +88,34 @@ export default function SEOManagerV2() {
         });
 
     return (
-        <div className="min-h-screen bg-obsidian-dark text-white font-['Inter',sans-serif]">
-            <header className="sticky top-0 z-50 border-b border-white/5 bg-obsidian-dark/80 backdrop-blur-2xl">
-                <div className="px-6 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/admin-v2')}>
-                        <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center shadow-[0_0_15px_rgba(245,158,11,0.3)] group-hover:scale-105 transition-transform">
-                            <Shield className="w-5 h-5 text-black" />
-                        </div>
-                        <div>
-                            <p className="text-sm font-black text-white leading-none tracking-tight uppercase">Dashboard</p>
-                            <p className="text-[10px] text-amber-500 font-bold tracking-[0.2em] uppercase leading-none mt-1.5 glow-text-amber">Global SEO Manager</p>
-                        </div>
+        <V2Shell>
+            <div className="p-6 space-y-6">
+                {/* Header Section */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-2xl font-black text-white italic tracking-tighter flex items-center gap-3">
+                            <Globe className="w-8 h-8 text-amber-500" />
+                            Global SEO Manager
+                        </h1>
+                        <p className="text-zinc-500 mt-1 font-medium">Monitor and automate SEO health across all {leads.length} assets.</p>
                     </div>
 
                     <div className="flex items-center gap-3">
                         <button 
                             onClick={handlePingGoogle}
                             disabled={indexing || loading}
-                            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-all text-xs font-bold disabled:opacity-50"
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-all text-xs font-black uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-amber-500/5"
                         >
                             <CloudLightning className={`w-4 h-4 ${indexing ? 'animate-pulse' : ''}`} />
                             {indexing ? 'Indexing...' : 'Index Platform'}
                         </button>
-                        <button onClick={fetchSEOData} className="p-2.5 rounded-xl border border-white/5 bg-obsidian-surface-high/50 hover:bg-obsidian-surface-highest transition-all">
+                        <button onClick={fetchSEOData} className="p-2.5 rounded-xl border border-white/5 bg-obsidian-surface-high/50 hover:bg-obsidian-surface-highest transition-all shadow-xl">
                             <RefreshCw className={`w-4 h-4 text-zinc-400 ${loading ? 'animate-spin' : ''}`} />
                         </button>
                     </div>
                 </div>
-            </header>
 
-            <main className="p-6 space-y-6 max-w-[1600px] mx-auto">
-                <div className="grid grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <div className="glass-card rounded-3xl p-6 border-t border-white/5">
                         <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">Total Web Assets</p>
                         <p className="text-3xl font-black text-white">{leads.length}</p>
@@ -290,7 +285,7 @@ export default function SEOManagerV2() {
                         )}
                     </div>
                 </div>
-            </main>
-        </div>
+            </div>
+        </V2Shell>
     );
 }
