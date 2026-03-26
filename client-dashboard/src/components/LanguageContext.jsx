@@ -11,7 +11,19 @@ const translations = {
             signOut: "Sign Out",
             portal: "Client Portal",
             editor: "Edit Website",
-            seo: "SEO Optimization"
+            seo: "SEO & Analytics"
+        },
+        seo: {
+            analytics: "Visitor Analytics",
+            views: "Total Page Views",
+            engaged: "Engaged Sessions",
+            conversion: "Daily Reach Goal",
+            indexing: "Instant Indexing",
+            indexDesc: "Notify Google immediately of your latest website updates.",
+            indexBtn: "Index My Site Now",
+            indexing_active: "Indexing in progress...",
+            indexed: "Indexing requested!",
+            metrics: "Site Performance"
         },
         editor: {
             title: "Website Editor",
@@ -129,7 +141,19 @@ const translations = {
             signOut: "تسجيل الخروج",
             portal: "بوابة العملاء",
             editor: "تعديل الموقع",
-            seo: "تحسين محركات البحث"
+            seo: "SEO والتحليلات"
+        },
+        seo: {
+            analytics: "تحليلات الزوار",
+            views: "إجمالي المشاهدات",
+            engaged: "الجلسات المتفاعلة",
+            conversion: "هدف الوصول اليومي",
+            indexing: "الفهرسة الفورية",
+            indexDesc: "أبلغ جوجل فوراً بأحدث تحديثات موقعك الإلكتروني.",
+            indexBtn: "فهرس موقعي الآن",
+            indexing_active: "جاري الفهرسة...",
+            indexed: "تم طلب الفهرسة!",
+            metrics: "أداء الموقع"
         },
         editor: {
             title: "محرر الموقع",

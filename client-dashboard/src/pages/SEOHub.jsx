@@ -4,7 +4,7 @@ import { useLanguage } from '../components/LanguageContext';
 import { 
     Search, Layout, CheckCircle, AlertCircle, 
     ArrowRight, Globe, Save, RefreshCw, BarChart2,
-    Eye, Info, HelpingHand
+    Eye, Info, HelpingHand, Users, CloudLightning
 } from 'lucide-react';
 
 export default function SEOHub() {
@@ -12,10 +12,14 @@ export default function SEOHub() {
     const { t, lang } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [indexing, setIndexing] = useState(false);
+    const [indexed, setIndexed] = useState(false);
     const [seoData, setSeoData] = useState({
         seo_title: '',
         seo_description: '',
         seo_score: 0,
+        views: 0,
+        full_minute_views: 0,
         indexing_status: 'not_indexed',
         seo_metadata: {
             on_page_checklist: { h1: false, alt_text: false, google_business_profile: false },
@@ -31,11 +35,7 @@ export default function SEOHub() {
         if (!user) return;
         setLoading(true);
         try {
-            // In the customer portal, we fetch by the user's linked lead
-            // The user metadata or a separate profile table usually stores the place_id
-            const { data: profile } = await user.aud === 'authenticated' ? { data: { place_id: user.user_metadata?.place_id } } : { data: null };
             const placeId = user.user_metadata?.place_id;
-            
             if (placeId) {
                 const response = await fetch(`/api/seo?action=details&id=${placeId}`);
                 const result = await response.json();
@@ -47,6 +47,23 @@ export default function SEOHub() {
             console.error('[SEO Hub] Fetch error:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleIndex = async () => {
+        const placeId = user.user_metadata?.place_id;
+        if (!placeId) return;
+        setIndexing(true);
+        try {
+            const response = await fetch(`/api/seo?action=ping-google&id=${placeId}`, { method: 'POST' });
+            if (response.ok) {
+                setIndexed(true);
+                setTimeout(() => setIndexed(false), 5000);
+            }
+        } catch (error) {
+            console.error('[SEO Hub] Indexing error:', error);
+        } finally {
+            setIndexing(false);
         }
     };
 
@@ -94,10 +111,10 @@ export default function SEOHub() {
                 <div>
                     <h1 className="text-3xl font-black text-white italic tracking-tighter flex items-center gap-3">
                         <Search className="w-8 h-8 text-blue-500" />
-                        {lang === 'ar' ? 'مركز تحسين محركات البحث' : 'SEO Optimization Hub'}
+                        {t('nav.seo')}
                     </h1>
                     <p className="text-zinc-500 mt-1 font-medium">
-                        {lang === 'ar' ? 'قم بتحسين ظهور موقعك على جوجل' : 'Increase your visibility on Google Search and Maps.'}
+                        {lang === 'ar' ? 'قم بتحسين ظهور موقعك على جوجل وتتبع زوارك' : 'Increase your visibility on Google Search and track your visitors.'}
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -126,6 +143,42 @@ export default function SEOHub() {
                                 />
                              </svg>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-[#12141c] rounded-3xl p-6 border border-white/5 shadow-xl flex items-center gap-5 group hover:border-blue-500/30 transition-all">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                        <Users className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest leading-none mb-1.5">{t('seo.views')}</p>
+                        <p className="text-2xl font-black text-white leading-none tracking-tight">{seoData.views || 0}</p>
+                    </div>
+                </div>
+
+                <div className="bg-[#12141c] rounded-3xl p-6 border border-white/5 shadow-xl flex items-center gap-5 group hover:border-emerald-500/30 transition-all">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+                        <BarChart2 className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest leading-none mb-1.5">{t('seo.engaged')}</p>
+                        <p className="text-2xl font-black text-white leading-none tracking-tight">{seoData.full_minute_views || 0}</p>
+                    </div>
+                </div>
+
+                <div className="bg-[#12141c] rounded-3xl p-6 border border-white/5 shadow-xl flex flex-col justify-center gap-2 group hover:border-amber-500/30 transition-all relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-1">
+                        <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest leading-none">{t('seo.conversion')}</p>
+                        <p className="text-xs font-bold text-amber-500">{(Math.min(100, ((seoData.views || 0) / 50) * 100)).toFixed(0)}%</p>
+                    </div>
+                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                            className="h-full bg-amber-500 transition-all duration-1000"
+                            style={{ width: `${Math.min(100, ((seoData.views || 0) / 50) * 100)}%` }}
+                        />
                     </div>
                 </div>
             </div>
@@ -258,6 +311,32 @@ export default function SEOHub() {
                                     : 'Include your city and primary service in the title to rank better for local searches.'}
                              </p>
                         </div>
+                    </div>
+
+                    <div className="bg-[#12141c] rounded-3xl p-6 border border-white/5 shadow-xl space-y-5">
+                        <div className="flex items-center gap-3">
+                            <CloudLightning className="w-5 h-5 text-amber-500" />
+                            <h2 className="text-sm font-black text-white uppercase tracking-widest">{t('seo.indexing')}</h2>
+                        </div>
+                        
+                        <p className="text-[11px] text-zinc-500 leading-relaxed font-medium">
+                            {t('seo.indexDesc')}
+                        </p>
+
+                        <button 
+                            onClick={handleIndex}
+                            disabled={indexing || indexed}
+                            className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
+                                indexed 
+                                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                                : 'bg-white/5 hover:bg-white/10 text-white border border-white/10'
+                            }`}
+                        >
+                            {indexing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : 
+                             indexed ? <CheckCircle className="w-3.5 h-3.5" /> : 
+                             <CloudLightning className="w-3.5 h-3.5" />}
+                            {indexing ? t('seo.indexing_active') : indexed ? t('seo.indexed') : t('seo.indexBtn')}
+                        </button>
                     </div>
 
                     <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-600/20 relative overflow-hidden group border border-white/10">
