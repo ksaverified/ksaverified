@@ -4,7 +4,7 @@ import {
     LayoutDashboard, Radio, Map as MapIcon, Globe,
     MessageCircle, UserCheck, MessageSquare,
     BarChart3, Activity, Settings, Zap, LogOut,
-    ChevronDown
+    ChevronDown, Search
 } from 'lucide-react';
 import GlobalStatusBar from './GlobalStatusBar';
 import { useAuth } from './AuthContext';
@@ -24,6 +24,7 @@ const NAV_SECTIONS = [
             { to: '/admin/pipeline', icon: Radio, label: 'Lead Pipeline' },
             { to: '/admin/map', icon: MapIcon, label: 'Scout Map' },
             { to: '/admin/websites', icon: Globe, label: 'Live Sites' },
+            { to: '/admin/seo', icon: Search, label: 'Global SEO Manager' },
         ]
     },
     {

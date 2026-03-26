@@ -58,6 +58,7 @@ function App() {
             <Route path="whatsapp" element={<WhatsApp />} />
             <Route path="interest-confirmed" element={<InterestConfirmed />} />
             <Route path="logs" element={<Logs />} />
+            <Route path="seo" element={<SEOManagerV2 />} />
           </Route>
 
           {/* Sales Force Routes */}

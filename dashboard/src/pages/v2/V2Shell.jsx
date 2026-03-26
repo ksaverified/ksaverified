@@ -3,13 +3,14 @@ import { useAuth } from '../../components/AuthContext';
 import { supabase } from '../../lib/supabase';
 import {
     Shield, LayoutDashboard, Users, Globe, MessageSquare,
-    BarChart2, Map, BookOpen, Terminal, Settings, LogOut, ChevronLeft, Bot, Award
+    BarChart2, Map, BookOpen, Terminal, Settings, LogOut, ChevronLeft, Bot, Award, Search
 } from 'lucide-react';
 
 const NAV_ITEMS = [
     { path: '/admin-v2', label: 'Overview', icon: LayoutDashboard, exact: true },
     { path: '/admin-v2/pipeline', label: 'Pipeline', icon: Users },
     { path: '/admin-v2/websites', label: 'Websites', icon: Globe },
+    { path: '/admin-v2/seo', label: 'Global SEO', icon: Search },
     { path: '/admin-v2/whatsapp', label: 'WhatsApp CX', icon: MessageSquare },
     { path: '/admin-v2/sales', label: 'Sales Force', icon: Award },
     { path: '/admin-v2/analytics', label: 'Analytics', icon: BarChart2 },
