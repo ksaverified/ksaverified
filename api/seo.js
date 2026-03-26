@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
             case 'robots':
                 return await handleRobots(req, res);
             case 'ping-google':
-                return await handlePingGoogle(req, res);
+                return await handlePingGoogle(db, id, req, res);
             default:
                 return res.status(400).json({ error: 'Invalid SEO action' });
         }
@@ -165,21 +165,35 @@ async function handleSEOAudit(db, id, req, res) {
     return res.status(200).json({ success: true, score, data: data[0] });
 }
 
-async function handlePingGoogle(req, res) {
+async function handlePingGoogle(db, id, req, res) {
     try {
-        const sitemapUrl = 'https://ksaverified.com/sitemap.xml';
-        const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`;
+        let targetUrl = 'https://ksaverified.com/sitemap.xml';
         
+        if (id) {
+            const lead = await db.getLead(id);
+            if (lead && lead.slug) {
+                targetUrl = `https://ksaverified.com/${lead.slug}`;
+            }
+        }
+
+        const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(targetUrl)}`;
         await axios.get(pingUrl);
         
+        // Update status in DB if individual
+        if (id) {
+            await db.supabase
+                .from('leads')
+                .update({ indexing_status: 'pending', updated_at: new Date().toISOString() })
+                .eq('place_id', id);
+        }
+
         return res.status(200).json({ 
             success: true, 
-            message: 'Successfully notified Google. They will background crawl your sitemap shortly.' 
+            message: id ? 'Google notified of site update.' : 'Successfully notified Google. They will background crawl your sitemap shortly.' 
         });
     } catch (error) {
-        // Google might return 204 or other status that axios might count as error if not 200
         if (error.response && error.response.status === 204) {
-            return res.status(200).json({ success: true, message: 'Google accepted the sitemap notification.' });
+            return res.status(200).json({ success: true, message: 'Google accepted the notification.' });
         }
         throw new Error('Failed to notify Google: ' + error.message);
     }

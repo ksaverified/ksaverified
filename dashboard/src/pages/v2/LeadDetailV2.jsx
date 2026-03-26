@@ -6,7 +6,7 @@ import {
     Calendar, Clock, CreditCard, Unlock, Lock,
     CheckCircle, AlertTriangle, User, Hash,
     ExternalLink, Edit2, Save, X, BarChart2,
-    Monitor, Tablet, Smartphone, Search
+    Monitor, Tablet, Smartphone, Search, CloudLightning
 } from 'lucide-react';
 import V2Shell from './V2Shell';
 
@@ -134,19 +134,20 @@ export default function LeadDetailV2() {
         }
     };
 
-    const handleLock = async () => {
+    const handleIndex = async () => {
+        if (!confirm('Notify Google to re-crawl this specific business site?')) return;
         setSaving(true);
         try {
-            const { error } = await supabase.from('leads').update({
-                is_unlocked: false,
-                unlock_until: null,
-                updated_at: new Date().toISOString()
-            }).eq('place_id', placeId);
-
-            if (error) throw error;
-            fetchData();
+            const res = await fetch(`/api/seo?action=ping-google&id=${placeId}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert(data.message);
+                fetchData();
+            } else {
+                throw new Error(data.error);
+            }
         } catch (e) {
-            alert('Failed to lock: ' + e.message);
+            alert('Failed to index: ' + e.message);
         } finally {
             setSaving(false);
         }
@@ -197,9 +198,18 @@ export default function LeadDetailV2() {
                     </div>
                     <div className="flex items-center gap-3">
                         {lead.vercel_url && (
-                            <a href={lead.vercel_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all amber-glow">
-                                <Globe className="w-4 h-4" /> View Site <ExternalLink className="w-3 h-3 opacity-50" />
-                            </a>
+                            <>
+                                <button 
+                                    onClick={handleIndex}
+                                    disabled={saving}
+                                    className="flex items-center gap-2 px-4 py-2.5 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-amber-500 border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all disabled:opacity-50"
+                                >
+                                    <CloudLightning className={`w-4 h-4 ${saving ? 'animate-pulse' : ''}`} /> Index Site
+                                </button>
+                                <a href={lead.vercel_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 rounded-xl text-xs font-bold uppercase tracking-wider transition-all amber-glow">
+                                    <Globe className="w-4 h-4" /> View Site <ExternalLink className="w-3 h-3 opacity-50" />
+                                </a>
+                            </>
                         )}
                         {!isEditing ? (
                             <button onClick={() => setIsEditing(true)} className="flex items-center gap-2 px-4 py-2.5 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all">
