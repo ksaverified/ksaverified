@@ -20,11 +20,11 @@
     "rewrites": [
         {
             "source": "/sitemap.xml",
-            "destination": "/api/sitemap"
+            "destination": "/api/seo?action=sitemap"
         },
         {
             "source": "/robots.txt",
-            "destination": "/api/robots"
+            "destination": "/api/seo?action=robots"
         },
         {
             "source": "/api/admin_sfa",

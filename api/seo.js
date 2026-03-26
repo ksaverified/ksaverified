@@ -15,6 +15,10 @@ module.exports = async function handler(req, res) {
                 return await handleSEOUpdate(db, id, req, res);
             case 'audit':
                 return await handleSEOAudit(db, id, req, res);
+            case 'sitemap':
+                return await handleSitemap(db, req, res);
+            case 'robots':
+                return await handleRobots(req, res);
             case 'ping-google':
                 return await handlePingGoogle(req, res);
             default:
@@ -22,9 +26,49 @@ module.exports = async function handler(req, res) {
         }
     } catch (error) {
         console.error(`[SEO API Error: ${action}]`, error.message);
-        return res.status(500).json({ success: false, error: error.message });
+        return res.status(500).send(action === 'sitemap' ? 'Error generating sitemap' : error.message);
     }
 };
+
+async function handleSitemap(db, req, res) {
+    const baseUrl = 'https://ksaverified.com';
+    try {
+        const { data: leads, error } = await db.supabase
+            .from('leads')
+            .select('slug, updated_at')
+            .not('slug', 'is', null)
+            .eq('status', 'live');
+
+        if (error) throw error;
+
+        let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+        xml += `  <url>\n    <loc>${baseUrl}/</loc>\n    <changefreq>daily</changefreq>\n    <priority>1.0</priority>\n  </url>\n`;
+
+        for (const lead of leads) {
+            const lastMod = lead.updated_at ? new Date(lead.updated_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+            xml += `  <url>\n    <loc>${baseUrl}/${lead.slug}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>\n`;
+        }
+
+        xml += '</urlset>';
+        res.setHeader('Content-Type', 'text/xml');
+        return res.status(200).send(xml);
+    } catch (error) {
+        throw error;
+    }
+}
+
+async function handleRobots(req, res) {
+    const robots = `User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://ksaverified.com/sitemap.xml`;
+
+    res.setHeader('Content-Type', 'text/plain');
+    return res.status(200).send(robots);
+}
 
 async function handleGlobalSEO(db, req, res) {
     // Fetch SEO health for all sites (Admin view)
