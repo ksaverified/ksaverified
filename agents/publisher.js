@@ -50,11 +50,17 @@ class PublisherAgent {
    * Injects the Google Analytics 4 (GA4) tag into the <head>
    * @param {string} htmlString 
    * @param {string} measurementId 
+   * @param {Object} config - Optional GA4 config parameters (e.g. { page_title: '...' })
    * @returns {string}
    */
-  injectGTag(htmlString, measurementId = 'G-JDPL5ZZZ9X') {
+  injectGTag(htmlString, measurementId = 'G-JDPL5ZZZ9X', config = {}) {
     if (!htmlString || !measurementId) return htmlString;
     
+    // Convert config object to gtag config call params
+    const configString = Object.keys(config).length > 0 
+      ? `, ${JSON.stringify(config)}` 
+      : '';
+
     const gtagScript = `
       <!-- Google tag (gtag.js) -->
       <script async src="https://www.googletagmanager.com/gtag/js?id=${measurementId}"></script>
@@ -62,7 +68,7 @@ class PublisherAgent {
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', '${measurementId}');
+        gtag('config', '${measurementId}'${configString});
       </script>
     `;
 

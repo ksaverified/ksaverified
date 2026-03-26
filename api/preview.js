@@ -27,8 +27,10 @@ module.exports = async function handler(request, response) {
             finalHtml = publisher.injectSEOTags(finalHtml, lead.seo_title, lead.seo_description);
         }
 
-        // Inject Google Analytics (GA4)
-        finalHtml = publisher.injectGTag(finalHtml, 'G-JDPL5ZZZ9X');
+        // Inject Google Analytics (GA4) with business context
+        finalHtml = publisher.injectGTag(finalHtml, 'G-JDPL5ZZZ9X', {
+            page_title: lead.business_name || 'Business Site'
+        });
 
         if (lead.status !== 'completed' && !isDashboardView) {
             finalHtml = publisher.injectModal(finalHtml, lead.place_id);
