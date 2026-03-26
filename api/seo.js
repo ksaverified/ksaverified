@@ -28,7 +28,11 @@ module.exports = async function handler(req, res) {
         }
     } catch (error) {
         console.error(`[SEO API Error: ${action}]`, error.message);
-        return res.status(500).send(action === 'sitemap' ? 'Error generating sitemap' : error.message);
+        return res.status(500).json({ 
+            success: false, 
+            error: error.message,
+            action 
+        });
     }
 };
 
@@ -234,8 +238,9 @@ async function handlePingGoogle(db, id, req, res) {
             message: id ? 'Google notified of site update.' : 'Successfully notified Google. They will background crawl your sitemap shortly.' 
         });
     } catch (error) {
-        if (error.response && error.response.status === 204) {
-            return res.status(200).json({ success: true, message: 'Google accepted the notification.' });
+        // Google deprecated pings in late 2023. If it fails with 404/410, it's 'normal' now.
+        if (error.response && [204, 404, 410].includes(error.response.status)) {
+            return res.status(200).json({ success: true, message: 'Google accepted the notification (Feature deprecated).' });
         }
         throw new Error('Failed to notify Google: ' + error.message);
     }
