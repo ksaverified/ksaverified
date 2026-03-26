@@ -92,6 +92,13 @@ export default function Layout() {
                         </div>
                     </div>
 
+                    <button 
+                        onClick={() => window.location.href = '/admin-v2'}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-zinc-500 hover:text-amber-500 hover:bg-amber-500/5 transition-all text-xs font-black uppercase tracking-widest mt-auto mb-4 border border-dashed border-white/5"
+                    >
+                        <Shield className="w-4 h-4" /> Back to Admin
+                    </button>
+
                     <button
                         onClick={handleLogout}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 group"
