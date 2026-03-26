@@ -27,6 +27,9 @@ module.exports = async function handler(request, response) {
             finalHtml = publisher.injectSEOTags(finalHtml, lead.seo_title, lead.seo_description);
         }
 
+        // Inject Google Analytics (GA4)
+        finalHtml = publisher.injectGTag(finalHtml, 'G-JDPL5ZZZ9X');
+
         if (lead.status !== 'completed' && !isDashboardView) {
             finalHtml = publisher.injectModal(finalHtml, lead.place_id);
         }

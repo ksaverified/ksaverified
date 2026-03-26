@@ -47,6 +47,36 @@ class PublisherAgent {
   }
 
   /**
+   * Injects the Google Analytics 4 (GA4) tag into the <head>
+   * @param {string} htmlString 
+   * @param {string} measurementId 
+   * @returns {string}
+   */
+  injectGTag(htmlString, measurementId = 'G-JDPL5ZZZ9X') {
+    if (!htmlString || !measurementId) return htmlString;
+    
+    const gtagScript = `
+      <!-- Google tag (gtag.js) -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=${measurementId}"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', '${measurementId}');
+      </script>
+    `;
+
+    // Inject at the beginning of <head>
+    const headMatch = htmlString.match(/<head[^>]*>/i);
+    if (headMatch) {
+      const index = htmlString.indexOf(headMatch[0]) + headMatch[0].length;
+      return htmlString.substring(0, index) + '\n' + gtagScript + htmlString.substring(index);
+    }
+    
+    return htmlString;
+  }
+
+  /**
    * Injects the payment modal snippet at the start of the <body>
    * @param {string} htmlString - Original website HTML
    * @param {string} placeId - The ID of the lead for tracking
