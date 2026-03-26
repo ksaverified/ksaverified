@@ -130,6 +130,14 @@ export default function SEOHub() {
 
                 <div className="flex items-center gap-3">
                     <button 
+                        onClick={handleIndex}
+                        disabled={indexing}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 text-amber-500 transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+                    >
+                        {indexing ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Globe className="w-3.5 h-3.5" />}
+                        {indexing ? 'Indexing...' : 'Index Website'}
+                    </button>
+                    <button 
                         onClick={handleRelinquish}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/20 bg-red-500/5 hover:bg-red-500/10 text-red-500 transition-all text-[10px] font-black uppercase tracking-widest"
                     >
