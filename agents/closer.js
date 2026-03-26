@@ -57,6 +57,19 @@ class CloserAgent {
         const formattedPhone = this.formatPhoneNumber(phone);
         if (!formattedPhone) return 'skipped_invalid';
 
+        // 0. Pre-flight check: Verify the website is working before pitching
+        if (vercelUrl) {
+            console.log(`[Closer] Performing pre-flight check on URL: ${vercelUrl}`);
+            try {
+                // Perform a simple GET request. Axios defaults to throwing an error for status >= 400.
+                await axios.get(vercelUrl, { timeout: 15000 });
+                console.log(`[Closer] Pre-flight check passed. Site is up.`);
+            } catch (err) {
+                console.error(`[Closer] CRITICAL: Pre-flight check failed for ${vercelUrl}. Error: ${err.message}`);
+                throw new Error(`Website at ${vercelUrl} is not working or unreachable. Pitch aborted to prevent sending broken links.`);
+            }
+        }
+
         // 1. Ensure lead exists and generate/retrieve PIN
         let registrationData = { pin: '000000' };
         try {
