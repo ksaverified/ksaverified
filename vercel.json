@@ -47,6 +47,14 @@
             "destination": "/api/system?action=trigger"
         },
         {
+            "source": "/api/translate",
+            "destination": "/api/system?action=translate"
+        },
+        {
+            "source": "/api/send-message",
+            "destination": "/api/system?action=send-message"
+        },
+        {
             "source": "/api/(.*)",
             "destination": "/api/$1"
         },

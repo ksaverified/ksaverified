@@ -10,6 +10,10 @@ module.exports = async function handler(req, res) {
                 return await handleTrack(req, res);
             case 'trigger':
                 return await handleTrigger(req, res);
+            case 'translate':
+                return await handleTranslate(req, res);
+            case 'send-message':
+                return await handleSendMessage(req, res);
             default:
                 return res.status(400).json({ error: 'Invalid system action' });
         }
@@ -18,6 +22,40 @@ module.exports = async function handler(req, res) {
         return res.status(500).json({ success: false, error: error.message });
     }
 };
+
+async function handleTranslate(req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    const { text, targetLang } = req.body;
+    if (!text || !targetLang) return res.status(400).json({ error: 'Missing text or targetLang' });
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
+
+    const { GoogleGenerativeAI } = require('@google/generative-ai');
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `Translate the following text to ${targetLang}. Return ONLY the translated text. Do not add quotes, explanations, or conversational filler.
+    Text: "${text}"`;
+
+    const result = await model.generateContent(prompt);
+    const translatedText = result.response.text().trim();
+    return res.status(200).json({ translatedText });
+}
+
+async function handleSendMessage(req, res) {
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    const { phone, message, placeId } = req.body;
+    if (!phone || !message) return res.status(400).json({ error: 'Missing phone or message' });
+
+    const db = new DatabaseService();
+    const axios = require('axios');
+    const whatsappServiceUrl = 'https://adelaida-ferulaceous-hypsometrically.ngrok-free.dev';
+
+    await axios.post(`${whatsappServiceUrl}/send`, { to: phone, message });
+    await db.saveOutboundChatLog(placeId || null, phone, message);
+    return res.status(200).json({ success: true });
+}
 
 async function handleTrack(req, res) {
     const { id, event } = req.query; // event: 'view', 'full_minute'
