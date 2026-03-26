@@ -5,7 +5,7 @@ import {
     Globe, Shield, Search, Filter, ArrowUpDown, 
     ExternalLink, Edit3, CheckCircle, AlertCircle, 
     BarChart, Activity, ChevronRight, RefreshCw,
-    Layout, Eye
+    Layout, Eye, CloudLightning
 } from 'lucide-react';
 
 export default function SEOManagerV2() {
@@ -31,6 +31,27 @@ export default function SEOManagerV2() {
             setLoading(false);
         }
     }, []);
+
+    const [indexing, setIndexing] = useState(false);
+
+    const handlePingGoogle = async () => {
+        if (!confirm('This will notify Google to re-crawl the entire platform sitemap. Continue?')) return;
+        
+        setIndexing(true);
+        try {
+            const response = await fetch('/api/seo?action=ping-google', { method: 'POST' });
+            const data = await response.json();
+            if (data.success) {
+                alert(data.message);
+            } else {
+                throw new Error(data.error);
+            }
+        } catch (err) {
+            alert('Error indexing platform: ' + err.message);
+        } finally {
+            setIndexing(false);
+        }
+    };
 
     useEffect(() => {
         fetchSEOData();
@@ -83,6 +104,14 @@ export default function SEOManagerV2() {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <button 
+                            onClick={handlePingGoogle}
+                            disabled={indexing || loading}
+                            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 transition-all text-xs font-bold disabled:opacity-50"
+                        >
+                            <CloudLightning className={`w-4 h-4 ${indexing ? 'animate-pulse' : ''}`} />
+                            {indexing ? 'Indexing...' : 'Index Platform'}
+                        </button>
                         <button onClick={fetchSEOData} className="p-2.5 rounded-xl border border-white/5 bg-obsidian-surface-high/50 hover:bg-obsidian-surface-highest transition-all">
                             <RefreshCw className={`w-4 h-4 text-zinc-400 ${loading ? 'animate-spin' : ''}`} />
                         </button>

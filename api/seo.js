@@ -1,4 +1,5 @@
 const DatabaseService = require('../services/db');
+const axios = require('axios');
 
 module.exports = async function handler(req, res) {
     const { action, id } = req.query;
@@ -14,6 +15,8 @@ module.exports = async function handler(req, res) {
                 return await handleSEOUpdate(db, id, req, res);
             case 'audit':
                 return await handleSEOAudit(db, id, req, res);
+            case 'ping-google':
+                return await handlePingGoogle(req, res);
             default:
                 return res.status(400).json({ error: 'Invalid SEO action' });
         }
@@ -116,4 +119,24 @@ async function handleSEOAudit(db, id, req, res) {
 
     if (error) throw error;
     return res.status(200).json({ success: true, score, data: data[0] });
+}
+
+async function handlePingGoogle(req, res) {
+    try {
+        const sitemapUrl = 'https://ksaverified.com/sitemap.xml';
+        const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`;
+        
+        await axios.get(pingUrl);
+        
+        return res.status(200).json({ 
+            success: true, 
+            message: 'Successfully notified Google. They will background crawl your sitemap shortly.' 
+        });
+    } catch (error) {
+        // Google might return 204 or other status that axios might count as error if not 200
+        if (error.response && error.response.status === 204) {
+            return res.status(200).json({ success: true, message: 'Google accepted the sitemap notification.' });
+        }
+        throw new Error('Failed to notify Google: ' + error.message);
+    }
 }
