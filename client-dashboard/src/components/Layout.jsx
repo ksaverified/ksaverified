@@ -64,8 +64,12 @@ export default function Layout() {
                                 }`
                             }
                         >
-                            <item.icon className={`h-4 w-4 ${isActive ? 'text-black' : 'text-zinc-500 group-hover:text-amber-500'}`} />
-                            <span>{item.name}</span>
+                            {({ isActive }) => (
+                                <>
+                                    <item.icon className={`h-4 w-4 ${isActive ? 'text-black' : 'text-zinc-500 group-hover:text-amber-500'}`} />
+                                    <span>{item.name}</span>
+                                </>
+                            )}
                         </NavLink>
                     ))}
                 </nav>
@@ -153,14 +157,18 @@ export default function Layout() {
                                     to={item.href}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className={({ isActive }) =>
-                                        `flex items-center gap-3 px-4 py-4 rounded-xl transition-all ${isActive
-                                            ? 'bg-blue-600 text-white'
-                                            : 'text-zinc-400'
+                                        `flex items-center gap-4 px-6 py-5 rounded-2xl transition-all ${isActive
+                                            ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 font-black italic uppercase text-xs tracking-widest'
+                                            : 'text-zinc-400 font-bold uppercase text-xs tracking-widest'
                                         }`
                                     }
                                 >
-                                    <item.icon className="h-6 w-6" />
-                                    <span className="text-lg font-medium">{item.name}</span>
+                                    {({ isActive }) => (
+                                        <>
+                                            <item.icon className={`h-5 w-5 ${isActive ? 'text-black' : 'text-amber-500/60'}`} />
+                                            <span>{item.name}</span>
+                                        </>
+                                    )}
                                 </NavLink>
                             ))}
                         </nav>
