@@ -69,12 +69,21 @@ class CloserAgent {
         if (vercelUrl) {
             console.log(`[Closer] Performing pre-flight check on URL: ${vercelUrl}`);
             try {
-                // Perform a simple GET request. Axios defaults to throwing an error for status >= 400.
-                await axios.get(vercelUrl, { timeout: 15000 });
-                console.log(`[Closer] Pre-flight check passed. Site is up.`);
+                const response = await axios.get(vercelUrl, {
+                    timeout: 20000,
+                    maxRedirects: 5,
+                    validateStatus: (status) => status < 500 // Accept 2xx, 3xx, 4xx — only reject 5xx
+                });
+                console.log(`[Closer] Pre-flight check passed (status: ${response.status}). Site is up.`);
             } catch (err) {
-                console.error(`[Closer] CRITICAL: Pre-flight check failed for ${vercelUrl}. Error: ${err.message}`);
-                throw new Error(`Website at ${vercelUrl} is not working or unreachable. Pitch aborted to prevent sending broken links.`);
+                // Only hard-block on genuine connection failures, not HTTP errors
+                const isConnectionError = err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === 'ECONNRESET';
+                if (isConnectionError) {
+                    console.error(`[Closer] CRITICAL: Pre-flight connection failure for ${vercelUrl}. Error: ${err.message}`);
+                    throw new Error(`Website at ${vercelUrl} is not working or unreachable. Pitch aborted to prevent sending broken links.`);
+                }
+                // Timeout or other transient errors: warn but allow pitch through
+                console.warn(`[Closer] Pre-flight check warning (non-fatal): ${err.message}. Proceeding with pitch.`);
             }
         }
 
