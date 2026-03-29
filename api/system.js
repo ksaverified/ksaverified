@@ -15,7 +15,8 @@ module.exports = async function handler(req, res) {
             case 'send-message':
                 return await handleSendMessage(req, res);
             case 'notification-worker':
-                return await handleNotificationWorker(db, req, res);
+                const dbInstance = new DatabaseService();
+                return await handleNotificationWorker(dbInstance, req, res);
             default:
                 return res.status(400).json({ error: 'Invalid system action' });
         }

@@ -439,12 +439,6 @@ const SalesmanDashboard = () => {
                             <div>
                                 <h2 className="text-2xl font-bold">{selectedLead.name}</h2>
                                 <p className="text-gray-500">{selectedLead.address}</p>
-                                {selectedLead.vercel_url && (
-                                    <a href={selectedLead.vercel_url} target="_blank" rel="noreferrer"
-                                        className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-amber-500/10 text-amber-500 text-xs font-bold rounded-xl border border-amber-500/20 hover:bg-amber-500/20 transition-colors">
-                                        <Globe className="w-3.5 h-3.5" /> View Generated Website
-                                    </a>
-                                )}
                             </div>
 
                             {!selectedLead.claimed ? (
@@ -458,29 +452,41 @@ const SalesmanDashboard = () => {
                                             <span className="text-sm text-gray-500">{routeInfo.legs[0].duration.text} away</span>
                                         </div>
                                     )}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <button 
-                                            className={`py-4 rounded-2xl font-bold flex items-center justify-center gap-2 border ${directionsError ? 'bg-orange-500/10 border-orange-500/30 text-orange-500' : 'bg-white/5 border-white/10'}`}
-                                            onClick={() => {
-                                                if (directionsError) {
-                                                    // Trigger a local retry by resetting state and switching to map
-                                                    setDirectionsError(false);
-                                                    setViewMode('map');
-                                                    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedLead.address)}&travelmode=driving`, '_blank');
-                                                } else {
-                                                    setViewMode('map');
-                                                }
-                                            }}
-                                        >
-                                            {directionsError ? <Navigation className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
-                                            {directionsError ? 'Open Google Maps' : 'View Map'}
-                                        </button>
-                                        <button 
-                                            className="py-4 bg-brand rounded-2xl font-bold shadow-lg shadow-brand/20"
-                                            onClick={() => handleClaim(selectedLead)}
-                                        >
-                                            Claim Lead
-                                        </button>
+                                    <div className="flex flex-col gap-4">
+                                        {selectedLead.vercel_url && (
+                                            <a 
+                                                href={selectedLead.vercel_url} 
+                                                target="_blank" 
+                                                rel="noreferrer"
+                                                className="py-4 rounded-2xl font-bold flex items-center justify-center gap-2 bg-amber-500/10 border border-amber-500/30 text-amber-500 hover:bg-amber-500/20 transition-colors w-full"
+                                            >
+                                                <Globe className="w-5 h-5" /> View Generated Website
+                                            </a>
+                                        )}
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <button 
+                                                className={`py-4 rounded-2xl font-bold flex items-center justify-center gap-2 border ${directionsError ? 'bg-orange-500/10 border-orange-500/30 text-orange-500' : 'bg-white/5 border-white/10'}`}
+                                                onClick={() => {
+                                                    if (directionsError) {
+                                                        // Trigger a local retry by resetting state and switching to map
+                                                        setDirectionsError(false);
+                                                        setViewMode('map');
+                                                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(selectedLead.address)}&travelmode=driving`, '_blank');
+                                                    } else {
+                                                        setViewMode('map');
+                                                    }
+                                                }}
+                                            >
+                                                {directionsError ? <Navigation className="w-5 h-5" /> : <MapIcon className="w-5 h-5" />}
+                                                {directionsError ? 'Open Google Maps' : 'View Map'}
+                                            </button>
+                                            <button 
+                                                className="py-4 bg-brand rounded-2xl font-bold shadow-lg shadow-brand/20"
+                                                onClick={() => handleClaim(selectedLead)}
+                                            >
+                                                Claim Lead
+                                            </button>
+                                        </div>
                                     </div>
                                     {directionsError && (
                                         <p className="text-[10px] text-gray-600 text-center uppercase tracking-widest mt-2">

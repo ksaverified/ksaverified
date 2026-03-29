@@ -29,6 +29,7 @@ const CATEGORIES = [
     'Gym & Fitness',
     'Flowers & Gifts',
     'Construction',
+    'Bookstore / Library',
     'Default / Generic'
 ];
 
@@ -45,6 +46,7 @@ function getCategory(lead) {
     if (str.includes('sport') || str.includes('gym') || str.includes('fitness') || str.includes('رياضة')) return 'Gym & Fitness';
     if (str.includes('flower') || str.includes('gift') || str.includes('ورد') || str.includes('هدايا')) return 'Flowers & Gifts';
     if (str.includes('construct') || str.includes('contractor') || str.includes('build') || str.includes('مقاول') || str.includes('بناء')) return 'Construction';
+    if (str.includes('book') || str.includes('library') || str.includes('stationery') || str.includes('مكتبة') || str.includes('قرطاسية')) return 'Bookstore / Library';
     return 'Default / Generic';
 }
 

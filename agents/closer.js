@@ -57,7 +57,15 @@ class CloserAgent {
         const formattedPhone = this.formatPhoneNumber(phone);
         if (!formattedPhone) return 'skipped_invalid';
 
-        // 0. Pre-flight check: Verify the website is working before pitching
+        // 0. Pre-flight check: Verify the website is working AND validated before pitching
+        if (db) {
+            const lead = await db.getLeadByPhone(formattedPhone);
+            if (lead && lead.is_validated !== true) {
+                console.error(`[Closer] HARD BLOCK: Lead ${businessName} (${formattedPhone}) is NOT validated. Pitch aborted.`);
+                throw new Error(`Website quality assurance check failed. Lead is not marked as validated in database. Please review the site manually or run AuditorAgent.`);
+            }
+        }
+
         if (vercelUrl) {
             console.log(`[Closer] Performing pre-flight check on URL: ${vercelUrl}`);
             try {
@@ -83,7 +91,8 @@ class CloserAgent {
         console.log(`[Closer] Sending Enhanced Pitch for ${businessName}...`);
 
         // Image and Portal details
-        const marketingImageUrl = 'https://ksaverified.com/marketing/offer.png';
+        // Use a reliable, always-online marketing image. Replace with CDN-hosted asset once available.
+        const marketingImageUrl = process.env.MARKETING_IMAGE_URL || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
         const portalUrl = 'https://ksaverified.com/customers';
 
         let templates;
@@ -119,9 +128,13 @@ class CloserAgent {
         const messageBody = `${msgEn}\n\n---\n\n${msgAr}`;
 
         try {
-            // 1. Send Marketing Image FIRST
+            // 1. Send Marketing Image FIRST — non-fatal if it fails
             console.log(`[Closer] Step 1: Sending marketing image to ${formattedPhone}...`);
-            await this.sendMedia(formattedPhone, marketingImageUrl, "KSA Verified 💎");
+            try {
+                await this.sendMedia(formattedPhone, marketingImageUrl, "KSA Verified 💎");
+            } catch (imgErr) {
+                console.warn(`[Closer] Marketing image failed (non-fatal): ${imgErr.message}. Continuing with text pitch.`);
+            }
 
             // 2. Send the Access Details message SECOND
             await this.sendMessage(formattedPhone, messageBody);
@@ -157,9 +170,19 @@ Would you like to see a custom preview for your business completely for free? Ju
     /**
      * Sends the "1 Week Free + 19 SAR" promotion to existing leads.
      */
-    async sendPromotion(businessName, phone, vercelUrl) {
+    async sendPromotion(businessName, phone, vercelUrl, db) {
         const formattedPhone = this.formatPhoneNumber(phone);
         if (!formattedPhone) return 'skipped_invalid';
+
+        // Enforce validation check for promotions too
+        if (db) {
+            const lead = await db.getLeadByPhone(formattedPhone);
+            if (lead && lead.is_validated !== true) {
+                console.error(`[Closer] HARD BLOCK: Lead ${businessName} (${formattedPhone}) is NOT validated. Promotion aborted.`);
+                return 'skipped_unvalidated';
+            }
+        }
+
         const promoImageUrl = 'https://ksaverified.com/marketing/promo_19sar.png';
         const portalUrl = 'https://ksaverified.com/customers';
 
@@ -193,6 +216,7 @@ Reply 'INTERESTED' to activate this offer!
             throw err;
         }
     }
+
 
     /**
      * Generic method to send a message via the local WhatsApp service

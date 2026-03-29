@@ -8,6 +8,7 @@ const BillerAgent = require('./agents/biller');
 const DatabaseService = require('./services/db');
 const ScoutAgent = require('./agents/scout');
 const AuditorAgent = require('./agents/auditor');
+const CertifierAgent = require('./agents/certifier');
 const systemApi = require('./api/system');
 
 class Orchestrator {
@@ -19,6 +20,7 @@ class Orchestrator {
     this.closer = new CloserAgent();
     this.biller = new BillerAgent();
     this.auditor = new AuditorAgent();
+    this.certifier = new CertifierAgent();
     this.db = new DatabaseService();
     this.isRunning = false;
     this.axios = require('axios');
@@ -100,6 +102,7 @@ class Orchestrator {
         await this.runWarmingCycle();
         await this.runNudgeCycle();
         await this.runTrialReminderCycle();
+        await this.runRetargetingCycle(); // NEW: Smart retargeting for conversions
       }
 
       // Step 2: Process intermediate leads (backlog)
@@ -187,25 +190,38 @@ class Orchestrator {
           }
           
           if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
-            await this.db.addLog('auditor', 'visual_audit_started', activeLead.place_id, { name: activeLead.name }, 'info');
-            const auditReport = await this.auditor.audit(currentHtml, activeLead.slug);
-            await this.db.addLog('auditor', 'visual_audit_completed', activeLead.place_id, auditReport, 'info');
-            
-            if (auditReport.brokenImages.length > 0) {
-              console.log(`[Orchestrator] Auditor found ${auditReport.brokenImages.length} broken images. Requiring additional retouching...`);
-              // Mark for more retouching if needed, but for now we just log it.
-            }
-          }
-
-          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
             await this.db.addLog('publisher', 'deployment_started', activeLead.placeId, {}, 'info');
             vercelUrl = await this.publisher.handlePublish(activeLead.placeId, activeLead.slug);
-            await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: vercelUrl });
+            await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: vercelUrl, indexing_status: 'pending' });
+            
+            // Step 2.1: [NEW] Live URL Audit
+            // Now that it's live, we perform a final visual audit before pitching.
+            await this.db.addLog('auditor', 'live_audit_started', activeLead.placeId, { url: vercelUrl }, 'info');
+            const auditReport = await this.auditor.audit(vercelUrl, activeLead.slug, true);
+            
+            // Store audit metrics in the DB
+            await this.db.updateLeadStatus(activeLead.placeId, 'published', {
+               audit_score: auditReport.score,
+               last_audit_error: auditReport.brokenImages.length > 0 ? `Broken images: ${auditReport.brokenImages.join(', ')}` : (auditReport.layoutIssues[0] || null),
+               is_validated: auditReport.isValidated,
+               validation_notes: `Auto-audit score: ${auditReport.score}/100. ${auditReport.isValidated ? 'PASSED' : 'FAILED - NEEDS MANUAL REVIEW'}`
+            });
+            
+            await this.db.addLog('auditor', 'live_audit_completed', activeLead.placeId, { 
+              score: auditReport.score, 
+              isValidated: auditReport.isValidated,
+              errors: auditReport.brokenImages.length + auditReport.layoutIssues.length
+            }, auditReport.isValidated ? 'success' : 'warning');
+            
+            // Update the local state for the next step
+            activeDbLead.is_validated = auditReport.isValidated;
           }
 
           if (activeDbLead.status !== 'pitched') {
+            // HARD BLOCK: Only pitch if the site passed the audit.
             if (!activeDbLead.is_validated) {
-              console.log(`[Orchestrator] 🛑 Skipping pitch for ${activeLead.name}. Status: Published but NOT VALIDATED.`);
+              console.log(`[Orchestrator] 🛑 Skipping pitch for ${activeLead.name}. Status: Published but FAILED QUALITY AUDIT.`);
+              await this.db.addLog('orchestrator', 'pitch_aborted', activeLead.placeId, { reason: 'Failed quality audit' }, 'warning');
               activeDbLead = await this.db.getPendingLead();
               continue;
             }
@@ -397,8 +413,7 @@ class Orchestrator {
   async runNotificationCycle() {
     console.log('[Orchestrator] Running Google Compliance Notification Cycle (48h Rule)...');
     try {
-      // Create a mock req/res for the API handler
-      const req = { query: { action: 'notification-worker' } };
+      const req = { method: 'POST', query: { action: 'notification-worker' } };
       const res = {
         json: (data) => console.log(`[Orchestrator] Notification Worker:`, data),
         status: (code) => ({ json: (data) => console.log(`[Orchestrator] Notification Worker Error (${code}):`, data) })
@@ -407,6 +422,181 @@ class Orchestrator {
     } catch (e) {
       console.error(`[Orchestrator] Notification Cycle failed:`, e.message);
     }
+  }
+
+  /**
+   * RETARGETING ENGINE — The core conversion driver.
+   * Segments all existing certified leads and contacts them with the right message.
+   * 
+   * Groups:
+   * A — Certified but never pitched → PITCH NOW
+   * B — Pitched 48h-7d ago, no response → NUDGE with link
+   * C — Pitched 7+ days ago with no conversion → 19 SAR PROMO
+   * D — Interest confirmed, no payment after 48h → URGENCY CLOSE
+   */
+  async runRetargetingCycle() {
+    console.log('\n[Orchestrator] 🎯 Starting Retargeting Cycle...');
+    
+    try {
+      const health = await this.axios.get(`${this.closer.baseURL}/health`);
+      if (!health.data.ready) {
+        console.warn('[Orchestrator] WhatsApp not ready for retargeting. Skipping.');
+        return;
+      }
+    } catch (e) {
+      console.warn('[Orchestrator] WhatsApp health check failed for retargeting:', e.message);
+      return;
+    }
+
+    const now = Date.now();
+    const hourMs = 60 * 60 * 1000;
+    const antiSpamCutoff = new Date(now - 24 * hourMs).toISOString(); // Min 24h between contacts
+
+    // ─── GROUP A: Certified + Published but never pitched ───────────────────
+    try {
+      const { data: groupA } = await this.db.supabase
+        .from('leads')
+        .select('*')
+        .eq('is_certified', true)
+        .eq('status', 'published')
+        .not('vercel_url', 'is', null)
+        .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
+        .limit(5); // Throttle: max 5 per cycle
+
+      if (groupA && groupA.length > 0) {
+        console.log(`[Retargeting] Group A: ${groupA.length} certified leads ready to pitch`);
+        for (const lead of groupA) {
+          try {
+            await this.closer.pitchLead(lead.name, lead.phone, lead.vercel_url, this.db);
+            await this.db.supabase.from('leads').update({
+              status: 'pitched',
+              last_retargeted_at: new Date().toISOString(),
+              retarget_count: (lead.retarget_count || 0) + 1,
+              retarget_group: 'A_initial_pitch'
+            }).eq('place_id', lead.place_id);
+            await this.db.addLog('orchestrator', 'retarget_pitch_A', lead.place_id, { name: lead.name }, 'success');
+            await new Promise(r => setTimeout(r, 15000)); // 15s throttle
+          } catch (e) {
+            console.error(`[Retargeting] Group A pitch failed for ${lead.name}:`, e.message);
+            if (e.message.includes('Number not on WhatsApp')) {
+              await this.db.updateLeadStatus(lead.place_id, 'invalid', { last_error: 'Number not on WhatsApp' });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Retargeting] Group A error:', e.message);
+    }
+
+    // ─── GROUP B: Pitched 48h–7 days ago, no response → NUDGE ──────────────
+    try {
+      const fortyEightHoursAgo = new Date(now - 48 * hourMs).toISOString();
+      const sevenDaysAgo = new Date(now - 7 * 24 * hourMs).toISOString();
+
+      const { data: groupB } = await this.db.supabase
+        .from('leads')
+        .select('*')
+        .eq('status', 'pitched')
+        .eq('is_certified', true)
+        .lt('updated_at', fortyEightHoursAgo)
+        .gt('updated_at', sevenDaysAgo)
+        .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
+        .limit(8);
+
+      if (groupB && groupB.length > 0) {
+        console.log(`[Retargeting] Group B: ${groupB.length} pitched leads to nudge`);
+        for (const lead of groupB) {
+          try {
+            const msgEn = `Hi ${lead.name}! 💎 Just a friendly reminder — your custom website is live and waiting for you!\n\n🌐 Check it out: ${lead.vercel_url}\n\nYour 1-week FREE trial is active. Reply with any questions — we're here to help! 🚀`;
+            const msgAr = `مرحباً ${lead.name}! 💎 تذكير ودي فقط — موقعك الإلكتروني المخصص جاهز وينتظرك!\n\n🌐 شاهده الآن: ${lead.vercel_url}\n\nتجربتك المجانية لمدة أسبوع نشطة. راسلنا بأي سؤال — نحن هنا للمساعدة! 🚀`;
+            await this.closer.sendMessage(this.closer.formatPhoneNumber(lead.phone), `${msgEn}\n\n---\n\n${msgAr}`);
+            await this.db.supabase.from('leads').update({
+              last_retargeted_at: new Date().toISOString(),
+              retarget_count: (lead.retarget_count || 0) + 1,
+              retarget_group: 'B_nudge'
+            }).eq('place_id', lead.place_id);
+            await this.db.addLog('orchestrator', 'retarget_nudge_B', lead.place_id, { name: lead.name }, 'success');
+            await new Promise(r => setTimeout(r, 10000));
+          } catch (e) {
+            console.error(`[Retargeting] Group B nudge failed for ${lead.name}:`, e.message);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Retargeting] Group B error:', e.message);
+    }
+
+    // ─── GROUP C: Pitched 7+ days ago, cold → 19 SAR PROMO ─────────────────
+    try {
+      const sevenDaysAgo = new Date(now - 7 * 24 * hourMs).toISOString();
+
+      const { data: groupC } = await this.db.supabase
+        .from('leads')
+        .select('*')
+        .eq('status', 'pitched')
+        .eq('is_certified', true)
+        .lt('updated_at', sevenDaysAgo)
+        .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
+        .limit(5);
+
+      if (groupC && groupC.length > 0) {
+        console.log(`[Retargeting] Group C: ${groupC.length} cold leads for 19 SAR promo`);
+        for (const lead of groupC) {
+          try {
+            await this.closer.sendPromotion(lead.name, lead.phone, lead.vercel_url, this.db);
+            await this.db.supabase.from('leads').update({
+              last_retargeted_at: new Date().toISOString(),
+              retarget_count: (lead.retarget_count || 0) + 1,
+              retarget_group: 'C_promo'
+            }).eq('place_id', lead.place_id);
+            await this.db.addLog('orchestrator', 'retarget_promo_C', lead.place_id, { name: lead.name }, 'success');
+            await new Promise(r => setTimeout(r, 10000));
+          } catch (e) {
+            console.error(`[Retargeting] Group C promo failed for ${lead.name}:`, e.message);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Retargeting] Group C error:', e.message);
+    }
+
+    // ─── GROUP D: Interest confirmed, no payment after 48h → URGENCY CLOSE ──
+    try {
+      const fortyEightHoursAgo = new Date(now - 48 * hourMs).toISOString();
+
+      const { data: groupD } = await this.db.supabase
+        .from('leads')
+        .select('*')
+        .eq('status', 'interest_confirmed')
+        .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
+        .limit(5);
+
+      if (groupD && groupD.length > 0) {
+        console.log(`[Retargeting] Group D: ${groupD.length} interested leads to urgency-close`);
+        const portalUrl = 'https://ksaverified.com/customers';
+        const stcPay = '+966 50 791 3514';
+        for (const lead of groupD) {
+          try {
+            const msgEn = `${lead.name}, your FREE trial is active! ⏰ Don't miss this offer:\n\n✅ First month: Only *19 SAR* (Normal: 99 SAR)\n✅ Your site: ${lead.vercel_url || 'Ready for you!'}\n✅ Payment: STC Pay to ${stcPay}\n\nSend your payment screenshot here to activate instantly! 🚀\nPortal: ${portalUrl}`;
+            const msgAr = `${lead.name}، تجربتك المجانية نشطة! ⏰ لا تفوّت هذا العرض:\n\n✅ الشهر الأول: *19 ريال فقط* (السعر العادي: 99 ريال)\n✅ موقعك: ${lead.vercel_url || 'جاهز لك!'}\n✅ الدفع: STC Pay على ${stcPay}\n\nأرسل صورة الإيصال هنا للتفعيل الفوري! 🚀\nالبوابة: ${portalUrl}`;
+            await this.closer.sendMessage(this.closer.formatPhoneNumber(lead.phone), `${msgEn}\n\n---\n\n${msgAr}`);
+            await this.db.supabase.from('leads').update({
+              last_retargeted_at: new Date().toISOString(),
+              retarget_count: (lead.retarget_count || 0) + 1,
+              retarget_group: 'D_urgency_close'
+            }).eq('place_id', lead.place_id);
+            await this.db.addLog('orchestrator', 'retarget_urgency_D', lead.place_id, { name: lead.name }, 'success');
+            await new Promise(r => setTimeout(r, 10000));
+          } catch (e) {
+            console.error(`[Retargeting] Group D close failed for ${lead.name}:`, e.message);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[Retargeting] Group D error:', e.message);
+    }
+
+    console.log('[Orchestrator] 🎯 Retargeting Cycle complete.');
   }
 
   startLoop() {

@@ -76,7 +76,7 @@ async function handleSitemap(db, req, res) {
             .from('leads')
             .select('slug, updated_at')
             .not('slug', 'is', null)
-            .eq('status', 'live');
+            .not('vercel_url', 'is', null);
 
         if (error) throw error;
 

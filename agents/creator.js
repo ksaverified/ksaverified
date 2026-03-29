@@ -32,6 +32,7 @@ class CreatorAgent {
 
         // Token Optimization: Map long Google Photo URLs to short aliases
         // This prevents the generation from truncating due to 800-character URLs repeated multiple times.
+        // We now use semantic-ready numbering but tell the AI to use descriptive aliases
         const photoAliases = (business.photos || []).map((url, i) => ({
             alias: `GPHOTO_${i}`,
             url: url
@@ -47,7 +48,7 @@ class CreatorAgent {
       - Industry/Types: ${(business.types || []).join(', ')}
       
       Real Business Photos (USE THESE ALIASES in your img src or background-image url() attributes):
-      ${(photoAliases.length > 0) ? photoAliases.map(p => `- ${p.alias} (This represents a real photo of the business)`).join('\n      ') : 'No real photos available.'}
+      ${(photoAliases.length > 0) ? photoAliases.map(p => `- ${p.alias} (Real photo of the business)`).join('\n      ') : 'No real photos available.'}
       
       Real Customer Reviews (Incorporate these into a Testimonials section to build trust):
       ${(business.reviews && business.reviews.length > 0) ? business.reviews.map(r => `"${r}"`).join('\n      ') : 'No recent reviews available.'}
@@ -57,29 +58,30 @@ class CreatorAgent {
       
       *CRITICAL INSTRUCTION FOR RESPONSIVENESS*:
       1. Use Tailwind's grid and flex utilities with responsive prefixes (e.g., \`grid-cols-1 md:grid-cols-2\`) to ensure the layout looks perfect on phones, tablets, and desktops.
-      2. Implement a functional "Hamburger Menu" for mobile view. The desktop navigation links should be hidden on small screens, and a menu icon should appear. When clicked, the menu should slide or fade in.
-      3. Since this is a single file, you can use a small \`<script>\` block or a hidden checkbox technique to handle the menu toggle.
-      4. Ensure padding, font sizes, and image heights are adjusted for mobile using Tailwind classes like \`px-4 md:px-8\` and \`text-2xl md:text-5xl\`.
+      2. Implement a functional "Hamburger Menu" for mobile view.
+      3. Ensure padding, font sizes, and image heights are adjusted for mobile using Tailwind classes like \`px-4 md:px-8\`.
       
       *CRITICAL INSTRUCTION FOR SERVICES/SUBPAGES & NAVIGATION*: 
       1. DO NOT use placeholders like "Service 1", "Lorem Ipsum", or empty sections.
       2. Analyze the business name, industry, and customer reviews to deduce their exact services.
-      3. Fully populate the "Services" or secondary sections with real, compelling, and localized descriptions fitting this specific business in Saudi Arabia. Create comprehensive content.
-      4. Since this is a strict SINGLE-PAGE website, all navigation links in the header/footer MUST use anchor tags (e.g., \`href="#services"\`) that smoothly scroll to corresponding sections on the same page. 
-      5. DO NOT create fake links to external pages like \`services.html\` or \`about.html\`. All content MUST exist and be fully written out on this one single page. Ensure every section linked in the navigation menu actually exists in the HTML body with the correct \`id\` attribute.
+      3. Fully populate the "Services" or secondary sections with real, compelling, and localized descriptions fitting this specific business in Saudi Arabia.
       
       *CRITICAL INSTRUCTION FOR VISUALS*:
-      1. The website MUST be visually stunning. The Hero section MUST include a large, beautiful background image or a looping background video.
-      2. CRITICAL: You MUST use the "Real Business Photos" ALIASES provided above (e.g. GPHOTO_0, GPHOTO_1) for the key images on the site.
-      3. Distribute the real business photos (GPHOTO_n) throughout the Hero and Service sections to make the website feel authentic.
-      4. If real photo aliases run out or are missing, you may use \`https://loremflickr.com/w/h/keyword?random=X\` as a fallback. If using the fallback, use simple 1-word generic keywords and append a unique random number to prevent duplicate cats from appearing.
-      5. Do not just leave blank colored boxes. Use rich imagery throughout the design to make it feel premium.
+      1. The website MUST be visually stunning. The Hero section MUST include a large, beautiful background image.
+      2. SEMANTIC IMAGE TAGGING: Instead of random numbers, use these EXACT aliases for your images:
+         - \`GPHOTO_HERO\`: Use for the main hero/opening background.
+         - \`GPHOTO_INTERIOR\`: Use for "About Us" or atmosphere sections.
+         - \`GPHOTO_SERVICE_1\`, \`GPHOTO_SERVICE_2\`...: Use for specific service highlights.
+         - \`GPHOTO_TEAM\`: Use for team or personal bio sections.
+         - \`GPHOTO_LOGO\`: Use for the brand mark / logo placeholder.
+      3. PRIORITIZE REAL PHOTOS: If real photo aliases (GPHOTO_0, GPHOTO_1, etc.) are available above, use them for the HERO and INTERIOR first.
+      4. If real photos are missing, use the SEMANTIC aliases (\`GPHOTO_HERO\`, \`GPHOTO_INTERIOR\`, etc.) and the Retoucher Agent will resolve them with high-quality stock photos.
+      5. DO NOT use \`loremflickr\` or any other external URL. Only use \`GPHOTO_...\` aliases.
       
       *CRITICAL INSTRUCTION FOR BILINGUAL SUPPORT*:
-      1. DO NOT write complex custom Javascript to rearrange navigation nodes or toggle individual element's \`.active\` classes. That takes up too many tokens and truncates the generation.
-      2. Keep it simple: use CSS logic. Example: Hide \`[data-lang="ar"]\` when \`html[lang="en"]\` is active, and vice versa using CSS. The Javascript switcher button should literally just toggle \`document.documentElement.lang\`.
+      1. Keep it simple: use CSS logic for language toggling. The Javascript switcher button should just toggle \`document.documentElement.lang\`.
       
-      Output ONLY the raw HTML string. No markdown formatting like \`\`\`html at the top or bottom. Just the pure HTML source code starting with <!DOCTYPE html>.
+      Output ONLY the raw HTML string. No markdown formatting. Just the pure HTML source code starting with <!DOCTYPE html>.
       
       *SUPER CRITICAL: DO NOT STOP GENERATING UNTIL YOU REACH </html>.*
       You MUST finish the entire page down to the closing </html> tag. Do not output truncated code under any circumstance.
