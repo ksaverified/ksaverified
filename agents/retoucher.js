@@ -56,8 +56,9 @@ class RetoucherAgent {
         const realPhotos = photos || business.photos || [];
 
         // PHASE 1: Identify all semantic placeholders (e.g., GPHOTO_HERO, GPHOTO_SERVICE_1)
-        const placeholderRegex = /GPHOTO_[A-Z0-0_]+/g;
-        const foundPlaceholders = [...new Set(cleanedHtml.match(placeholderRegex) || [])];
+        const placeholderRegex = /GPHOTO_[A-Z0-9_]+/g;
+        const matched = cleanedHtml.match(placeholderRegex);
+        const foundPlaceholders = matched ? [...new Set(matched)] : [];
         console.log(`[Retoucher] Found semantic placeholders: ${foundPlaceholders.join(', ')}`);
 
         // PHASE 2: Generate specialized queries for each unique placeholder
@@ -68,13 +69,14 @@ class RetoucherAgent {
 
             try {
                 const tagPurpose = tag.replace('GPHOTO_', '').toLowerCase().replace(/_/g, ' ');
-                const pexelsPrompt = `Generate a Pexels search query (2-3 words) for a "${tagPurpose}" image for a business.
-Business: "${business.name}" (${(business.types || []).join(', ')})
-Goal: High-quality, premium, visual appeal.
-Localization: If the tag is HERO, INTERIOR, or STOREFRONT, prioritize Middle Eastern/Saudi Arabian aesthetics.
-Output ONLY the 2-3 word query.`;
+                const pexelsPrompt = `As an image curator, generate a concise English Pexels search query (exactly 2-3 words) for a "${tagPurpose}" image for a business.
+Business Name: "${business.name}"
+Business Categories: ${(business.types || []).join(', ')}
+Goal: Premium, high-quality aesthetics.
+Note: The business name might be in Arabic, but the Pexels query MUST be in English.
+Output ONLY the 2-3 word English query. NO preamble, NO characters/quotes.`;
 
-                const suggestedQuery = await generateText(pexelsPrompt, { temperature: 0.1, maxOutputTokens: 20, model: 'gemini-1.5-flash' });
+                const suggestedQuery = await generateText(pexelsPrompt, { temperature: 0.1, maxOutputTokens: 1024 });
                 let finalQuery = suggestedQuery ? suggestedQuery.replace(/```[a-z]*|```|\*\*|['"]/gi, '').trim() : tagPurpose;
                 
                 // Explicit Localization Injection for key atmosphere tags
@@ -92,6 +94,7 @@ Output ONLY the 2-3 word query.`;
         });
 
         await Promise.all(queryPromises);
+        console.log(`[Retoucher] Mapped ${Object.keys(placeholderMappings).length} placeholders successfully.`);
 
         // PHASE 3: Fallback & Real Photo Resolution
         // 1. Map explicit numeric aliases GPHOTO_0, GPHOTO_1 etc to real photos
