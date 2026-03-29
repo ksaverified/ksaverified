@@ -1,4 +1,5 @@
 const axios = require('axios');
+const gemini = require('../services/gemini');
 
 /**
  * Closer Agent
@@ -18,6 +19,7 @@ class CloserAgent {
         });
 
         console.log(`[Closer] Using Local WhatsApp service at ${this.baseURL}`);
+        this.gemini = gemini;
     }
 
     /**
@@ -295,6 +297,43 @@ Please send a screenshot of your payment receipt here to finalize your activatio
             return true;
         } catch (err) {
             console.error(`[Closer] Trial reminder failed for ${formattedPhone}: ${err.message}`);
+            throw err;
+        }
+    }
+
+    /**
+     * Sends a highly personalized urgency close message using Gemini AI.
+     * Targeted at Group D leads (Interest confirmed but no payment).
+     */
+    async sendUrgencyClose(lead) {
+        const formattedPhone = this.formatPhoneNumber(lead.phone);
+        if (!formattedPhone) return 'skipped_invalid';
+
+        const portalUrl = 'https://ksaverified.com/customers';
+        const stcPay = '+966 50 791 3514';
+
+        console.log(`[Closer] Generating personalized Urgency Close for ${lead.name}...`);
+        
+        const context = `URGENCY CLOSE: The lead confirmed interest in a website but hasn't paid yet. 
+        Their site is already live at ${lead.vercel_url}. 
+        We are offering the first month for just 19 SAR (discount from 99 SAR). 
+        They must pay via STC Pay to ${stcPay} and send a screenshot.`;
+
+        let messageBody = await this.gemini.generateSalesMessage(lead, context);
+
+        if (!messageBody) {
+            console.warn(`[Closer] Gemini failed for Urgency Close. Using fallback template for ${lead.name}.`);
+            const msgEn = `${lead.name}, your FREE trial is active! ⏰ Don't miss this offer:\n\n✅ First month: Only *19 SAR* (Normal: 99 SAR)\n✅ Your site: ${lead.vercel_url || 'Ready for you!'}\n✅ Payment: STC Pay to ${stcPay}\n\nSend your payment screenshot here to activate instantly! 🚀\nPortal: ${portalUrl}`;
+            const msgAr = `${lead.name}، تجربتك المجانية نشطة! ⏰ لا تفوّت هذا العرض:\n\n✅ الشهر الأول: *19 ريال فقط* (السعر العادي: 99 ريال)\n✅ موقعك: ${lead.vercel_url || 'جاهز لك!'}\n✅ الدفع: STC Pay على ${stcPay}\n\nأرسل صورة الإيصال هنا للتفعيل الفوري! 🚀\nالبوابة: ${portalUrl}`;
+            messageBody = `${msgEn}\n\n---\n\n${msgAr}`;
+        }
+
+        try {
+            await this.sendMessage(formattedPhone, messageBody);
+            console.log(`[Closer] Urgency Close delivered to ${lead.name}`);
+            return true;
+        } catch (err) {
+            console.error(`[Closer] Urgency Close failed for ${lead.name}: ${err.message}`);
             throw err;
         }
     }

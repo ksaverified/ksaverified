@@ -218,8 +218,9 @@ class Orchestrator {
           }
 
           if (activeDbLead.status !== 'pitched') {
-            // HARD BLOCK: Only pitch if the site passed the audit.
-            if (!activeDbLead.is_validated) {
+            // RELAXED BLOCK: In Promotion Mode, if it's already published, we can nudge/pitch even if validation flag is missing.
+            // But we should try to auto-validate it if it hasn't been done.
+            if (!activeDbLead.is_validated && !promotionMode) {
               console.log(`[Orchestrator] 🛑 Skipping pitch for ${activeLead.name}. Status: Published but FAILED QUALITY AUDIT.`);
               await this.db.addLog('orchestrator', 'pitch_aborted', activeLead.placeId, { reason: 'Failed quality audit' }, 'warning');
               activeDbLead = await this.db.getPendingLead();
@@ -274,7 +275,7 @@ class Orchestrator {
 
     const leads = await this.db.getScoutedLeads(30);
     for (const lead of leads) {
-      if (!lead.is_validated) {
+      if (!lead.is_validated && !process.env.PROMOTION_MODE === 'true') {
         console.log(`[Orchestrator] Skipping warming for ${lead.name} (Not Validated)`);
         continue;
       }
@@ -309,7 +310,7 @@ class Orchestrator {
 
     const leads = await this.db.getPitchedLeads(30);
     for (const lead of leads) {
-      if (!lead.is_validated) {
+      if (!lead.is_validated && !process.env.PROMOTION_MODE === 'true') {
         console.log(`[Orchestrator] Skipping promotion for ${lead.name} (Not Validated)`);
         continue;
       }
@@ -577,9 +578,7 @@ class Orchestrator {
         const stcPay = '+966 50 791 3514';
         for (const lead of groupD) {
           try {
-            const msgEn = `${lead.name}, your FREE trial is active! ⏰ Don't miss this offer:\n\n✅ First month: Only *19 SAR* (Normal: 99 SAR)\n✅ Your site: ${lead.vercel_url || 'Ready for you!'}\n✅ Payment: STC Pay to ${stcPay}\n\nSend your payment screenshot here to activate instantly! 🚀\nPortal: ${portalUrl}`;
-            const msgAr = `${lead.name}، تجربتك المجانية نشطة! ⏰ لا تفوّت هذا العرض:\n\n✅ الشهر الأول: *19 ريال فقط* (السعر العادي: 99 ريال)\n✅ موقعك: ${lead.vercel_url || 'جاهز لك!'}\n✅ الدفع: STC Pay على ${stcPay}\n\nأرسل صورة الإيصال هنا للتفعيل الفوري! 🚀\nالبوابة: ${portalUrl}`;
-            await this.closer.sendMessage(this.closer.formatPhoneNumber(lead.phone), `${msgEn}\n\n---\n\n${msgAr}`);
+            await this.closer.sendUrgencyClose(lead);
             await this.db.supabase.from('leads').update({
               last_retargeted_at: new Date().toISOString(),
               retarget_count: (lead.retarget_count || 0) + 1,
