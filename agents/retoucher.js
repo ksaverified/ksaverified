@@ -236,7 +236,7 @@ RULES:
 4. Provide a JSON array of edits: [{ "old": "...", "new": "..." }]`;
 
         try {
-            const auditRes = await generateText(`${systemPrompt}\n\nHTML:\n${cleanedHtml.substring(0, 50000)}`, { temperature: 0.2, maxOutputTokens: 2048, model: 'gemini-2.5-pro' });
+            const auditRes = await generateText(`${systemPrompt}\n\nHTML:\n${cleanedHtml.substring(0, 50000)}`, { temperature: 0.2, maxOutputTokens: 8192, model: 'gemini-1.5-pro' });
             if (auditRes) {
                 const jsonMatch = auditRes.match(/\[[\s\S]*\]/);
                 if (jsonMatch) {
