@@ -46,6 +46,23 @@ class Orchestrator {
     }
   }
 
+  /**
+   * Pre-flight check for WhatsApp service.
+   * Returns true if ready, false if waiting for authentication.
+   */
+  async checkWhatsAppHealth() {
+    try {
+      const response = await this.axios.get('http://localhost:8081/health');
+      if (response.data.ready) return true;
+      
+      console.log('[Orchestrator] 🟡 WhatsApp service is active but WAITING for authentication (QR scan required).');
+      return false;
+    } catch (err) {
+      console.warn('[Orchestrator] 🔴 WhatsApp microservice is DOWN or unreachable:', err.message);
+      return false;
+    }
+  }
+
   async runPipeline() {
     if (this.isRunning) {
       console.log('[Orchestrator] Cycle already in progress. Skipping.');
@@ -67,6 +84,17 @@ class Orchestrator {
     console.log('======================================================');
     await this.db.addLog('orchestrator', 'cycle_start', null, { promotionMode }, 'info');
     await this.db.cleanupOldLogs(14); // Keep DB size in check
+
+    // [Value-Led Refactor] Step 0: WhatsApp Pre-flight check
+    // We only proceed if WhatsApp is ready OR if we are just scouting (which doesn't need WA)
+    // However, since we often move straight from scout to pitch, it's safer to check here.
+    const isWaReady = await this.checkWhatsAppHealth();
+    if (!isWaReady) {
+        console.log('[Orchestrator] Cycle deferred: WhatsApp service not authenticated.');
+        await this.db.addLog('orchestrator', 'cycle_deferred', null, { reason: 'WhatsApp authentication required' }, 'info');
+        this.isRunning = false;
+        return;
+    }
 
     try {
       // Step 0: Check Subscriptions
@@ -155,11 +183,7 @@ class Orchestrator {
             activeDbLead = await this.db.getPendingLead();
             continue;
           }
-          // 3. Health Check
-          if (activeDbLead.status !== 'pitched') {
-            const health = await this.axios.get('http://localhost:8081/health');
-            if (!health.data.ready) throw new Error('WhatsApp not ready');
-          }
+
 
           let currentHtml = activeDbLead.website_html || '';
           let vercelUrl = activeDbLead.vercel_url || '';

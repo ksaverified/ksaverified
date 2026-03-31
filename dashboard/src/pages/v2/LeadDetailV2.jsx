@@ -134,6 +134,24 @@ export default function LeadDetailV2() {
         }
     };
 
+    const handleLock = async () => {
+        setSaving(true);
+        try {
+            const { error } = await supabase.from('leads').update({
+                is_unlocked: false,
+                unlock_until: null,
+                updated_at: new Date().toISOString()
+            }).eq('place_id', placeId);
+
+            if (error) throw error;
+            fetchData();
+        } catch (e) {
+            alert('Failed to lock: ' + e.message);
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const handleIndex = async () => {
         if (!confirm('Notify Google to re-crawl this specific business site?')) return;
         setSaving(true);
