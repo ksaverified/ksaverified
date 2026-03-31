@@ -13,6 +13,36 @@ class ScoutAgent {
     this.baseURL = 'https://places.googleapis.com/v1/places:searchText';
   }
 
+  /**
+   * Search Bing organically to see if the business has a strong presence.
+   * A gap is found if Bing doesn't prominently feature them or their phone.
+   */
+  async crossReferenceBing(name, phone) {
+    try {
+      const query = `${name} Riyadh`;
+      const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+      const response = await axios.get(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        timeout: 5000
+      });
+
+      const html = response.data.toLowerCase();
+      // Only require the main recognizable parts of the name (over 3 chars) to appear
+      const nameParts = name.toLowerCase().split(' ').filter(p => p.length > 3);
+      
+      const isMissingName = nameParts.length > 0 && !nameParts.some(part => html.includes(part));
+      
+      if (isMissingName) {
+        return 'bing_missing'; // Means Bing organic results didn't even match their name
+      }
+      return 'present';
+    } catch (err) {
+      console.warn(`[Scout] Warning: crossReferenceBing failed for ${name} - ${err.message}`);
+      return 'error';
+    }
+  }
 
   /**
    * Finds a place using a phone number
@@ -138,8 +168,16 @@ class ScoutAgent {
           };
         });
 
-      console.log(`[Scout] Filtered down to ${validLeads.length} valid leads (phone, no website).`);
-      return validLeads;
+      // 2. Resolve gaps for valid leads (via Bing organic search)
+      console.log(`[Scout] Filtered down to ${validLeads.length} valid leads (phone, no website). Checking for external search engine gaps...`);
+      
+      // We will map in parallel since Axios organic GET is fairly lightweight, but wait for Promise.all
+      const processedLeads = await Promise.all(validLeads.map(async (lead) => {
+        lead.bingGap = await this.crossReferenceBing(lead.name, lead.phone);
+        return lead;
+      }));
+
+      return processedLeads;
     } catch (error) {
       console.error(`[Scout] Error during lead generation: ${error.message}`);
       throw error;

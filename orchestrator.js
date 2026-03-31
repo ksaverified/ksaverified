@@ -22,6 +22,7 @@ class Orchestrator {
     this.auditor = new AuditorAgent();
     this.certifier = new CertifierAgent();
     this.db = new DatabaseService();
+    this.closer.setDatabase(this.db);
     this.isRunning = false;
     this.axios = require('axios');
   }
@@ -280,7 +281,7 @@ class Orchestrator {
         continue;
       }
       try {
-        const result = await this.closer.warmLead(lead.name, lead.phone);
+        const result = await this.closer.warmLead(lead);
         if (result === 'local_sent' || result === true) {
           await this.db.addLog('closer', 'warming_sent', lead.place_id, { name: lead.name }, 'success');
           await this.db.updateLeadStatus(lead.place_id, 'warming_sent');
@@ -315,7 +316,7 @@ class Orchestrator {
         continue;
       }
       try {
-        const result = await this.closer.sendPromotion(lead.name, lead.phone, lead.vercel_url);
+        const result = await this.closer.sendPromotion(lead.name, lead.phone, lead.vercel_url, this.db);
         if (result === 'local_sent' || result === true) {
           await this.db.addLog('closer', 'promo_sent', lead.place_id, { name: lead.name }, 'success');
         } else if (result === 'skipped_invalid') {
@@ -342,6 +343,7 @@ class Orchestrator {
       .from('leads')
       .select('*')
       .eq('status', 'pitched')
+      .not('website_html', 'is', null)
       .lt('updated_at', twoDaysAgo)
       .limit(10);
 
@@ -376,6 +378,7 @@ class Orchestrator {
       .from('leads')
       .select('*')
       .not('trial_start_date', 'is', null)
+      .not('website_html', 'is', null)
       .or('reminded_2d_before.eq.false,reminded_1d_before.eq.false')
       .limit(20);
 
@@ -461,6 +464,7 @@ class Orchestrator {
         .eq('is_certified', true)
         .eq('status', 'published')
         .not('vercel_url', 'is', null)
+        .not('website_html', 'is', null)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
         .limit(5); // Throttle: max 5 per cycle
 
@@ -499,6 +503,7 @@ class Orchestrator {
         .select('*')
         .eq('status', 'pitched')
         .eq('is_certified', true)
+        .not('website_html', 'is', null)
         .lt('updated_at', fortyEightHoursAgo)
         .gt('updated_at', sevenDaysAgo)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
@@ -536,6 +541,7 @@ class Orchestrator {
         .select('*')
         .eq('status', 'pitched')
         .eq('is_certified', true)
+        .not('website_html', 'is', null)
         .lt('updated_at', sevenDaysAgo)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
         .limit(5);
@@ -569,6 +575,7 @@ class Orchestrator {
         .from('leads')
         .select('*')
         .eq('status', 'interest_confirmed')
+        .not('website_html', 'is', null)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
         .limit(5);
 

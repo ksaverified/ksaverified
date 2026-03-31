@@ -20,6 +20,12 @@ class CloserAgent {
 
         console.log(`[Closer] Using Local WhatsApp service at ${this.baseURL}`);
         this.gemini = gemini;
+        this.db = null; // Will be set by Orchestrator
+    }
+
+    /** Sets the database service for logging */
+    setDatabase(db) {
+        this.db = db;
     }
 
     /**
@@ -148,7 +154,7 @@ class CloserAgent {
             }
 
             // 2. Send the Access Details message SECOND
-            await this.sendMessage(formattedPhone, messageBody);
+            await this.sendMessage(formattedPhone, messageBody, lead?.place_id);
 
             console.log(`[Closer] Enhanced Pitch successfully delivered to ${formattedPhone}`);
             return 'local_sent';
@@ -159,23 +165,120 @@ class CloserAgent {
     }
 
     /**
+     * Tries to find the business on another search engine organic results (Bing)
+     * Returns true if it looks missing, false if found.
+     */
+    async _isMissingOnBing(businessName) {
+        try {
+            const query = `${businessName} Riyadh`;
+            const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+            // Use local API for simple fetch to avoid messing with user-agent logic, or direct axios
+            const response = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 5000 });
+            const html = response.data.toLowerCase();
+            const nameParts = businessName.toLowerCase().split(' ').filter(p => p.length > 3);
+            const isMissing = nameParts.length > 0 && !nameParts.some(part => html.includes(part));
+            return isMissing;
+        } catch (err) {
+            return false; // Safely default to 'found' if Bing errors out
+        }
+    }
+
+    /**
+     * Converts a Google Place type to a friendly niche string for messaging.
+     */
+    formatNiche(types) {
+        if (!types || !Array.isArray(types) || types.length === 0) {
+            return { en: 'businesses like yours', ar: 'أعمال مشابهة لعملكم' };
+        }
+        
+        const primary = types[0] || '';
+        
+        const dictionary = {
+            'restaurant': { en: 'a restaurant', ar: 'مطعم' },
+            'cafe': { en: 'a cafe', ar: 'مقهى' },
+            'coffee_shop': { en: 'a coffee shop', ar: 'مقهى' },
+            'bakery': { en: 'a bakery', ar: 'مخبز' },
+            'car_repair': { en: 'a car repair shop', ar: 'ورشة صيانة سيارات' },
+            'car_wash': { en: 'a car wash', ar: 'مغسلة سيارات' },
+            'mechanic': { en: 'a mechanic', ar: 'ميكانيكي سيارات' },
+            'gym': { en: 'a gym', ar: 'صالة رياضية' },
+            'hair_care': { en: 'a hair salon', ar: 'صالون حلاقة' },
+            'beauty_salon': { en: 'a beauty salon', ar: 'صالون تجميل' },
+            'laundry': { en: 'a laundry service', ar: 'مغسلة ملابس' },
+            'clothing_store': { en: 'a clothing store', ar: 'متجر ملابس' },
+            'supermarket': { en: 'a supermarket', ar: 'سوبر ماركت' },
+            'grocery_or_supermarket': { en: 'a grocery store', ar: 'بقالة' },
+            'health_beauty': { en: 'a health and beauty store', ar: 'متجر صحة وجمال' },
+            'hospital': { en: 'a hospital', ar: 'مستشفى' },
+            'clinic': { en: 'a clinic', ar: 'عيادة' },
+            'dentist': { en: 'a dental clinic', ar: 'عيادة أسنان' },
+            'pharmacy': { en: 'a pharmacy', ar: 'صيدلية' },
+            'real_estate_agency': { en: 'a real estate agency', ar: 'مكتب عقارات' },
+            'travel_agency': { en: 'a travel agency', ar: 'وكالة سفر' },
+            'lawyer': { en: 'a law firm', ar: 'مكتب محاماة' },
+            'plumber': { en: 'a plumber', ar: 'سباك' },
+            'electrician': { en: 'an electrician', ar: 'كهربائي' }
+        };
+        
+        if (dictionary[primary]) {
+            return dictionary[primary];
+        }
+        
+        const friendlyName = primary.replace(/_/g, ' ');
+        return { 
+            en: `a ${friendlyName}`, 
+            ar: `مجال ${friendlyName}`
+        };
+    }
+
+    /**
      * Sends a "Lead Warming" text to confirm interest before expensive generation.
      */
-    async warmLead(businessName, phone) {
-        const formattedPhone = this.formatPhoneNumber(phone);
+    async warmLead(lead) {
+        const businessName = lead.name;
+        const formattedPhone = this.formatPhoneNumber(lead.phone);
         if (!formattedPhone) return 'skipped_invalid';
-        const message = `Hello ${businessName}! 💎 We are KSA Verified. We're currently designing a premium AI-powered website for businesses in your area. 
+        
+        const niche = this.formatNiche(lead.types);
+        
+        let messageEn = '';
+        let messageAr = '';
 
-Would you like to see a custom preview for your business completely for free? Just reply 'YES' and we'll send it over!
+        console.log(`[Closer] Warming lead ${formattedPhone}. Checking secondary search engines for gaps...`);
+        const isMissingOnBing = await this._isMissingOnBing(businessName);
 
----
+        if (isMissingOnBing) {
+            console.log(`[Closer] Huge Gap Identified: Not found organically on Bing.`);
+            messageEn = `Hi ${businessName}. I saw your listing on Google Maps, but when I searched on other platforms (like Bing) for ${niche.en} in Riyadh, your business didn't show up at all.
 
-مرحباً ${businessName}! 💎 نحن KSA Verified. نقوم حالياً بتصميم موقع إلكتروني متميز مدعوم بالذكاء الاصطناعي للشركات في منطقتك.
+I know that's probably not at the top of your priority list when you're busy actually running your business, but missing from these other directories might be costing you more customers than you think.
 
-هل تود رؤية معاينة مخصصة لعملك مجاناً تماماً؟ فقط رد بـ "نعم" وسنرسلها لك!`;
+Happy to share the exact gaps I found if you're open to it.`;
 
-        console.log(`[Closer] Warming lead ${formattedPhone}...`);
-        return await this.sendMessage(formattedPhone, message);
+            messageAr = `مرحباً ${businessName}. رأيت قائمتكم على خرائط جوجل، ولكن عندما بحثت في منصات أخرى (مثل Bing) عن ${niche.ar} في الرياض، لم يظهر عملكم على الإطلاق.
+
+أعلم أن هذا ربما لا يكون على رأس قائمة أولوياتكم مع انشغالكم الفعلي بإدارة العمل، لكن الغياب عن أدلة البحث الأخرى قد يكلفكم خسارة عملاء أكثر مما تعتقدون.
+
+سأكون سعيداً بمشاركة ما وجدته بالضبط إذا كنتم منفتحين لذلك.`;
+
+        } else {
+            // Default Gap: Missing Website (since they were scouted with no website)
+            messageEn = `Hi ${businessName}. I was trying to find your website when searching for ${niche.en} in Riyadh online, but I couldn't find one. 
+
+I know that's probably not at the top of your priority list when you're busy actually running your business, but it might be costing you more customers than you think. 
+
+Happy to share what I found if you're open to it.`;
+
+            messageAr = `مرحباً ${businessName}. كنت أحاول العثور على موقعكم الإلكتروني أثناء البحث عن ${niche.ar} في الرياض عبر الإنترنت، لكنني لم أتمكن من العثور عليه.
+
+أعلم أن هذا ربما لا يكون على رأس قائمة أولوياتكم مع انشغالكم الفعلي بإدارة العمل، لكن هذا الأمر قد يكلفكم خسارة عملاء أكثر مما تعتقدون.
+
+سأكون سعيداً بمشاركة ما وجدته معكم إذا كنتم منفتحين لذلك.`;
+        }
+
+        const message = `${messageEn}\n\n---\n\n${messageAr}`;
+
+        return await this.sendMessage(formattedPhone, message, lead.place_id || null);
     }
 
     /**
@@ -194,7 +297,7 @@ Would you like to see a custom preview for your business completely for free? Ju
             }
         }
 
-        const promoImageUrl = 'https://ksaverified.com/marketing/promo_19sar.png';
+        const promoImageUrl = process.env.PROMO_IMAGE_URL || 'https://ksaverified.com/marketing/promo_19sar.png';
         const portalUrl = 'https://ksaverified.com/customers';
 
         const message = `Special Offer for ${businessName}! 🚀 
@@ -220,7 +323,8 @@ Reply 'INTERESTED' to activate this offer!
         console.log(`[Closer] Sending 19 SAR Promo to ${formattedPhone}...`);
         try {
             await this.sendMedia(formattedPhone, promoImageUrl, "Flash Sale: 1 Week FREE + 19 SAR 🚀");
-            await this.sendMessage(formattedPhone, message);
+            const lead = await db.getLeadByPhone(formattedPhone);
+            await this.sendMessage(formattedPhone, message, lead?.place_id);
             return true;
         } catch (err) {
             console.error(`[Closer] Promo send failed: ${err.message}`);
@@ -232,9 +336,19 @@ Reply 'INTERESTED' to activate this offer!
     /**
      * Generic method to send a message via the local WhatsApp service
      */
-    async sendMessage(to, message) {
+    async sendMessage(to, message, placeId = null) {
         try {
             const response = await this.api.post('/send', { to, message });
+            
+            // Log to database if available
+            if (this.db) {
+                try {
+                    await this.db.saveOutboundChatLog(to, message, placeId);
+                } catch (logErr) {
+                    console.warn(`[Closer] Logging failed: ${logErr.message}`);
+                }
+            }
+
             if (response.data && response.data.success) return true;
             throw new Error(response.data?.error || 'Unknown error');
         } catch (error) {
@@ -293,7 +407,7 @@ Please send a screenshot of your payment receipt here to finalize your activatio
 
         console.log(`[Closer] Sending ${daysRemaining}-day Trial Reminder to ${formattedPhone}...`);
         try {
-            await this.sendMessage(formattedPhone, messageBody);
+            await this.sendMessage(formattedPhone, messageBody, lead.place_id);
             return true;
         } catch (err) {
             console.error(`[Closer] Trial reminder failed for ${formattedPhone}: ${err.message}`);
@@ -329,7 +443,7 @@ Please send a screenshot of your payment receipt here to finalize your activatio
         }
 
         try {
-            await this.sendMessage(formattedPhone, messageBody);
+            await this.sendMessage(formattedPhone, messageBody, lead.place_id);
             console.log(`[Closer] Urgency Close delivered to ${lead.name}`);
             return true;
         } catch (err) {

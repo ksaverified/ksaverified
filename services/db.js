@@ -10,16 +10,17 @@ class DatabaseService {
             throw new Error('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY missing in environment variables.');
         }
 
-        // Increase timeout for fetch to 60 seconds (Node 22 default is lower/stricter)
         this.supabase = createClient(this.supabaseUrl, this.supabaseKey, {
             auth: {
                 persistSession: false
             },
             global: {
                 fetch: (url, options) => {
+                    // Use standard fetch but with an explicit signal for timeouts
+                    // This prevents hangs on 'Unhealthy' Supabase states
                     return fetch(url, { 
                         ...options, 
-                        signal: AbortSignal.timeout(60000) 
+                        signal: AbortSignal.timeout(10000) // 10s cutoff
                     });
                 }
             }
@@ -75,6 +76,7 @@ class DatabaseService {
                     lat: lead.location?.lat || null,
                     lng: lead.location?.lng || null,
                     photos: lead.photos || [],
+                    types: lead.types || [],
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'place_id' })
                 .select();
@@ -116,7 +118,7 @@ class DatabaseService {
         return this.withRetry(async () => {
             const { data, error } = await this.supabase
                 .from('leads')
-                .select('place_id, name, phone, address, lat, lng, photos, website_html, vercel_url, status, retry_count, updated_at')
+                .select('place_id, name, phone, address, lat, lng, photos, types, website_html, vercel_url, status, retry_count, updated_at')
                 .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched'])
                 .or('retry_count.lt.3,retry_count.is.null')
                 .order('status', { ascending: true }) // 'interest_confirmed' comes before 'scouted' alphabetically/logically
@@ -273,6 +275,8 @@ class DatabaseService {
      * Save an inbound chat interaction
      */
     async saveChatLog(placeId, phone, messageIn, messageOut, status = 'pending', translatedMessage = null, whatsappMsgId = null) {
+        if (!placeId) return; // Skip if no valid placeId to avoid FK violations
+
         const payload = {
             place_id: placeId,
             phone: phone,
@@ -296,6 +300,8 @@ class DatabaseService {
      * Save only an inbound message (used by webhook)
      */
     async saveInboundChatLog(placeId, phone, messageIn, translatedMessage = null, whatsappMsgId = null) {
+        if (!placeId) return; // Skip if no valid placeId to avoid FK violations
+
         const payload = {
             place_id: placeId,
             phone: phone,
@@ -357,6 +363,8 @@ class DatabaseService {
      * Save a unilateral outbound message (e.g. from manual admin typing or webhook)
      */
     async saveOutboundChatLog(placeId, phone, messageOut, whatsappMsgId = null) {
+        if (!placeId) return; // Skip if no valid placeId to avoid FK violations
+
         const payload = {
             place_id: placeId,
             phone: phone,
@@ -454,7 +462,7 @@ class DatabaseService {
 
         if (error) {
             // Graceful fallback to the legacy approach if the RPC doesn't exist yet
-            console.warn('[DB] RPC get_scouted_leads_without_warming failed, falling back:', error.message);
+            // console.warn('[DB] RPC get_scouted_leads_without_warming failed, falling back:', error.message);
             return this._getScoutedLeadsFallback(limit);
         }
         return data || [];
@@ -529,34 +537,37 @@ class DatabaseService {
         // Single query: get pitched leads that have NO 'promo_sent' log entry.
         const { data, error } = await this.supabase.rpc('get_pitched_leads_without_promo', { p_limit: limit });
 
-        if (error) {
-            console.warn('[DB] RPC get_pitched_leads_without_promo failed, falling back:', error.message);
+        if (error || !data || data.length === 0) {
+            // if (error) console.warn('[DB] RPC get_pitched_leads_without_promo failed, falling back:', error.message);
             return this._getPitchedLeadsFallback(limit);
         }
         return data || [];
     }
 
-    /** Fallback N+1 approach (used only if RPC isn't deployed yet) */
+    /** Fallback logic to fetch pitched leads without sent promos */
     async _getPitchedLeadsFallback(limit = 10) {
+        // Fetch a larger chunk of pitched leads (up to 1000)
         const { data: leads, error } = await this.supabase
             .from('leads')
             .select('place_id, name, phone, status, vercel_url, updated_at')
             .eq('status', 'pitched')
+            .not('website_html', 'is', null)
             .order('updated_at', { ascending: true })
-            .limit(limit * 3);
+            .limit(1000);
 
         if (error) throw error;
 
+        // Fetch all sent promo IDs to filter locally
+        const { data: promoLogs } = await this.supabase
+            .from('logs')
+            .select('place_id')
+            .eq('action', 'promo_sent');
+            
+        const sentIds = new Set(promoLogs?.map(l => l.place_id) || []);
+
         const finalLeads = [];
         for (const lead of leads || []) {
-            const { data: logs } = await this.supabase
-                .from('logs')
-                .select('id')
-                .eq('place_id', lead.place_id)
-                .eq('action', 'promo_sent')
-                .limit(1);
-
-            if (!logs || logs.length === 0) {
+            if (!sentIds.has(lead.place_id)) {
                 finalLeads.push(lead);
             }
             if (finalLeads.length >= limit) break;

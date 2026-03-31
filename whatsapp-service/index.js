@@ -332,7 +332,14 @@ async function startWhatsApp() {
 
         try {
             console.log(`[WhatsApp] Fetching media from URL: ${mediaUrl}`);
-            const media = await MessageMedia.fromUrl(mediaUrl);
+            let media;
+            try {
+                media = await MessageMedia.fromUrl(mediaUrl);
+            } catch (mediaErr) {
+                console.error(`[WhatsApp] Media fetch failed: ${mediaErr.message}. Falling back to text-only.`);
+                // If media fetch fails, we continue by sending just the caption as a text message
+                media = null;
+            }
 
             // 1. Resolve Number ID
             let finalId = to;
@@ -359,9 +366,15 @@ async function startWhatsApp() {
                     await client.getContactById(finalId).catch(() => null);
                     await new Promise(r => setTimeout(r, 1000)); // Sync delay
 
-                    await client.sendMessage(finalId, media, { caption: caption });
-                    console.log(`[WhatsApp] Media sent successfully on attempt ${attempt} to ${finalId}`);
-                    return res.json({ success: true, message: 'Media sent!' });
+                    if (media && attempt === 1) {
+                        await client.sendMessage(finalId, media, { caption: caption });
+                    } else {
+                        // Fallback: Send the caption as a normal text message (append media URL if we had it but it failed)
+                        const finalCaption = (attempt > 1 && media && mediaUrl) ? `${caption}\n\n[Promo Image: ${mediaUrl}]` : caption;
+                        await client.sendMessage(finalId, finalCaption);
+                    }
+                    console.log(`[WhatsApp] ${media ? 'Media' : 'Text'} sent successfully on attempt ${attempt} to ${finalId}`);
+                    return res.json({ success: true, message: media ? 'Media sent!' : 'Text sent (media failed)!' });
                 } catch (err) {
                     lastError = err;
                     console.warn(`[WhatsApp] Media send attempt ${attempt} failed: ${err.message}`);
@@ -374,7 +387,7 @@ async function startWhatsApp() {
             console.error('[WhatsApp] Media send ultimate failure:', error);
             res.status(500).json({
                 error: 'Failed to send media after retries',
-                details: error.message,
+                details: error ? (error.stack || error.message || String(error) || 'Unknown') : 'Unknown',
                 isReady: isReady
             });
         }
