@@ -10,4 +10,4 @@ RUN npm install
 COPY . .
 
 # Run the single-cycle script for Cloud Run Jobs
-CMD ["node", "run_cloud_job.js"]
+CMD ["node", "core/run_cloud_job.js"]

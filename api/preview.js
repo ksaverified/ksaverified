@@ -1,5 +1,5 @@
-const DatabaseService = require('../services/db');
-const PublisherAgent = require('../agents/publisher');
+const DatabaseService = require('../core/services/db');
+const PublisherAgent = require('../core/agents/publisher');
 
 module.exports = async function handler(request, response) {
     const { id } = request.query;

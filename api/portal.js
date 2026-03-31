@@ -49,7 +49,7 @@ async function handleRequestPassword(req, res) {
     }
     
     try {
-        const authService = require('../services/auth');
+        const authService = require('../core/services/auth');
         const formattedPhone = authService.formatPhone(phone);
 
         // 1. Fetch the lead to ensure they exist
@@ -116,7 +116,7 @@ async function handleGetWebsiteConfig(req, res) {
     if (!config || Object.keys(config).length === 0) {
         console.log(`[Portal] Config for ${phone} is empty. Attempting to extract from HTML...`);
         
-        const PatcherService = require('../services/patcher');
+        const PatcherService = require('../core/services/patcher');
         const patcher = new PatcherService();
 
         // 1. Try to extract from HTML using the PatcherService
@@ -165,7 +165,7 @@ async function handleUpdateWebsiteConfig(req, res) {
         // 2. Patch the HTML if we have it
         let updatedHtml = lead.website_html;
         if (updatedHtml) {
-            const PatcherService = require('../services/patcher');
+            const PatcherService = require('../core/services/patcher');
             const patcher = new PatcherService();
             updatedHtml = await patcher.patchHtml(updatedHtml, config);
         }

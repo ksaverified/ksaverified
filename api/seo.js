@@ -1,4 +1,4 @@
-const DatabaseService = require('../services/db');
+const DatabaseService = require('../core/services/db');
 const axios = require('axios');
 
 module.exports = async function handler(req, res) {

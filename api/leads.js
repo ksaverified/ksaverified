@@ -1,6 +1,6 @@
-const DatabaseService = require('../services/db');
-const ScoutAgent = require('../agents/scout');
-const Orchestrator = require('../orchestrator');
+const DatabaseService = require('../core/services/db');
+const ScoutAgent = require('../core/agents/scout');
+const Orchestrator = require('../core/orchestrator');
 
 module.exports = async function handler(req, res) {
     const { action } = req.query;

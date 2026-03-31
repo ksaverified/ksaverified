@@ -1,4 +1,4 @@
-const DatabaseService = require('../services/db');
+const DatabaseService = require('../core/services/db');
 const fs = require('fs');
 const path = require('path');
 

@@ -1,6 +1,6 @@
 const { waitUntil } = require('@vercel/functions');
-const DatabaseService = require('../services/db');
-const ChatbotAgent = require('../agents/chatbot');
+const DatabaseService = require('../core/services/db');
+const ChatbotAgent = require('../core/agents/chatbot');
 
 // Webhook handles the local WhatsApp microservice
 module.exports = async function handler(request, response) {

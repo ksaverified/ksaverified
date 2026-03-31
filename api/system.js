@@ -1,5 +1,5 @@
-const DatabaseService = require('../services/db');
-const Orchestrator = require('../orchestrator');
+const DatabaseService = require('../core/services/db');
+const Orchestrator = require('../core/orchestrator');
 
 module.exports = async function handler(req, res) {
     const { action } = req.query;
