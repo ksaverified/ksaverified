@@ -9,6 +9,7 @@ const DatabaseService = require('./services/db');
 const ScoutAgent = require('./agents/scout');
 const AuditorAgent = require('./agents/auditor');
 const CertifierAgent = require('./agents/certifier');
+const MarketingAuditAgent = require('./agents/marketingAudit');
 const systemApi = require('./api/system');
 
 class Orchestrator {
@@ -21,6 +22,7 @@ class Orchestrator {
     this.biller = new BillerAgent();
     this.auditor = new AuditorAgent();
     this.certifier = new CertifierAgent();
+    this.marketingAudit = new MarketingAuditAgent();
     this.db = new DatabaseService();
     this.closer.setDatabase(this.db);
     this.isRunning = false;
@@ -286,7 +288,7 @@ class Orchestrator {
   }
 
   async runWarmingCycle() {
-    console.log('[Orchestrator] Running Lead Warming Cycle...');
+    console.log('[Orchestrator] Running Lead Warming Cycle with Map Gap Analysis...');
     try {
       const health = await this.axios.get(`${this.closer.baseURL}/health`);
       if (!health.data.ready) {
@@ -298,26 +300,66 @@ class Orchestrator {
       return;
     }
 
-    const leads = await this.db.getScoutedLeads(30);
-    for (const lead of leads) {
-      if (!lead.is_validated && !process.env.PROMOTION_MODE === 'true') {
-        console.log(`[Orchestrator] Skipping warming for ${lead.name} (Not Validated)`);
-        continue;
-      }
+    const leads = await this.db.getScoutedLeads(50);
+    
+    // Sort leads by Map Gap priority (hot leads first)
+    const sortedLeads = leads.sort((a, b) => {
+      const priorityOrder = { hot: 0, warm: 1, cold: 2 };
+      const aPriority = a.map_gap_analysis?.priority_level || a.priority || 'warm';
+      const bPriority = b.map_gap_analysis?.priority_level || b.priority || 'warm';
+      return (priorityOrder[aPriority] || 1) - (priorityOrder[bPriority] || 1);
+    });
+
+    // Limit to top 20 per cycle to maintain quality
+    const topLeads = sortedLeads.slice(0, 20);
+
+    console.log(`[Orchestrator] Warming ${topLeads.length} leads (sorted by Map Gap priority)...`);
+
+    for (const lead of topLeads) {
       try {
+        // Parse map gap analysis if stored as JSON string
+        if (typeof lead.map_gap_analysis === 'string') {
+          try {
+            lead.mapGapAnalysis = JSON.parse(lead.map_gap_analysis);
+          } catch (e) {
+            lead.mapGapAnalysis = {};
+          }
+        } else {
+          lead.mapGapAnalysis = lead.map_gap_analysis || {};
+        }
+
+        // Generate Map Gap marketing audit for hot leads
+        if (lead.mapGapAnalysis?.priorityLevel === 'hot' || lead.mapGapAnalysis?.gapCount >= 3) {
+          console.log(`[Orchestrator] Generating Map Gap Audit for HOT lead: ${lead.name}`);
+          try {
+            const auditReport = await this.marketingAudit.generateAudit(lead, this.db);
+            lead.auditReport = auditReport;
+          } catch (auditErr) {
+            console.warn(`[Orchestrator] Audit generation failed for ${lead.name}: ${auditErr.message}`);
+          }
+        }
+
+        // Use Map Gap style warm message
         const result = await this.closer.warmLead(lead);
         if (result === 'local_sent' || result === true) {
-          await this.db.addLog('closer', 'warming_sent', lead.place_id, { name: lead.name }, 'success');
+          await this.db.addLog('closer', 'warming_sent_mapgap', lead.place_id, { 
+            name: lead.name, 
+            priority: lead.mapGapAnalysis?.priorityLevel || 'unknown',
+            conversionScore: lead.mapGapAnalysis?.scores?.conversionScore || 0,
+            gapCount: lead.mapGapAnalysis?.gapCount || 0
+          }, 'success');
           await this.db.updateLeadStatus(lead.place_id, 'warming_sent');
         } else if (result === 'skipped_invalid') {
           console.log(`[Orchestrator] Marking ${lead.name} as invalid (landline).`);
           await this.db.updateLeadStatus(lead.place_id, 'invalid', { last_error: 'Landline detected during warming' });
         }
-        await new Promise(r => setTimeout(r, 8000));
+        await new Promise(r => setTimeout(r, 10000)); // 10s throttle for Map Gap quality approach
       } catch (e) {
         console.error(`[Orchestrator] Warming failed for ${lead.name}:`, e.message);
       }
     }
+    
+    console.log('[Orchestrator] Map Gap Warming Cycle complete.');
   }
 
   async runPromotionCycle() {
@@ -375,10 +417,10 @@ class Orchestrator {
 
     for (const lead of leads) {
       try {
-        const message = `Hi ${lead.name}! 💎 Just checking in—did you have a chance to look at your new website preview? {previewUrl}\n\nYour 1-week FREE trial is running! Let me know if you have any questions.`.replace('{previewUrl}', lead.vercel_url);
-        await this.closer.sendMessage(lead.phone, message);
-        await this.db.saveOutboundChatLog(lead.place_id, lead.phone, message);
-        await this.db.updateLeadStatus(lead.place_id, 'pitched', { updated_at: new Date().toISOString() }); // Reset timer
+        const result = await this.closer.sendNudge(lead);
+        if (result === true) {
+          await this.db.updateLeadStatus(lead.place_id, 'pitched', { updated_at: new Date().toISOString() }); // Reset timer
+        }
         await new Promise(r => setTimeout(r, 8000));
       } catch (e) {
         console.error(`[Orchestrator] Nudge failed for ${lead.name}:`, e.message);

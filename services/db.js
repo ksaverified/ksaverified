@@ -53,7 +53,7 @@ class DatabaseService {
 
     /**
      * Upsert a lead into the database. If it exists, it will be updated.
-     * @param {Object} lead - The lead object (placeId, name, phone, address, location)
+     * @param {Object} lead - The lead object (placeId, name, phone, address, location, mapGapAnalysis)
      */
     async upsertLead(lead) {
         return this.withRetry(async () => {
@@ -65,20 +65,37 @@ class DatabaseService {
             const shortId = lead.placeId ? lead.placeId.slice(-6) : Math.random().toString(36).substring(7);
             slug = `${slug}-${shortId}`;
 
+            // Build upsert payload with Map Gap analysis if available
+            const upsertPayload = {
+                place_id: lead.placeId,
+                name: lead.name,
+                slug: slug,
+                phone: lead.phone,
+                address: lead.address,
+                lat: lead.location?.lat || null,
+                lng: lead.location?.lng || null,
+                photos: lead.photos || [],
+                types: lead.types || [],
+                updated_at: new Date().toISOString()
+            };
+
+            // Add Map Gap analysis if available
+            if (lead.mapGapAnalysis) {
+                upsertPayload.map_gap_analysis = lead.mapGapAnalysis;
+                upsertPayload.priority = lead.mapGapAnalysis.priorityLevel || 'warm';
+                upsertPayload.conversion_score = lead.mapGapAnalysis.scores?.conversionScore || 0;
+                upsertPayload.gap_count = lead.mapGapAnalysis.gapCount || 0;
+            }
+
+            // Add review data if available
+            if (lead.rating !== undefined) upsertPayload.rating = lead.rating;
+            if (lead.reviewCount !== undefined) upsertPayload.review_count = lead.reviewCount;
+            if (lead.website) upsertPayload.website = lead.website;
+            if (lead.openingHours) upsertPayload.opening_hours = lead.openingHours;
+
             const { data, error } = await this.supabase
                 .from('leads')
-                .upsert({
-                    place_id: lead.placeId,
-                    name: lead.name,
-                    slug: slug,
-                    phone: lead.phone,
-                    address: lead.address,
-                    lat: lead.location?.lat || null,
-                    lng: lead.location?.lng || null,
-                    photos: lead.photos || [],
-                    types: lead.types || [],
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'place_id' })
+                .upsert(upsertPayload, { onConflict: 'place_id' })
                 .select();
 
             if (error) {

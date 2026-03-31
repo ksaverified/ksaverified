@@ -32,6 +32,10 @@ import LeadDetailV2 from './pages/v2/LeadDetailV2';
 import SalesTeamV2 from './pages/v2/SalesTeamV2';
 import AdminAssistantV2 from './pages/v2/AdminAssistantV2';
 import SEOManagerV2 from './pages/v2/SEOManagerV2';
+// ── V3 Map Gap Dashboard ─────────────────────────────────────────────────────
+import MapGapDashboard from './pages/mapgap/MapGapDashboard';
+import MapGapSettings from './pages/mapgap/MapGapSettings';
+import GapAnalysis from './pages/mapgap/GapAnalysis';
 
 function App() {
   return (
@@ -93,6 +97,23 @@ function App() {
           <Route path="/admin-v2/assistant" element={<AuthGuard allowedRoles={['admin']}><AdminAssistantV2 /></AuthGuard>} />
           <Route path="/admin-v2/settings" element={<AuthGuard allowedRoles={['admin']}><SettingsV2 /></AuthGuard>} />
           <Route path="/admin-v2/seo" element={<AuthGuard allowedRoles={['admin']}><SEOManagerV2 /></AuthGuard>} />
+
+          {/* ── Dashboard V3: Map Gap System ── */}
+          <Route path="/admin-v3/mapgap" element={
+            <AuthGuard allowedRoles={['admin']}>
+              <MapGapDashboard />
+            </AuthGuard>
+          } />
+          <Route path="/admin-v3/mapgap/analysis" element={
+            <AuthGuard allowedRoles={['admin']}>
+              <GapAnalysis />
+            </AuthGuard>
+          } />
+          <Route path="/admin-v3/mapgap/settings" element={
+            <AuthGuard allowedRoles={['admin']}>
+              <MapGapSettings />
+            </AuthGuard>
+          } />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

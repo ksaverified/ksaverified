@@ -29,6 +29,58 @@ class CloserAgent {
     }
 
     /**
+     * Cleans up business names to remove bot-like suffixes
+     */
+    cleanBusinessName(name) {
+        if (!name) return 'Your Business';
+        let clean = name.replace(/[\(\)\[\]]/g, ''); // Remove brackets
+        clean = clean.split(' - ')[0]; // Take first part of dash separators
+        clean = clean.split(' | ')[0];
+        
+        // Remove common regional/branch suffixes (Case-insensitive)
+        const suffixes = [
+            / Riyadh$/i, / Jeddah$/i, / Dammam$/i, / Khobar$/i,
+            / branch$/i, / main$/i, / office$/i,
+            / store$/i, / shop$/i, / showroom$/i,
+            / فرع$/i, / الرياض$/i, / جدة$/i, / الدمام$/i
+        ];
+        
+        for (const suffix of suffixes) {
+            clean = clean.replace(suffix, '');
+        }
+        
+        return clean.trim();
+    }
+
+    /**
+     * Determines the niche in Arabic and English for personalized templates
+     */
+    formatNiche(types) {
+        const typeMap = {
+            'restaurant': { en: 'Restaurant', ar: 'مطعم' },
+            'cafe': { en: 'Cafe', ar: 'كافيه' },
+            'gym': { en: 'Gym', ar: 'نادي رياضي' },
+            'dentist': { en: 'Dental Clinic', ar: 'عيادة أسنان' },
+            'barber_shop': { en: 'Barbershop', ar: 'صالون حلاقة' },
+            'beauty_salon': { en: 'Beauty Salon', ar: 'مشغل نسائي' },
+            'bakery': { en: 'Bakery', ar: 'مخبز' },
+            'florist': { en: 'Flower Shop', ar: 'محل زهور' },
+            'car_repair': { en: 'Auto Repair', ar: 'ورشة سيارات' },
+            'car_wash': { en: 'Car Wash', ar: 'مغسلة سيارات' },
+            'furniture_store': { en: 'Furniture Store', ar: 'معرض أثاث' },
+            'spa': { en: 'Spa', ar: 'سبا ومركز استرخاء' },
+            'book_store': { en: 'Bookstore', ar: 'مكتبة' },
+            'optician': { en: 'Optician', ar: 'محل نظارات' },
+            'electronics_store': { en: 'Electronics Store', ar: 'محل إلكترونيات' },
+            'general_contractor': { en: 'Contracting Company', ar: 'شركة مقاولات' },
+            'real_estate_agency': { en: 'Real Estate Agency', ar: 'مكتب عقارات' }
+        };
+        
+        const primary = types?.[0];
+        return typeMap[primary] || { en: 'your business', ar: 'عملكم' };
+    }
+
+    /**
      * Cleans and formats phone numbers to international format (e.g., 966...)
      */
     formatPhoneNumber(rawPhone) {
@@ -66,11 +118,16 @@ class CloserAgent {
         if (!formattedPhone) return 'skipped_invalid';
 
         // 0. Pre-flight check: Verify the website is working AND validated before pitching
+        let leadRecord = null;
         if (db) {
-            const lead = await db.getLeadByPhone(formattedPhone);
-            if (lead && lead.is_validated !== true) {
-                console.error(`[Closer] HARD BLOCK: Lead ${businessName} (${formattedPhone}) is NOT validated. Pitch aborted.`);
-                throw new Error(`Website quality assurance check failed. Lead is not marked as validated in database. Please review the site manually or run AuditorAgent.`);
+            try {
+                leadRecord = await db.getLeadByPhone(formattedPhone);
+                if (leadRecord && leadRecord.is_validated !== true) {
+                    console.error(`[Closer] HARD BLOCK: Lead ${businessName} (${formattedPhone}) is NOT validated. Pitch aborted.`);
+                    throw new Error(`Website quality assurance check failed. Lead is not marked as validated in database. Please review the site manually or run AuditorAgent.`);
+                }
+            } catch (err) {
+                console.warn(`[Closer] Database lookup for ${formattedPhone} failed: ${err.message}. Proceeding with caution.`);
             }
         }
 
@@ -84,83 +141,77 @@ class CloserAgent {
                 });
                 console.log(`[Closer] Pre-flight check passed (status: ${response.status}). Site is up.`);
             } catch (err) {
-                // Only hard-block on genuine connection failures, not HTTP errors
                 const isConnectionError = err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === 'ECONNRESET';
                 if (isConnectionError) {
                     console.error(`[Closer] CRITICAL: Pre-flight connection failure for ${vercelUrl}. Error: ${err.message}`);
                     throw new Error(`Website at ${vercelUrl} is not working or unreachable. Pitch aborted to prevent sending broken links.`);
                 }
-                // Timeout or other transient errors: warn but allow pitch through
                 console.warn(`[Closer] Pre-flight check warning (non-fatal): ${err.message}. Proceeding with pitch.`);
             }
         }
 
-        // 1. Ensure lead exists and generate/retrieve PIN
-        let registrationData = { pin: '000000' };
-        try {
-            const authService = require('../services/auth');
-            registrationData = await authService.registerLead({ name: businessName, phone: formattedPhone });
-            console.log(`[Closer] Lead ${formattedPhone} ready with PIN: ${registrationData.pin}`);
-        } catch (dbErr) {
-            console.warn(`[Closer] Registration failed: ${dbErr.message}.`);
-        }
+        // 1. Clean business name and determine niche
+        const cleanedName = this.cleanBusinessName(businessName);
+        const { en: nicheEn, ar: nicheAr } = this.formatNiche(leadRecord?.types || []);
 
-        console.log(`[Closer] Sending Enhanced Pitch for ${businessName}...`);
+        // 2. Check for previous pitch to prevent duplicates
+        if (db && leadRecord) {
+            const { data: previousMsgs } = await db.supabase
+                .from('chat_logs')
+                .select('id')
+                .eq('place_id', leadRecord.place_id)
+                .not('message_out', 'is', null)
+                .limit(1);
 
-        // Image and Portal details
-        // Use a reliable, always-online marketing image. Replace with CDN-hosted asset once available.
-        const marketingImageUrl = process.env.MARKETING_IMAGE_URL || 'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2';
-        const portalUrl = 'https://ksaverified.com/customers';
-
-        let templates;
-        try {
-            templates = await db.getSetting('whatsapp_template');
-        } catch (e) {
-            templates = {
-                en: "Hello {businessName}! 💎 We built a premium preview for your new website: {previewUrl}\n\nManage your site at your KSA Verified Portal: {portalUrl}\n\nYour Login Credentials:\nPhone: {phone}\nTemporary Password: *{password}*",
-                ar: "مرحباً {businessName}! 💎 لقد قمنا بإنشاء معاينة متميزة لموقعك الإلكتروني الجديد: {previewUrl}\n\nأدر موقعك من خلال بوابة KSA Verified: {portalUrl}\n\nبيانات تسجيل الدخول الخاصة بك:\nرقم الجوال: {phone}\nكلمة المرور المؤقتة: *{password}*",
-                en_returning: "Welcome back {businessName}! 💎 We updated your premium preview: {previewUrl}\n\nAccess your KSA Verified Portal with your new temporary password.\n\nPortal: {portalUrl}\nPhone: {phone}\nNew Password: *{password}*",
-                ar_returning: "مرحباً بعودتك {businessName}! 💎 لقد قمنا بتحديث معاينتك المتميزة: {previewUrl}\n\nيمكنك الوصول إلى بوابة KSA Verified بكلمة المرور المؤقتة الجديدة.\n\nالبوابة: {portalUrl}\nرقم الجوال: {phone}\nكلمة المرور الجديدة: *{password}*"
-            };
-        }
-
-        const buildMessage = (template, name, url, portal, phoneNum, pass) => {
-            if (!template) return '';
-            return template
-                .replace(/{businessName}/g, name)
-                .replace(/{previewUrl}/g, url)
-                .replace(/{portalUrl}/g, portal)
-                .replace(/{phone}/g, phoneNum)
-                .replace(/{password}/g, pass);
-        };
-
-        const msgEn = buildMessage(
-            registrationData.isNew ? templates.en : (templates.en_returning || "Welcome back {businessName}! 💎 We've updated your premium preview: {previewUrl}\n\nAccess your portal with your new temporary password.\n\nPortal: {portalUrl}\nPhone: {phone}\nNew Password: *{password}*"),
-            businessName, vercelUrl, portalUrl, formattedPhone, registrationData.pin
-        );
-        const msgAr = buildMessage(
-            registrationData.isNew ? templates.ar : (templates.ar_returning || "مرحباً بعودتك {businessName}! 💎 لقد قمنا بتحديث المعاينة المتميزة الخاصة بك: {previewUrl}\n\nيمكنك الوصول إلى البوابة الخاصة بك باستخدام كلمة المرور المؤقتة الجديدة.\n\nالبوابة: {portalUrl}\nرقم الجوال: {phone}\nكلمة المرور الجديدة: *{password}*"),
-            businessName, vercelUrl, portalUrl, formattedPhone, registrationData.pin
-        );
-        const messageBody = `${msgEn}\n\n---\n\n${msgAr}`;
-
-        try {
-            // 1. Send Marketing Image FIRST — non-fatal if it fails
-            console.log(`[Closer] Step 1: Sending marketing image to ${formattedPhone}...`);
-            try {
-                await this.sendMedia(formattedPhone, marketingImageUrl, "KSA Verified 💎");
-            } catch (imgErr) {
-                console.warn(`[Closer] Marketing image failed (non-fatal): ${imgErr.message}. Continuing with text pitch.`);
+            if (previousMsgs && previousMsgs.length > 0) {
+                console.log(`[Closer] Lead ${cleanedName} already has outbound messages. Skipping initial pitch.`);
+                return 'duplicate_skipped';
             }
+        }
 
-            // 2. Send the Access Details message SECOND
-            await this.sendMessage(formattedPhone, messageBody, lead?.place_id);
+        // 3. Prepare Professional Template
+        const sales_pitch = `السلام عليكم فريق ${cleanedName} 👋
 
-            console.log(`[Closer] Enhanced Pitch successfully delivered to ${formattedPhone}`);
-            return 'local_sent';
+معكم فريق KSA Verified المتخصص في التحول الرقمي للشركات في الرياض.
+
+لقد قمنا بتصميم نموذج أولي لموقعكم الإلكتروني الجديد كجزء من مبادرة دعم الأعمال المحلية لدينا. نهدف لمساعدة ${nicheAr} الخاص بكم على التميز وجذب المزيد من العملاء عبر الإنترنت.
+
+هل يمكننا إرسال رابط المعاينة لتلقي ملاحظاتكم؟
+
+English Translation:
+Hi ${cleanedName} team 👋
+
+We are the KSA Verified team, specializing in digital transformation for businesses in Riyadh.
+
+We've developed a custom website prototype for your ${nicheEn} as part of our local business initiative. Our goal is to help you stand out and attract more customers online.
+
+May we share the preview link for your feedback?
+
+Best regards,
+KSA Verified Team`;
+
+        try {
+            console.log(`[Closer] Pitching ${cleanedName} (${formattedPhone}) via WhatsApp...`);
+            
+            // 4. Determine and send Niche-Specific Image
+            const nicheImage = this.getNicheImage(leadRecord?.types || []);
+            await this.sendMedia(formattedPhone, nicheImage, `Website Proposal for ${cleanedName} 🚀`);
+
+            // 5. Send the text pitch
+            const response = await this.sendMessage(formattedPhone, sales_pitch, leadRecord?.place_id);
+            
+            if (response === 'sent' || response === 'local_sent') {
+                console.log(`[Closer] Professional pitch delivered to ${cleanedName}`);
+                return 'local_sent';
+            } else {
+                throw new Error('Local WhatsApp service failed to confirm delivery');
+            }
         } catch (err) {
-            console.error(`[Closer] Enhanced outreach failed for ${formattedPhone}: ${err.message}`);
-            throw new Error(`Enhanced Outreach Failed: ${err.message}`);
+            console.error(`[Closer] Pitch failed for ${cleanedName}: ${err.message}`);
+            if (db && leadRecord) {
+                await db.addLog('closer', 'pitch_failed', leadRecord.place_id, { error: err.message }, 'error');
+            }
+            throw err;
         }
     }
 
@@ -184,100 +235,243 @@ class CloserAgent {
     }
 
     /**
-     * Converts a Google Place type to a friendly niche string for messaging.
+     * Cleans up business names to remove bot-like suffixes
+     */
+    cleanBusinessName(name) {
+        if (!name) return 'Your Business';
+        let clean = name.replace(/[\(\)\[\]]/g, ''); // Remove brackets
+        clean = clean.split(' - ')[0]; // Take first part of dash separators
+        clean = clean.split(' | ')[0];
+        
+        // Remove common regional/branch suffixes (Case-insensitive)
+        const suffixes = [
+            / Riyadh$/i, / Jeddah$/i, / Dammam$/i, / Khobar$/i,
+            / branch$/i, / main$/i, / office$/i,
+            / store$/i, / shop$/i, / showroom$/i,
+            / فرع$/i, / الرياض$/i, / جدة$/i, / الدمام$/i
+        ];
+        
+        for (const suffix of suffixes) {
+            clean = clean.replace(suffix, '');
+        }
+        
+        return clean.trim();
+    }
+
+    /**
+     * Determines the niche in Arabic and English for personalized templates
      */
     formatNiche(types) {
+        const typeMap = {
+            'restaurant': { en: 'Restaurant', ar: 'مطعم' },
+            'cafe': { en: 'Cafe', ar: 'كافيه' },
+            'gym': { en: 'Gym', ar: 'نادي رياضي' },
+            'dentist': { en: 'Dental Clinic', ar: 'عيادة أسنان' },
+            'health': { en: 'Health and Wellness Clinic', ar: 'عيادة صحية' },
+            'barber_shop': { en: 'Barbershop', ar: 'صالون حلاقة' },
+            'beauty_salon': { en: 'Beauty Salon', ar: 'مشغل نسائي' },
+            'bakery': { en: 'Bakery', ar: 'مخبز' },
+            'florist': { en: 'Flower Shop', ar: 'محل زهور' },
+            'car_repair': { en: 'Auto Repair', ar: 'ورشة سيارات' },
+            'car_wash': { en: 'Car Wash', ar: 'مغسلة سيارات' },
+            'furniture_store': { en: 'Furniture Store', ar: 'معرض أثاث' },
+            'spa': { en: 'Spa', ar: 'سبا ومركز استرخاء' },
+            'book_store': { en: 'Bookstore', ar: 'مكتبة' },
+            'optician': { en: 'Optician', ar: 'محل نظارات' },
+            'electronics_store': { en: 'Electronics Store', ar: 'محل إلكترونيات' },
+            'electronics_repair': { en: 'Electronics Repair', ar: 'إصلاح إلكترونيات' },
+            'clothing_store': { en: 'Boutique', ar: 'بوتيك ملابس' },
+            'roastery': { en: 'Coffee Roastery', ar: 'محمصة قهوة' },
+            'general_contractor': { en: 'Contracting Company', ar: 'شركة مقاولات' },
+            'real_estate_agency': { en: 'Real Estate Agency', ar: 'مكتب عقارات' }
+        };
+        
         if (!types || !Array.isArray(types) || types.length === 0) {
             return { en: 'businesses like yours', ar: 'أعمال مشابهة لعملكم' };
         }
         
-        const primary = types[0] || '';
-        
-        const dictionary = {
-            'restaurant': { en: 'a restaurant', ar: 'مطعم' },
-            'cafe': { en: 'a cafe', ar: 'مقهى' },
-            'coffee_shop': { en: 'a coffee shop', ar: 'مقهى' },
-            'bakery': { en: 'a bakery', ar: 'مخبز' },
-            'car_repair': { en: 'a car repair shop', ar: 'ورشة صيانة سيارات' },
-            'car_wash': { en: 'a car wash', ar: 'مغسلة سيارات' },
-            'mechanic': { en: 'a mechanic', ar: 'ميكانيكي سيارات' },
-            'gym': { en: 'a gym', ar: 'صالة رياضية' },
-            'hair_care': { en: 'a hair salon', ar: 'صالون حلاقة' },
-            'beauty_salon': { en: 'a beauty salon', ar: 'صالون تجميل' },
-            'laundry': { en: 'a laundry service', ar: 'مغسلة ملابس' },
-            'clothing_store': { en: 'a clothing store', ar: 'متجر ملابس' },
-            'supermarket': { en: 'a supermarket', ar: 'سوبر ماركت' },
-            'grocery_or_supermarket': { en: 'a grocery store', ar: 'بقالة' },
-            'health_beauty': { en: 'a health and beauty store', ar: 'متجر صحة وجمال' },
-            'hospital': { en: 'a hospital', ar: 'مستشفى' },
-            'clinic': { en: 'a clinic', ar: 'عيادة' },
-            'dentist': { en: 'a dental clinic', ar: 'عيادة أسنان' },
-            'pharmacy': { en: 'a pharmacy', ar: 'صيدلية' },
-            'real_estate_agency': { en: 'a real estate agency', ar: 'مكتب عقارات' },
-            'travel_agency': { en: 'a travel agency', ar: 'وكالة سفر' },
-            'lawyer': { en: 'a law firm', ar: 'مكتب محاماة' },
-            'plumber': { en: 'a plumber', ar: 'سباك' },
-            'electrician': { en: 'an electrician', ar: 'كهربائي' }
-        };
-        
-        if (dictionary[primary]) {
-            return dictionary[primary];
-        }
-        
-        const friendlyName = primary.replace(/_/g, ' ');
-        return { 
-            en: `a ${friendlyName}`, 
-            ar: `مجال ${friendlyName}`
-        };
+        const primary = types[0];
+        return typeMap[primary] || { en: 'your business', ar: 'عملكم' };
     }
 
     /**
-     * Sends a "Lead Warming" text to confirm interest before expensive generation.
+     * Returns a high-quality marketing image URL for a specific niche.
+     * These are hosted via Pexels or KSA Verified's own CDN.
+     */
+    getNicheImage(types) {
+        const imageMap = {
+            'restaurant': 'https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg',
+            'cafe': 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg',
+            'gym': 'https://images.pexels.com/photos/1552242/pexels-photo-1552242.jpeg',
+            'dentist': 'https://images.pexels.com/photos/3845806/pexels-photo-3845806.jpeg',
+            'bakery': 'https://images.pexels.com/photos/205961/pexels-photo-205961.jpeg',
+            'florist': 'https://images.pexels.com/photos/931177/pexels-photo-931177.jpeg',
+            'spa': 'https://images.pexels.com/photos/3757942/pexels-photo-3757942.jpeg',
+            'furniture_store': 'https://images.pexels.com/photos/1866149/pexels-photo-1866149.jpeg',
+            'electronics_store': 'https://images.pexels.com/photos/356056/pexels-photo-356056.jpeg',
+            'electronics_repair': 'https://images.pexels.com/photos/2582937/pexels-photo-2582937.jpeg',
+            'optician': 'https://images.pexels.com/photos/3971231/pexels-photo-3971231.jpeg',
+            'clothing_store': 'https://images.pexels.com/photos/1036856/pexels-photo-1036856.jpeg',
+            'book_store': 'https://images.pexels.com/photos/159711/books-bookstore-book-reading-159711.jpeg',
+            'car_wash': 'https://images.pexels.com/photos/372810/pexels-photo-372810.jpeg',
+            'roastery': 'https://images.pexels.com/photos/684941/pexels-photo-684941.jpeg',
+            'barber_shop': 'https://images.pexels.com/photos/1319461/pexels-photo-1319461.jpeg'
+        };
+        
+        const primary = types && types.length > 0 ? types[0] : 'default';
+        return imageMap[primary] || 'https://images.pexels.com/photos/3183183/pexels-photo-3183183.jpeg'; // Professional handshake fallback
+    }
+
+    /**
+     * Sends a "Lead Warming" text using Map Gap methodology.
+     * Based on the "Map Gap System" - leads with specific observations, positive first, no hard ask.
      */
     async warmLead(lead) {
-        const businessName = lead.name;
+        const cleanedName = this.cleanBusinessName(lead.name);
         const formattedPhone = this.formatPhoneNumber(lead.phone);
         if (!formattedPhone) return 'skipped_invalid';
         
         const niche = this.formatNiche(lead.types);
         
-        let messageEn = '';
-        let messageAr = '';
+        console.log(`[Closer] Warming lead ${formattedPhone} using Map Gap methodology...`);
 
-        console.log(`[Closer] Warming lead ${formattedPhone}. Checking secondary search engines for gaps...`);
-        const isMissingOnBing = await this._isMissingOnBing(businessName);
+        // Use Map Gap style messages
+        const { en, ar } = this.generateMapGapMessage(lead);
+        const message = `${ar}\n\n---\n\n${en}`;
 
-        if (isMissingOnBing) {
-            console.log(`[Closer] Huge Gap Identified: Not found organically on Bing.`);
-            messageEn = `Hi ${businessName}. I saw your listing on Google Maps, but when I searched on other platforms (like Bing) for ${niche.en} in Riyadh, your business didn't show up at all.
+        return await this.sendMessage(formattedPhone, message, lead.place_id || null);
+    }
 
-I know that's probably not at the top of your priority list when you're busy actually running your business, but missing from these other directories might be costing you more customers than you think.
+    /**
+     * Generate Map Gap style message based on lead's gap analysis.
+     * Key principles from Map Gap System:
+     * 1. Lead with specific observation about their business
+     * 2. Say something positive before pointing out a problem
+     * 3. Offer value before asking for anything
+     * 4. Don't ask for a call - offer to share what you found
+     */
+    generateMapGapMessage(lead) {
+        const cleanedName = this.cleanBusinessName(lead.name);
+        const niche = this.formatNiche(lead.types);
+        const hasWebsite = lead.website && lead.website.length > 0;
+        const reviewCount = lead.reviewCount || 0;
+        const rating = lead.rating || 0;
+        const gapAnalysis = lead.mapGapAnalysis || {};
+        const gaps = gapAnalysis.gaps || [];
 
-Happy to share the exact gaps I found if you're open to it.`;
+        // If they have a website but have gaps
+        if (hasWebsite) {
+            const hasLowReviews = reviewCount < 20;
+            const hasNoReviews = reviewCount < 5;
+            const hasOutdatedSite = gaps.some(g => g.type === 'outdated_website');
 
-            messageAr = `مرحباً ${businessName}. رأيت قائمتكم على خرائط جوجل، ولكن عندما بحثت في منصات أخرى (مثل Bing) عن ${niche.ar} في الرياض، لم يظهر عملكم على الإطلاق.
+            let observation = '';
+            
+            if (hasNoReviews) {
+                observation = "I noticed your Google listing doesn't have any reviews yet, while competitors in your area typically have 20-100+";
+            } else if (hasLowReviews) {
+                observation = `Your business has ${reviewCount} reviews, which is solid, but competitors in your area often have 50+`;
+            } else if (hasOutdatedSite) {
+                observation = "I noticed your website could use a modern refresh to match today's mobile-first customers";
+            } else if (rating > 0) {
+                observation = `Your ${rating}-star rating shows you do great work, but I noticed some gaps that could be costing you customers`;
+            } else {
+                observation = "I found your business during a local search and noticed a few opportunities to capture more customers";
+            }
 
-أعلم أن هذا ربما لا يكون على رأس قائمة أولوياتكم مع انشغالكم الفعلي بإدارة العمل، لكن الغياب عن أدلة البحث الأخرى قد يكلفكم خسارة عملاء أكثر مما تعتقدون.
+            const en = `Hi ${cleanedName} team! 👋
 
-سأكون سعيداً بمشاركة ما وجدته بالضبط إذا كنتم منفتحين لذلك.`;
+I was searching for ${niche.en} in Riyadh and came across your business. ${hasNoReviews || hasLowReviews ? "You've got great potential!" : "Your business looks solid!"}
 
-        } else {
-            // Default Gap: Missing Website (since they were scouted with no website)
-            messageEn = `Hi ${businessName}. I was trying to find your website when searching for ${niche.en} in Riyadh online, but I couldn't find one. 
+${observation}. I put together a quick breakdown if you'd like to see it. No charge, no strings. Just thought it might help.
 
-I know that's probably not at the top of your priority list when you're busy actually running your business, but it might be costing you more customers than you think. 
+Happy to share what I found if you're curious.
 
-Happy to share what I found if you're open to it.`;
+Best,
+KSA Verified Team`;
 
-            messageAr = `مرحباً ${businessName}. كنت أحاول العثور على موقعكم الإلكتروني أثناء البحث عن ${niche.ar} في الرياض عبر الإنترنت، لكنني لم أتمكن من العثور عليه.
+            const ar = `مرحباً فريق ${cleanedName}! 👋
 
-أعلم أن هذا ربما لا يكون على رأس قائمة أولوياتكم مع انشغالكم الفعلي بإدارة العمل، لكن هذا الأمر قد يكلفكم خسارة عملاء أكثر مما تعتقدون.
+كنت أبحث عن ${niche.ar} في الرياض وعثرت على أعمالكم. ${hasNoReviews || hasLowReviews ? "لديكم إمكانيات رائعة!" : "أعمالكم تبدو صلبة!"}
 
-سأكون سعيداً بمشاركة ما وجدته معكم إذا كنتم منفتحين لذلك.`;
+${observation}. أعددت ملخصاً سريعاً إذا أحببتم رؤيته. بدون رسوم، بدون التزامات. فقط ظننت أنه قد يساعد.
+
+يسعدني مشاركة ما وجدته إذا كنتم فضوليين.
+
+مع أطيب التحيات،
+فريق KSA Verified`;
+
+            return { en, ar };
         }
 
-        const message = `${messageEn}\n\n---\n\n${messageAr}`;
+        // If they DON'T have a website - the message is different
+        const en = `Hi ${cleanedName} team! 👋
 
+I was trying to find your website when searching for ${niche.en} in Riyadh, but I couldn't find one.
+
+I know that's probably not at the top of your priority list when you're busy actually running your business, but it might be costing you more customers than you think.
+
+Happy to share what I found if you're open to it.
+
+Best,
+KSA Verified Team`;
+
+        const ar = `مرحباً فريق ${cleanedName}! 👋
+
+كنت أحاول البحث عن موقعكم الإلكتروني عند البحث عن ${niche.ar} في الرياض، لكنني لم أجد واحداً.
+
+أعلم أن هذا ربما ليس في أعلى قائمة أولوياتكم وأنتم مشغولون بإدارة عملكم، لكنه قد يكلفكم عملاء أكثر مما تظنون.
+
+يسعدني مشاركة ما وجدته معكم إذا كنتم منفتحين على ذلك.
+
+مع أطيب التحيات،
+فريق KSA Verified`;
+
+        return { en, ar };
+    }
+
+    /**
+     * Generate a marketing audit message when lead responds and wants to see findings.
+     * This is sent AFTER initial outreach - once they express interest.
+     */
+    async sendMarketingAudit(lead, auditReport, formattedPhone) {
+        if (!formattedPhone) return 'skipped_invalid';
+
+        const cleanedName = this.cleanBusinessName(lead.name);
+        
+        const en = `Hi ${cleanedName}! Great to hear from you! 🙏
+
+As promised, here's what I found during my quick audit:
+
+📊 Overall Score: ${auditReport.overallScore}/100
+
+The main gaps I identified:
+${auditReport.sections.gaps.gaps.slice(0, 3).map((g, i) => `${i + 1}. ${g.type} - ${g.description}`).join('\n')}
+
+Based on these findings, I'd recommend starting with a professional website since that's typically the highest-impact fix for businesses like yours.
+
+Would you like me to put together a custom proposal? No commitment - just want to help you capture more of those customers searching for ${this.formatNiche(lead.types).en} in your area!
+
+Best,
+KSA Verified Team`;
+
+        const ar = `مرحباً ${cleanedName}! يسعدني التواصل معكم! 🙏
+
+كما وعدتكم، إليكم ما وجدته خلال التدقيق السريع:
+
+📊 النتيجة الإجمالية: ${auditReport.overallScore}/100
+
+الفجوات الرئيسية التي حددتها:
+${auditReport.sections.gaps.gaps.slice(0, 3).map((g, i) => `${i + 1}. ${g.type} - ${g.description}`).join('\n')}
+
+بناءً على هذه النتائج، أوصي بالبدء بموقع إلكتروني احترافي لأنه عادة ما يكون الإصلاح الأكثر تأثيراً للأعمال مثلكم.
+
+هل تحبون أن أجهز عرضاً مخصصاً؟ بدون التزام - فقط أريد مساعدتكم على جذب المزيد من العملاء الذين يبحثون عن ${this.formatNiche(lead.types).ar} في منطقتكم!
+
+مع أطيب التحيات،
+فريق KSA Verified`;
+
+        const message = `${ar}\n\n---\n\n${en}`;
         return await this.sendMessage(formattedPhone, message, lead.place_id || null);
     }
 
@@ -285,14 +479,16 @@ Happy to share what I found if you're open to it.`;
      * Sends the "1 Week Free + 19 SAR" promotion to existing leads.
      */
     async sendPromotion(businessName, phone, vercelUrl, db) {
+        const cleanedName = this.cleanBusinessName(businessName);
         const formattedPhone = this.formatPhoneNumber(phone);
         if (!formattedPhone) return 'skipped_invalid';
 
         // Enforce validation check for promotions too
+        let leadRecord = null;
         if (db) {
-            const lead = await db.getLeadByPhone(formattedPhone);
-            if (lead && lead.is_validated !== true) {
-                console.error(`[Closer] HARD BLOCK: Lead ${businessName} (${formattedPhone}) is NOT validated. Promotion aborted.`);
+            leadRecord = await db.getLeadByPhone(formattedPhone);
+            if (leadRecord && leadRecord.is_validated !== true) {
+                console.error(`[Closer] HARD BLOCK: Lead ${cleanedName} (${formattedPhone}) is NOT validated. Promotion aborted.`);
                 return 'skipped_unvalidated';
             }
         }
@@ -300,34 +496,32 @@ Happy to share what I found if you're open to it.`;
         const promoImageUrl = process.env.PROMO_IMAGE_URL || 'https://ksaverified.com/marketing/promo_19sar.png';
         const portalUrl = 'https://ksaverified.com/customers';
 
-        const message = `Special Offer for ${businessName}! 🚀 
+        const message = `عرض خاص بمناسبة الإطلاق لـ ${cleanedName}! 🚀
 
-We are launching a new promotion: Get 1 Week FREE to test your site, then pay only 19 SAR for the first month! (Normal price 99 SAR).
-
-Check your site here: ${vercelUrl}
-Manage everything in your portal: ${portalUrl}
-
-Reply 'INTERESTED' to activate this offer!
-
----
-
-عرض خاص لـ ${businessName}! 🚀
-
-نحن نطلق عرضاً جديداً: احصل على أسبوع مجاني لاختبار موقعك، ثم ادفع 19 ريالاً فقط للشهر الأول! (السعر العادي 99 ريال).
+نحن نطلق عرض KSA Verified المتميز: احصل على أسبوع مجاني لاختبار موقعك الاحترافي، ثم ادفع 19 ريالاً فقط للشهر الأول! (السعر العادي 99 ريال).
 
 تحقق من موقعك هنا: ${vercelUrl}
 إدارة كل شيء في البوابة الخاصة بك: ${portalUrl}
 
-رد بـ "مهتم" لتفعيل هذا العرض!`;
+رد بـ "مهتم" لتفعيل هذا العرض والحصول على الخصم!
 
-        console.log(`[Closer] Sending 19 SAR Promo to ${formattedPhone}...`);
+(English Translation)
+Special Launch Offer for ${cleanedName}! 🚀 
+
+We are launching our KSA Verified promotion: Get 1 Week FREE to test your premium site, then pay only 19 SAR for the first month! (Normal price 99 SAR).
+
+Check your site here: ${vercelUrl}
+Manage everything in your portal: ${portalUrl}
+
+Reply 'INTERESTED' to activate this offer and claim your discount!`;
+
+        console.log(`[Closer] Sending 19 SAR Promo to ${cleanedName}...`);
         try {
             await this.sendMedia(formattedPhone, promoImageUrl, "Flash Sale: 1 Week FREE + 19 SAR 🚀");
-            const lead = await db.getLeadByPhone(formattedPhone);
-            await this.sendMessage(formattedPhone, message, lead?.place_id);
+            await this.sendMessage(formattedPhone, message, leadRecord?.place_id);
             return true;
         } catch (err) {
-            console.error(`[Closer] Promo send failed: ${err.message}`);
+            console.error(`[Closer] Promo send failed for ${cleanedName}: ${err.message}`);
             throw err;
         }
     }
@@ -377,15 +571,16 @@ Reply 'INTERESTED' to activate this offer!
      * @param {number} daysRemaining - Days left (e.g., 2 or 1)
      */
     async sendTrialReminder(lead, daysRemaining) {
+        const cleanedName = this.cleanBusinessName(lead.name);
         const formattedPhone = this.formatPhoneNumber(lead.phone);
         if (!formattedPhone) return false;
 
         const portalUrl = 'https://ksaverified.com/customers';
-        const stcPayDetails = 'STC Pay: +966 50 791 3514';
+        const stcPayDetails = 'STC Pay/Bank Transfer: +966 50 791 3514';
 
-        const messageEn = `Hi ${lead.name}! 💎 Your 1-week FREE trial expires in *${daysRemaining} day${daysRemaining > 1 ? 's' : ''}*. 
+        const messageEn = `Hi ${cleanedName}! 💎 Your 1-week FREE trial on KSA Verified expires in *${daysRemaining} day${daysRemaining > 1 ? 's' : ''}*. 
 
-To keep your premium AI website active and published, you can now activate your subscription for only *19 SAR* for the first month! (Normal price 99 SAR).
+To keep your professional AI website live and attracting customers, you can now activate your permanent plan for only *19 SAR* for the first month! (Normal price 99 SAR).
 
 Check your site: ${lead.vercel_url}
 Payment: ${stcPayDetails}
@@ -403,7 +598,7 @@ Please send a screenshot of your payment receipt here to finalize your activatio
 
 يرجى إرسال لقطة شاشة لإيصال الدفع هنا لإتمام التفعيل! 🚀`;
 
-        const messageBody = `${messageEn}\n\n---\n\n${messageAr}`;
+        const messageBody = `${messageAr}\n\nEnglish Translation:\n${messageEn}`;
 
         console.log(`[Closer] Sending ${daysRemaining}-day Trial Reminder to ${formattedPhone}...`);
         try {
@@ -420,34 +615,59 @@ Please send a screenshot of your payment receipt here to finalize your activatio
      * Targeted at Group D leads (Interest confirmed but no payment).
      */
     async sendUrgencyClose(lead) {
+        const cleanedName = this.cleanBusinessName(lead.name);
         const formattedPhone = this.formatPhoneNumber(lead.phone);
         if (!formattedPhone) return 'skipped_invalid';
 
         const portalUrl = 'https://ksaverified.com/customers';
         const stcPay = '+966 50 791 3514';
 
-        console.log(`[Closer] Generating personalized Urgency Close for ${lead.name}...`);
+        console.log(`[Closer] Generating personalized Urgency Close for ${cleanedName}...`);
         
         const context = `URGENCY CLOSE: The lead confirmed interest in a website but hasn't paid yet. 
         Their site is already live at ${lead.vercel_url}. 
-        We are offering the first month for just 19 SAR (discount from 99 SAR). 
+        We are offering the first month for just 19 SAR (discount from 99 SAR) with the KSA Verified brand. 
         They must pay via STC Pay to ${stcPay} and send a screenshot.`;
 
         let messageBody = await this.gemini.generateSalesMessage(lead, context);
 
         if (!messageBody) {
-            console.warn(`[Closer] Gemini failed for Urgency Close. Using fallback template for ${lead.name}.`);
-            const msgEn = `${lead.name}, your FREE trial is active! ⏰ Don't miss this offer:\n\n✅ First month: Only *19 SAR* (Normal: 99 SAR)\n✅ Your site: ${lead.vercel_url || 'Ready for you!'}\n✅ Payment: STC Pay to ${stcPay}\n\nSend your payment screenshot here to activate instantly! 🚀\nPortal: ${portalUrl}`;
-            const msgAr = `${lead.name}، تجربتك المجانية نشطة! ⏰ لا تفوّت هذا العرض:\n\n✅ الشهر الأول: *19 ريال فقط* (السعر العادي: 99 ريال)\n✅ موقعك: ${lead.vercel_url || 'جاهز لك!'}\n✅ الدفع: STC Pay على ${stcPay}\n\nأرسل صورة الإيصال هنا للتفعيل الفوري! 🚀\nالبوابة: ${portalUrl}`;
-            messageBody = `${msgEn}\n\n---\n\n${msgAr}`;
+            console.warn(`[Closer] Gemini failed for Urgency Close. Using fallback template for ${cleanedName}.`);
+            const msgEn = `${cleanedName} team, your KSA Verified trial is active! ⏰ Don't miss our launch offer:\n\n✅ First month: Only *19 SAR* (Normal: 99 SAR)\n✅ Your site: ${lead.vercel_url || 'Ready for you!'}\n✅ Payment: STC Pay to ${stcPay}\n\nSend your payment screenshot here to activate instantly! 🚀\nPortal: ${portalUrl}`;
+            const msgAr = `فريق ${cleanedName}، تجربتكم في KSA Verified نشطة! ⏰ لا تفوتوا عرض الإطلاق:\n\n✅ الشهر الأول: *19 ريال فقط* (السعر العادي: 99 ريال)\n✅ موقعكم: ${lead.vercel_url || 'جاهز لكم!'}\n✅ الدفع: STC Pay على ${stcPay}\n\nأرسل صورة إيصال الدفع هنا للتفعيل الفوري! 🚀\nالبوابة: ${portalUrl}`;
+            messageBody = `${msgAr}\n\nEnglish Translation:\n${msgEn}`;
         }
 
         try {
             await this.sendMessage(formattedPhone, messageBody, lead.place_id);
-            console.log(`[Closer] Urgency Close delivered to ${lead.name}`);
+            console.log(`[Closer] Urgency Close delivered to ${cleanedName}`);
             return true;
         } catch (err) {
-            console.error(`[Closer] Urgency Close failed for ${lead.name}: ${err.message}`);
+            console.error(`[Closer] Urgency Close failed for ${cleanedName}: ${err.message}`);
+            throw err;
+        }
+    }
+    /**
+     * Sends a bilingual nudge / follow-up message to a lead who has seen the preview but not replied.
+     */
+    async sendNudge(lead) {
+        const cleanedName = this.cleanBusinessName(lead.name);
+        const formattedPhone = this.formatPhoneNumber(lead.phone);
+        if (!formattedPhone) return 'skipped_invalid';
+
+        console.log(`[Closer] Sending bilingual nudge to ${cleanedName}...`);
+
+        const msgEn = `Hi ${cleanedName} team! 💎 Just checking in—did you have a chance to look at your new KSA Verified website preview?\n\n🔗 ${lead.vercel_url || 'Your preview is ready'}\n\nYour 1-week FREE trial is active! Let me know if you have any questions or would like to make any changes.`;
+        const msgAr = `أهلاً فريق ${cleanedName}! 💎 أردنا التأكد فقط—هل أتيحت لكم الفرصة لمراجعة معاينة موقعكم الإلكتروني الجديد من KSA Verified؟\n\n🔗 ${lead.vercel_url || 'المعاينة جاهزة'}\n\nفترة التجربة المجانية لمدة أسبوع نشطة الآن! أخبرونا إذا كان لديكم أي استفسارات أو ترغبون في إجراء أي تعديلات.`;
+
+        const messageBody = `${msgAr}\n\n(Translation Follows)\n\n${msgEn}`;
+
+        try {
+            await this.sendMessage(formattedPhone, messageBody, lead.place_id);
+            console.log(`[Closer] Nudge delivered to ${cleanedName}`);
+            return true;
+        } catch (err) {
+            console.error(`[Closer] Nudge failed for ${cleanedName}: ${err.message}`);
             throw err;
         }
     }
