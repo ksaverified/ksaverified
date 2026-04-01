@@ -93,11 +93,25 @@ export default function ComprehensiveDashboard() {
 
     const fetchData = useCallback(async () => {
         try {
-            const { data: leadsData } = await supabaseAdmin
+            const { data: leadsData, error } = await supabase
                 .from('leads')
                 .select('*')
                 .order('updated_at', { ascending: false })
                 .limit(500);
+            
+            if (error) {
+                console.error('Lead fetch error:', error);
+                // Try alternative approach
+                const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/leads?select=*&order=updated_at.desc&limit=500`, {
+                    headers: { 'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY }
+                });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    setLeads(Array.isArray(data) ? data : data.value || []);
+                    calculateStats(Array.isArray(data) ? data : data.value || []);
+                }
+                return;
+            }
             
             if (leadsData) {
                 setLeads(leadsData);
