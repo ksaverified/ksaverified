@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
     console.error("Missing Supabase credentials in .env.local");
@@ -12,7 +13,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storageKey: 'sb-hopuephsxsmegznvrzgv-auth-token', // Updated to new project
+        storageKey: 'sb-hopuephsxsmegznvrzgv-auth-token',
         storage: window.localStorage
     },
     global: {
@@ -39,3 +40,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
         }
     }
 });
+
+export const supabaseAdmin = supabaseServiceKey 
+    ? createClient(supabaseUrl, supabaseServiceKey, {
+        auth: { persistSession: false },
+        global: { fetch: (url, opts) => fetch(url, { ...opts, signal: AbortSignal.timeout(60000) }) }
+    })
+    : supabase;

@@ -3,11 +3,12 @@ import { useAuth } from '../../components/AuthContext';
 import { supabase } from '../../lib/supabase';
 import {
     Target, LayoutDashboard, AlertTriangle, Settings, LogOut, ChevronLeft,
-    BarChart3, Target as TargetIcon, Sliders, TrendingUp
+    BarChart3, Target as TargetIcon, Sliders, TrendingUp, Shield
 } from 'lucide-react';
 
 const NAV_ITEMS = [
     { path: '/admin-v3/mapgap', label: 'Overview', icon: LayoutDashboard, exact: true },
+    { path: '/admin-v3/mapgap/comprehensive', label: 'Command Center', icon: Shield },
     { path: '/admin-v3/mapgap/analysis', label: 'Gap Analysis', icon: AlertTriangle },
     { path: '/admin-v3/mapgap/settings', label: 'Configuration', icon: Sliders },
 ];

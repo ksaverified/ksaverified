@@ -36,6 +36,7 @@ import SEOManagerV2 from './pages/v2/SEOManagerV2';
 import MapGapDashboard from './pages/mapgap/MapGapDashboard';
 import MapGapSettings from './pages/mapgap/MapGapSettings';
 import GapAnalysis from './pages/mapgap/GapAnalysis';
+import ComprehensiveDashboard from './pages/mapgap/ComprehensiveDashboard';
 
 function App() {
   return (
@@ -102,6 +103,11 @@ function App() {
           <Route path="/admin-v3/mapgap" element={
             <AuthGuard allowedRoles={['admin']}>
               <MapGapDashboard />
+            </AuthGuard>
+          } />
+          <Route path="/admin-v3/mapgap/comprehensive" element={
+            <AuthGuard allowedRoles={['admin']}>
+              <ComprehensiveDashboard />
             </AuthGuard>
           } />
           <Route path="/admin-v3/mapgap/analysis" element={
