@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../components/AuthContext';
-import { supabase } from '../../../../core/db/supabase'; // Adjust based on your setup or use the local lib/supabase
+import { supabase } from '../lib/supabase';
 import { AlertTriangle, CheckCircle2, MapPin, Globe, Clock, MessageSquare, Phone, TrendingUp, Info } from 'lucide-react';
 import { useLanguage } from '../components/LanguageContext';
 
