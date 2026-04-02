@@ -19,6 +19,9 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/pricing" element={<LandingPage />} />
+          <Route path="/showcase" element={<LandingPage />} />
+          <Route path="/solutions" element={<LandingPage />} />
           <Route path="/manage" element={<Login />} />
 
           {/* Protected Admin Routes (Now Defaults to MapGap V3) */}

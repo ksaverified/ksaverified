@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Smartphone, CheckCircle2, ChevronRight, Zap, XCircle, User } from 'lucide-react';
 
@@ -48,9 +49,23 @@ const LandingPage = () => {
         }
     };
 
+    const location = useLocation();
+    const navigate = useNavigate();
+
     useEffect(() => {
         document.dir = lang === 'ar' ? 'rtl' : 'ltr';
     }, [lang]);
+
+    useEffect(() => {
+        const path = location.pathname;
+        if (path === '/pricing') {
+            document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+        } else if (path === '/showcase') {
+            document.getElementById('showcase')?.scrollIntoView({ behavior: 'smooth' });
+        } else if (path === '/solutions') {
+            document.getElementById('services')?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [location]);
 
     const toggleLang = () => setLang(prev => (prev === 'en' ? 'ar' : 'en'));
 
@@ -62,17 +77,45 @@ const LandingPage = () => {
             pricing: "Pricing",
             clientLogin: "Client Login",
             vision: "Saudi Vision 2030 Ready",
-            heroTitle: <>Your Premium Digital Presence, <br/><span className="text-gradient">100% Free.</span></>,
-            heroSub: "AI-powered business websites specifically engineered for Saudi entrepreneurs. Professional, lightning-fast, and deeply localized.",
+            heroTitle: <>The Ultimate Local Presence <br/><span className="text-gradient">for Saudi Success.</span></>,
+            heroSub: "Professional, AI-optimized business presence specifically engineered for the Kingdom. Join the verified network of top-performing Saudi brands.",
             getStarted: "Get Started",
             viewShowcase: "View Showcase",
-            offerTitle: <>GET YOUR WEBSITE <br/><span className="text-gold">100% FREE</span></>,
-            offerSub: "No hidden fees. No setup costs. Start your Saudi business journey with zero risk.",
-            feature1: "1 Week Full Access Free Trial",
-            feature2: "19 SAR/month for the first year",
-            feature3: "No Long-term Commitment",
-            regularPrice: "Regularly 199 SAR",
-            claimOffer: "Claim My Free Site",
+            pricingTitle: "Flexible Growth Plans",
+            pricingSub: "Choose the perfect tier to elevate your business presence in the Kingdom.",
+            
+            planBasic: "Basic",
+            planBasicPrice: "19",
+            planBasicDesc: "Essential Presence",
+            planBasicFeatures: [
+                "Map Information Optimization",
+                "Operating Hours Update",
+                "Review Monitoring",
+                "KSA Verified Badge"
+            ],
+
+            planPro: "Pro",
+            planProPrice: "49",
+            planProDesc: "Professional Growth",
+            planProFeatures: [
+                "Everything in Basic",
+                "AI-Generated Website",
+                "Advanced Website Editor",
+                "Custom Domain Support"
+            ],
+
+            planMax: "Max",
+            planMaxPrice: "99",
+            planMaxDesc: "Market Leadership",
+            planMaxFeatures: [
+                "Everything in Pro",
+                "SEO Management",
+                "Advanced Analytics",
+                "WhatsApp Lead Integration"
+            ],
+
+            mostPopular: "Most Popular",
+            trialText: "1-Week Free Trial on All Plans",
             foundingMember: "Founding Member Offer",
             enterpriseTitle: "Enterprise Features for Local Growth",
             enterpriseSub: "Everything you need to run your business in the Kingdom.",
@@ -84,21 +127,21 @@ const LandingPage = () => {
             srv3Desc: "Understand your traffic and conversions with simplified local data insights.",
             srv4Title: "Business Growth Tools",
             srv4Desc: "Integrated SEO and marketing modules to scale beyond the neighborhood.",
-            showcaseTitle: "Sample Masterpieces",
-            showcaseSub: "See what Saudi businesses are building with KSA Verified.",
+            showcaseTitle: "Masterpieces Built by AI",
+            showcaseSub: "Discover how we turn vision into reality for KSA entrepreneurs.",
             viewAll: "View All Templates",
             poweredBy: "Powered by",
             whyTitle: "Why KSA Verified?",
             whySub: "The smart bridge between your visionary business and the global market.",
             whyHeroTitle: "Elevate Your Digital Presence",
-            whyHeroDesc: "Empowering Saudi business owners with a premium digital presence, KSA Verified is the smart bridge between your vision and the global market. Our AI-driven platform crafts a world-class website for your business in seconds—deeply localized, lightning-fast, and 100% free for the first year.",
+            whyHeroDesc: "Empowering Saudi business owners with a premium digital presence, KSA Verified is the smart bridge between your vision and the global market. Our platform crafts world-class experiences for your business in seconds—deeply localized and lightning-fast.",
             whyPoint1: "Vision 2030 Ready",
             whyPoint1Desc: "Built specifically for the Kingdom's unique market and ambitious goals.",
             whyPoint2: "AI-Driven Localization",
             whyPoint2Desc: "Deeply customized content that speaks your customers' language natively.",
             whyPoint3: "Verified Status",
             whyPoint3Desc: "Join a trusted network of validated Saudi businesses and lead the digital economy.",
-            companyDesc: "Empowering the next generation of Saudi digital commerce. High-performance websites built for the local market.",
+            companyDesc: "Empowering the next generation of Saudi digital commerce. High-performance identities built for the local market.",
             copyright: "© 2026 KSA Verified. A KSA Intelligence Ops Venture."
         },
         ar: {
@@ -107,17 +150,45 @@ const LandingPage = () => {
             pricing: "الأسعار",
             clientLogin: "دخول العميل",
             vision: "جاهز لرؤية السعودية 2030",
-            heroTitle: <>تواجدك الرقمي المتميز، <br/><span className="text-gradient">مجاني 100%.</span></>,
-            heroSub: "مواقع أعمال مدعومة بالذكاء الاصطناعي مصممة خصيصاً لرواد الأعمال السعوديين. احترافية، سريعة البرق، ومحلية بعمق.",
+            heroTitle: <>التواجد الرقمي الأقوى <br/><span className="text-gradient">لنجاح الأعمال السعودية.</span></>,
+            heroSub: "هوية تجارية احترافية محسنة بالذكاء الاصطناعي، صُممت خصيصاً للمملكة. انضم إلى شبكة العلامات التجارية السعودية الموثوقة والمتميزة.",
             getStarted: "ابدأ الآن",
             viewShowcase: "عرض النماذج",
-            offerTitle: <>احصل على موقعك <br/><span className="text-gold">مجاناً 100%</span></>,
-            offerSub: "لا توجد رسوم خفية. لا توجد تكاليف إعداد. ابدأ رحلتك التجارية في السعودية بدون مخاطر.",
-            feature1: "تجربة مجانية كاملة لمدة أسبوع",
-            feature2: "19 ريال/شهرياً للسنة الأولى",
-            feature3: "بدون التزام طويل الأمد",
-            regularPrice: "السعر الأصلي 199 ريال",
-            claimOffer: "احصل على موقعي المجاني",
+            pricingTitle: "خطط نمو مرنة",
+            pricingSub: "اختر الباقة المثالية لتعزيز تواجد عملك في المملكة.",
+
+            planBasic: "الأساسية",
+            planBasicPrice: "19",
+            planBasicDesc: "التواجد الضروري",
+            planBasicFeatures: [
+                "تحسين معلومات الخرائط",
+                "تحديث ساعات العمل",
+                "مراقبة المراجعات",
+                "شارة KSA Verified"
+            ],
+
+            planPro: "المتقدمة",
+            planProPrice: "49",
+            planProDesc: "النمو الاحترافي",
+            planProFeatures: [
+                "كل ما في الباقة الأساسية",
+                "موقع إلكتروني بالذكاء الاصطناعي",
+                "محرر مواقع متقدم",
+                "دعم النطاق المخصص"
+            ],
+
+            planMax: "القصوى",
+            planMaxPrice: "99",
+            planMaxDesc: "ريادة السوق",
+            planMaxFeatures: [
+                "كل ما في الباقة المتقدمة",
+                "إدارة محركات البحث (SEO)",
+                "تحليلات متقدمة",
+                "تكامل واتساب لجذب العملاء"
+            ],
+
+            mostPopular: "الأكثر شعبية",
+            trialText: "تجربة مجانية لمدة أسبوع لجميع الباقات",
             foundingMember: "عرض العضو المؤسس",
             enterpriseTitle: "ميزات احترافية للنمو المحلي",
             enterpriseSub: "كل ما تحتاجه لإدارة عملك في المملكة.",
@@ -129,21 +200,21 @@ const LandingPage = () => {
             srv3Desc: "افهم حركة مرور موقعك وتحويلاتك من خلال رؤى بيانات محلية مبسطة.",
             srv4Title: "أدوات نمو الأعمال",
             srv4Desc: "وحدات تحسين محركات البحث والتسويق المتكاملة للتوسع خارج الحي.",
-            showcaseTitle: "روائع من أعمالنا",
-            showcaseSub: "شاهد ما تبنيه الشركات السعودية مع KSA Verified.",
+            showcaseTitle: "روائع صُنعت بالذكاء الاصطناعي",
+            showcaseSub: "اكتشف كيف نحول الرؤية إلى حقيقة لرواد الأعمال السعوديين.",
             viewAll: "عرض جميع القوالب",
             poweredBy: "بدعم من",
             whyTitle: "لماذا KSA Verified؟",
             whySub: "الجسر الذكي بين عملك الطموح والسوق العالمي.",
             whyHeroTitle: "ارتقِ بتواجدك الرقمي",
-            whyHeroDesc: "تمكين أصحاب الأعمال في السعودية من خلال حضور رقمي متميز؛ 'KSA Verified' هي الجسر الذكي بين رؤيتك والسوق العالمي. تقوم منصتنا المدعومة بالذكاء الاصطناعي بإنشاء موقع إلكتروني عالمي المستوى لعملك في ثوانٍ معدودة—مخصص محلياً بعمق، سريع البرق، ومجاني 100% للسنة الأولى.",
+            whyHeroDesc: "تمكين أصحاب الأعمال في السعودية من خلال حضور رقمي متميز؛ 'KSA Verified' هي الجسر الذكي بين رؤيتك والسوق العالمي. تقوم منصتنا بإنشاء تجارب عالمية المستوى لعملك في ثوانٍ معدودة—مخصصة محلياً بعمق وسريعة البرق.",
             whyPoint1: "جاهزية لرؤية 2030",
             whyPoint1Desc: "مصممة خصيصاً لسوق المملكة الطموح وأهدافه المستقبلية.",
             whyPoint2: "تخصيص ذكي",
             whyPoint2Desc: "محتوى مخصص بعمق يخاطب عملائك بلغتهم الأم وثقافتهم.",
             whyPoint3: "حالة التحقق",
             whyPoint3Desc: "انضم إلى شبكة موثوقة من الشركات السعودية المعتمدة وتقدّم في الاقتصاد الرقمي.",
-            companyDesc: "تمكين الجيل القادم من التجارة الرقمية السعودية. مواقع عالية الأداء صممت للسوق المحلي.",
+            companyDesc: "تمكين الجيل القادم من التجارة الرقمية السعودية. هويات رقمية عالية الأداء صممت للسوق المحلي.",
             copyright: "© 2026 KSA Verified. مشروع من KSA Intelligence Ops."
         }
     };
@@ -361,10 +432,11 @@ const LandingPage = () => {
 
                         {/* Desktop-only Navigation Links */}
                         <div className="hidden lg:flex items-center space-x-8 mr-4 rtl:mr-0 rtl:ml-4">
-                            <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#">{currentT.home}</a>
-                            <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#services">{currentT.solutions}</a>
-                            <a className="text-gray-300 hover:text-white transition-colors text-sm" href="#pricing">{currentT.pricing}</a>
-                            <a className="text-gold hover:text-white transition-colors text-sm font-semibold" href="https://ksaverified.store" target="_blank" rel="noopener noreferrer">{lang === 'en' ? 'Store & Services' : 'المتجر والخدمات'}</a>
+                            <button onClick={() => navigate('/')} className="text-gray-300 hover:text-white transition-colors text-sm">{currentT.home}</button>
+                            <button onClick={() => navigate('/solutions')} className="text-gray-300 hover:text-white transition-colors text-sm">{currentT.solutions}</button>
+                            <button onClick={() => navigate('/showcase')} className="text-gray-300 hover:text-white transition-colors text-sm">{currentT.viewShowcase}</button>
+                            <button onClick={() => navigate('/pricing')} className="text-gray-300 hover:text-white transition-colors text-sm">{currentT.pricing}</button>
+                            <a className="text-gold hover:text-white transition-colors text-sm font-semibold" href="https://ksaverified.store" target="_blank" rel="noopener noreferrer">{lang === 'en' ? 'Store' : 'المتجر'}</a>
                             <a className="text-gray-300 hover:text-white transition-colors text-sm" href="https://ksaverified.info" target="_blank" rel="noopener noreferrer">{lang === 'en' ? 'Corporate' : 'الشركة'}</a>
                         </div>
                     </div>
@@ -478,45 +550,91 @@ const LandingPage = () => {
                     </div>
                 </section>
 
-                {/* BEGIN: Offer Section (Trial) */}
-                <section className="py-20 px-4" id="pricing">
-                    <div className="max-w-5xl mx-auto">
-                        <div className="glass-card rounded-[24px] p-8 md:p-12 relative overflow-hidden border-2 border-brand/20">
-                            <div className="absolute top-0 right-0 p-6 opacity-10">
-                                <svg className="w-32 h-32 text-brand" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-5-5 1.41-1.41L11 14.17l7.59-7.59L20 8l-9 9z"></path></svg>
+                {/* BEGIN: Pricing Section (3-Tier) */}
+                <section className="py-24 px-4 bg-[#0a0a0c]" id="pricing">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-4">{currentT.pricingTitle}</h2>
+                            <p className="text-gray-400 text-lg">{currentT.pricingSub}</p>
+                            <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-brand/10 border border-brand/20 rounded-full text-brand-light text-sm font-bold">
+                                <Zap className="w-4 h-4" /> {currentT.trialText}
                             </div>
-                            <div className="grid md:grid-cols-2 gap-12 items-center text-left rtl:text-right">
-                                <div>
-                                    <h2 className="text-3xl font-heading font-bold mb-4">{currentT.offerTitle}</h2>
-                                    <p className="text-gray-400 mb-8">{currentT.offerSub}</p>
-                                    <ul className="space-y-4">
-                                        <li className="flex items-center gap-3">
-                                            <div className="w-5 h-5 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center shrink-0">✓</div>
-                                            <span>{currentT.feature1}</span>
-                                        </li>
-                                        <li className="flex items-center gap-3">
-                                            <div className="w-5 h-5 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center shrink-0">✓</div>
-                                            <span>{currentT.feature2}</span>
-                                        </li>
-                                        <li className="flex items-center gap-3">
-                                            <div className="w-5 h-5 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center shrink-0">✓</div>
-                                            <span>{currentT.feature3}</span>
-                                        </li>
-                                    </ul>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-8">
+                            {/* Basic Plan */}
+                            <div className="glass-card p-8 rounded-[32px] border border-white/5 flex flex-col hover:border-brand/30 transition-all group relative overflow-hidden">
+                                <div className="mb-8">
+                                    <h3 className="text-xl font-bold text-gray-400 mb-2">{currentT.planBasic}</h3>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-5xl font-extrabold text-white">{currentT.planBasicPrice}</span>
+                                        <span className="text-gray-500 font-bold uppercase text-sm">SAR/mo</span>
+                                    </div>
+                                    <p className="text-gray-500 mt-4 text-sm">{currentT.planBasicDesc}</p>
                                 </div>
-                                <div className="bg-black/40 rounded-twelve p-8 text-center border border-white/5">
-                                    <span className="block text-gray-500 line-through text-lg">{currentT.regularPrice}</span>
-                                    <div className="text-6xl font-extrabold my-2 text-white">0 <span className="text-xl font-normal text-gray-400">SAR</span></div>
-                                    <p className="text-sm text-brand-light font-bold tracking-widest uppercase mb-6">{currentT.foundingMember}</p>
-                                    <a href="/client-dashboard/login" className="w-full py-4 bg-white text-black font-bold rounded-twelve hover:bg-gray-200 transition-all block text-center">
-                                        {currentT.claimOffer}
-                                    </a>
+                                <ul className="space-y-4 mb-10 flex-grow">
+                                    {currentT.planBasicFeatures.map((f, i) => (
+                                        <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
+                                            <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                                            {f}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button onClick={() => setIsModalOpen(true)} className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all uppercase tracking-widest text-sm">
+                                    {currentT.getStarted}
+                                </button>
+                            </div>
+
+                            {/* Pro Plan (Featured) */}
+                            <div className="glass-card p-8 rounded-[32px] border-2 border-brand bg-brand/5 flex flex-col transform md:-translate-y-4 shadow-2xl shadow-brand/10 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 px-4 py-1 bg-brand text-white text-[10px] font-bold uppercase tracking-tighter rounded-bl-xl">{currentT.mostPopular}</div>
+                                <div className="mb-8">
+                                    <h3 className="text-xl font-bold text-brand-light mb-2">{currentT.planPro}</h3>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-5xl font-extrabold text-white">{currentT.planProPrice}</span>
+                                        <span className="text-gray-500 font-bold uppercase text-sm">SAR/mo</span>
+                                    </div>
+                                    <p className="text-gray-300 mt-4 text-sm">{currentT.planProDesc}</p>
                                 </div>
+                                <ul className="space-y-4 mb-10 flex-grow">
+                                    {currentT.planProFeatures.map((f, i) => (
+                                        <li key={i} className="flex items-center gap-3 text-sm text-white">
+                                            <CheckCircle2 className="w-5 h-5 text-brand shrink-0" />
+                                            {f}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button onClick={() => setIsModalOpen(true)} className="w-full py-4 bg-brand text-white font-bold rounded-2xl hover:brightness-110 transition-all shadow-lg shadow-brand/20 uppercase tracking-widest text-sm">
+                                    {currentT.getStarted}
+                                </button>
+                            </div>
+
+                            {/* Max Plan */}
+                            <div className="glass-card p-8 rounded-[32px] border border-white/5 flex flex-col hover:border-brand/30 transition-all group">
+                                <div className="mb-8">
+                                    <h3 className="text-xl font-bold text-gold mb-2">{currentT.planMax}</h3>
+                                    <div className="flex items-baseline gap-1">
+                                        <span className="text-5xl font-extrabold text-white">{currentT.planMaxPrice}</span>
+                                        <span className="text-gray-500 font-bold uppercase text-sm">SAR/mo</span>
+                                    </div>
+                                    <p className="text-gray-500 mt-4 text-sm">{currentT.planMaxDesc}</p>
+                                </div>
+                                <ul className="space-y-4 mb-10 flex-grow">
+                                    {currentT.planMaxFeatures.map((f, i) => (
+                                        <li key={i} className="flex items-center gap-3 text-sm text-gray-300">
+                                            <CheckCircle2 className="w-5 h-5 text-gold shrink-0" />
+                                            {f}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button onClick={() => setIsModalOpen(true)} className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all uppercase tracking-widest text-sm">
+                                    {currentT.getStarted}
+                                </button>
                             </div>
                         </div>
                     </div>
                 </section>
-                {/* END: Offer Section --> */}
+                {/* END: Pricing Section */}
 
                 {/* BEGIN: Services Section */}
                 <section className="py-24 px-4 bg-[#0d0d10]" id="services">
@@ -564,48 +682,69 @@ const LandingPage = () => {
                 {/* END: Services Section --> */}
 
                 {/* BEGIN: Showcase Section */}
-                <section className="py-24 px-4 overflow-hidden" id="showcase">
+                <section className="py-24 px-4 bg-[#0d0d10]" id="showcase">
                     <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 text-left rtl:text-right">
-                            <div>
-                                <h2 className="text-4xl font-heading font-bold mb-4">{currentT.showcaseTitle}</h2>
-                                <p className="text-gray-400">{currentT.showcaseSub}</p>
-                            </div>
-                            <a className="text-brand-light font-bold flex items-center gap-2 hover:gap-4 transition-all" href="#">
-                                {currentT.viewAll} <span>{lang === 'ar' ? '←' : '→'}</span>
-                            </a>
+                        <div className="text-center mb-16">
+                            <h2 className="text-4xl font-heading font-bold mb-4">{currentT.showcaseTitle}</h2>
+                            <p className="text-gray-400 text-lg">{currentT.showcaseSub}</p>
                         </div>
-                        <div className="grid md:grid-cols-2 gap-8 text-left rtl:text-right">
-                            {/* Item 1 */}
-                            <div className="group relative overflow-hidden rounded-twelve">
-                                <img alt="Mauve Roses Template" className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuANC0NZvWh1aNf5OcXD_FuTKLrby7eSD7ZmhgG12pfZ9gYiYGw0iopZjST4GyxX2UBxNegVGkZN08mxsw7AK7Bie0zK1PYlu3riWNUgB5MtHNYYKNhow92ch6mTSL_Ub1X2X7UFJ0OQTNJAkwrlz3vSZtG4PKW6J9BYjgTfexsFvL7VtBZuLQO4ARljCr1996MppvWHL1s7fc45wbkfC-S_JXv-iRhRJVNMVGfKoUUy9ab2j79TsZBmm4vF5KN24umix93QS73wcEg"/>
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
-                                    <span className="text-xs font-bold text-brand-light tracking-widest uppercase mb-2">Luxury Florist</span>
-                                    <h3 className="text-2xl font-bold">Mauve Roses</h3>
+                        
+                        <div className="grid md:grid-cols-3 gap-8 text-left rtl:text-right">
+                            {/* Item 1: Cafe */}
+                            <div className="group relative overflow-hidden rounded-[32px] border border-white/10 bg-[#121215]">
+                                <div className="aspect-[4/5] overflow-hidden">
+                                    <img alt="Modern Cafe" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="/cafe.png"/>
+                                </div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent flex flex-col justify-end p-8">
+                                    <span className="text-[10px] font-bold text-brand-light tracking-[0.2em] uppercase mb-2">Modern Cafe</span>
+                                    <h3 className="text-2xl font-bold text-white mb-2">{lang === 'en' ? 'Saffron & Bean' : 'زعفران وبن'}</h3>
+                                    <p className="text-gray-400 text-sm line-clamp-2">{lang === 'en' ? 'Premium culinary experience in the heart of Riyadh.' : 'تجربة طهي متميزة في قلب الرياض.'}</p>
                                 </div>
                             </div>
-                            {/* Item 2 */}
-                            <div className="group relative overflow-hidden rounded-twelve">
-                                <img alt="Local Barber Template" className="w-full aspect-video object-cover transition-transform duration-700 group-hover:scale-110" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBd57AfzCiDHasq4-Tjrn4QpaP7742FvdBe4C4BcNsTixsgJLcFCJWGhadsEJeqAZH73gt3ok-vBiOefbjf7zhd9eIshw9NrYUd6Eh97lsv0zogbjKp3cWGR2Pqdm5mHGEWptHo_vLdhqg4GBvXYtUdcu6BdzB4rx5w2paPS23QPlkP850xCg5QBSqmVlAyrMeocXfaxnk0Kbn5QJL0aYfJWGKY2uP8q-OdYkHx6FfBEE9EgljhatB7dPxDdCoXxAQ-BVMa7Hiecgg"/>
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-8">
-                                    <span className="text-xs font-bold text-electric tracking-widest uppercase mb-2">Service Business</span>
-                                    <h3 className="text-2xl font-bold">The Local Barber</h3>
+
+                            {/* Item 2: Florist */}
+                            <div className="group relative overflow-hidden rounded-[32px] border border-white/10 bg-[#121215]">
+                                <div className="aspect-[4/5] overflow-hidden">
+                                    <img alt="Luxury Florist" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="/florist.png"/>
+                                </div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent flex flex-col justify-end p-8">
+                                    <span className="text-[10px] font-bold text-brand-light tracking-[0.2em] uppercase mb-2">Luxury Florist</span>
+                                    <h3 className="text-2xl font-bold text-white mb-2">{lang === 'en' ? 'The Royal Petal' : 'البتلة الملكية'}</h3>
+                                    <p className="text-gray-400 text-sm line-clamp-2">{lang === 'en' ? 'Artisanal flower arrangements for Saudis elite.' : 'تنسيقات زهور حرفية لنخبة المجتمع السعودي.'}</p>
                                 </div>
                             </div>
+
+                            {/* Item 3: Barber */}
+                            <div className="group relative overflow-hidden rounded-[32px] border border-white/10 bg-[#121215]">
+                                <div className="aspect-[4/5] overflow-hidden">
+                                    <img alt="Premium Barber" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="/barber.png"/>
+                                </div>
+                                <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent flex flex-col justify-end p-8">
+                                    <span className="text-[10px] font-bold text-brand-light tracking-[0.2em] uppercase mb-2">Premium Barber</span>
+                                    <h3 className="text-2xl font-bold text-white mb-2">{lang === 'en' ? 'Groomed Excellence' : 'الرجل الأنيق'}</h3>
+                                    <p className="text-gray-400 text-sm line-clamp-2">{lang === 'en' ? 'The finest grooming services in Jeddah.' : 'أرقى خدمات الحلاقة والعناية في جدة.'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="mt-16 text-center">
+                            <button className="px-8 py-3 bg-white/5 border border-white/10 rounded-full text-white font-bold hover:bg-white/10 transition-all">
+                                {currentT.viewAll}
+                            </button>
                         </div>
                     </div>
                 </section>
-                {/* END: Showcase Section --> */}
+                {/* END: Showcase Section */}
 
                 {/* BEGIN: Trust Banner */}
                 <section className="py-12 border-y border-white/5 bg-white/[0.02]">
                     <div className="max-w-7xl mx-auto px-4 text-center">
-                        <p className="text-gray-500 font-medium tracking-widest uppercase text-sm mb-0">
-                            {currentT.poweredBy} <span className="text-white font-bold px-2 py-1 bg-brand/20 rounded ml-2 mr-2">KSA Intelligence Ops</span>
+                        <p className="text-gray-500 font-medium tracking-widest uppercase text-xs mb-0 flex items-center justify-center gap-4">
+                            {currentT.poweredBy} <span className="text-white font-bold px-3 py-1 bg-brand/20 rounded-full">KSA Intelligence Ops</span>
                         </p>
                     </div>
                 </section>
-                {/* END: Trust Banner --> */}
+                {/* END: Trust Banner */}
             </main>
 
             {/* BEGIN: Footer */}
