@@ -12,7 +12,8 @@ import {
     Globe,
     Languages,
     Search,
-    Shield
+    Shield,
+    Map as MapIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,6 +24,7 @@ export default function Layout() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const navigation = [
+        { name: t('nav.audit') || 'Gap Audit', href: '/audit', icon: MapIcon },
         { name: t('nav.website'), href: '/my-website', icon: Globe },
         { name: t('nav.editor'), href: '/editor', icon: Menu }, // Using Menu icon for editor for now
         { name: t('nav.seo'), href: '/seo', icon: Search },
@@ -42,7 +44,7 @@ export default function Layout() {
             
             {/* Sidebar - Desktop */}
             <aside className="hidden lg:flex w-72 flex-col glass-sidebar p-6 overflow-y-auto z-10">
-                <Link to="/my-website" className="flex items-center gap-3 px-2 mb-10 transition-opacity hover:opacity-80">
+                <Link to="/audit" className="flex items-center gap-3 px-2 mb-10 transition-opacity hover:opacity-80">
                     <img src="/logo.png" alt="KSA Verified" className="h-9 w-9 object-contain mb-0.5" />
                     <div>
                         <h1 className="text-lg font-black bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent leading-none">
@@ -118,7 +120,7 @@ export default function Layout() {
 
             {/* Mobile Header */}
             <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#0a0c10]/80 backdrop-blur-xl border-b border-white/5 z-50 px-4 flex items-center justify-between">
-                <Link to="/my-website" className="flex items-center gap-2.5">
+                <Link to="/audit" className="flex items-center gap-2.5">
                     <img src="/logo.png" alt="KSA Verified" className="h-7 w-7 object-contain mb-0.5" />
                     <div>
                         <span className="text-sm font-black bg-gradient-to-r from-amber-400 to-amber-600 bg-clip-text text-transparent leading-none">KSA Verified</span>

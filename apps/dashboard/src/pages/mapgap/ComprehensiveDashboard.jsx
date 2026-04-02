@@ -468,7 +468,7 @@ export default function ComprehensiveDashboard() {
                                             <p className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Top Opportunities</p>
                                             {leadsWithGap.slice(0, 3).map(lead => (
                                                 <div key={lead.place_id} className="flex items-center justify-between p-3 bg-zinc-800/30 rounded-xl hover:bg-zinc-800/50 transition-colors cursor-pointer"
-                                                    onClick={() => navigate(`/admin-v2/pipeline/${lead.place_id}`)}>
+                                                    onClick={() => navigate(`/admin/pipeline/${lead.place_id}`)}>
                                                     <div>
                                                         <p className="text-sm font-semibold text-zinc-200">{lead.name}</p>
                                                         <p className="text-xs text-zinc-500">{lead.address?.slice(0, 40) || 'No address'}</p>
@@ -518,7 +518,7 @@ export default function ComprehensiveDashboard() {
                                             const score = lead.conversion_score || 0;
                                             return (
                                                 <div key={lead.place_id} className="p-4 rounded-xl bg-zinc-900/50 border border-zinc-800/30 hover:border-amber-500/30 hover:bg-zinc-800/30 transition-all cursor-pointer group"
-                                                    onClick={() => navigate(`/admin-v2/pipeline/${lead.place_id}`)}>
+                                                    onClick={() => navigate(`/admin/pipeline/${lead.place_id}`)}>
                                                     <p className="text-xs font-bold text-zinc-200 group-hover:text-amber-300 transition-colors truncate">{lead.name}</p>
                                                     
                                                     {/* Gaps badges */}
@@ -608,7 +608,7 @@ export default function ComprehensiveDashboard() {
                                     <Activity className="w-4 h-4 text-amber-500" />
                                     Recent Agent Activity
                                 </h3>
-                                <button onClick={() => navigate('/admin-v2/logs')} className="text-xs text-amber-500 hover:text-amber-400 font-semibold">
+                                <button onClick={() => navigate('/admin/logs')} className="text-xs text-amber-500 hover:text-amber-400 font-semibold">
                                     View All →
                                 </button>
                             </div>
@@ -636,12 +636,12 @@ export default function ComprehensiveDashboard() {
                 {/* Quick Navigation */}
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 pt-4">
                     {[
-                        { label: 'Pipeline', icon: BarChart2, path: '/admin-v2/pipeline', color: '#6366f1' },
-                        { label: 'Map View', icon: MapIcon, path: '/admin-v2/map', color: '#8b5cf6' },
-                        { label: 'WhatsApp', icon: MessageCircle, path: '/admin-v2/whatsapp', color: '#10b981' },
-                        { label: 'Analytics', icon: TrendingUp, path: '/admin-v2/analytics', color: '#f59e0b' },
-                        { label: 'Websites', icon: Globe, path: '/admin-v2/websites', color: '#3b82f6' },
-                        { label: 'Settings', icon: Settings, path: '/admin-v2/settings', color: '#64748b' },
+                        { label: 'Pipeline', icon: BarChart2, path: '/admin/pipeline', color: '#6366f1' },
+                        { label: 'Map View', icon: MapIcon, path: '/admin/map', color: '#8b5cf6' },
+                        { label: 'WhatsApp', icon: MessageCircle, path: '/admin/whatsapp', color: '#10b981' },
+                        { label: 'Analytics', icon: TrendingUp, path: '/admin/analytics', color: '#f59e0b' },
+                        { label: 'Websites', icon: Globe, path: '/admin/websites', color: '#3b82f6' },
+                        { label: 'Settings', icon: Settings, path: '/admin/settings', color: '#64748b' },
                     ].map(item => (
                         <button key={item.path} onClick={() => navigate(item.path)} 
                             className="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/50 bg-zinc-900/30 hover:bg-zinc-800/30 hover:border-zinc-700 transition-all group">
@@ -770,7 +770,7 @@ function LeadsTable({ leads, loading, navigate }) {
                                                         <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
                                                     </a>
                                                 )}
-                                                <button onClick={() => navigate(`/admin-v2/pipeline/${lead.place_id}`)} 
+                                                <button onClick={() => navigate(`/admin/pipeline/${lead.place_id}`)} 
                                                     className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold transition-colors">
                                                     Details
                                                 </button>

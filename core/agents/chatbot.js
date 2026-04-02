@@ -151,9 +151,9 @@ Our team will review your payment and confirm within 1 hour.`;
                 const stcPay = '+966 50 791 3514';
                 const portalUrl = 'https://ksaverified.com/customers';
                 const siteName = lead ? lead.name : 'صاحب المشروع';
-                const siteLink = (lead && lead.vercel_url) ? `\n✅ موقعك جاهز: ${lead.vercel_url}` : '';
-                const msgEn = `Great question, ${siteName}! 💎\n\nSpecial offer today only:\n✅ First Month: *19 SAR* (Regular price: 99 SAR)\n✅ Annual Plan: 990 SAR (save 2 months!)${(lead && lead.vercel_url) ? `\n✅ Your site is ready: ${lead.vercel_url}` : ''}\n\n💳 Payment: STC Pay to ${stcPay}\nSend your receipt here to activate instantly! 🚀\nManage your site: ${portalUrl}`;
-                const msgAr = `سؤال ممتاز، ${siteName}! 💎\n\nعرض خاص اليوم فقط:\n✅ الشهر الأول: *19 ريال فقط* (السعر العادي: 99 ريال)\n✅ الاشتراك السنوي: 990 ريال (وفّر شهرين!)${siteLink}\n\n💳 الدفع: STC Pay على ${stcPay}\nأرسل الإيصال هنا للتفعيل الفوري! 🚀\nإدارة موقعك: ${portalUrl}`;
+                const msgEn = `Great question, ${siteName}! 💎\n\nChoose the best Gap Optimization plan for your business:\n✅ **Basic Plan** (19 SAR/mo): Fix minor gaps, missing info, and update hours. Perfect to start.\n✅ **Pro Plan** (49 SAR/mo): Includes a Custom Auto-Generated Website + Website Editor + Basic Plan.\n✅ **Max Plan** (99 SAR/mo): Includes Advanced SEO Analytics + Pro Plan.\n\n💳 Payment: STC Pay to ${stcPay}\nSend your receipt here to activate instantly! 🚀\nManage your profile gaps: ${portalUrl}`;
+                const msgAr = `سؤال ممتاز، ${siteName}! 💎\n\nاختر خطة تحسين النواقص الأنسب لعملك:\n✅ **الباقة الأساسية** (19 ريال/شهر): إصلاح النواقص والمعلومات المفقودة وتحديث الأوقات. ممتازة كبداية.\n✅ **باقة برو** (49 ريال/شهر): تتضمن موقع إلكتروني مخصص + أداة تعديل الموقع + الباقة الأساسية.\n✅ **باقة ماكس** (99 ريال/شهر): تتضمن تحليلات متقدمة وإدارة SEO + باقة برو.\n\n💳 الدفع: STC Pay على ${stcPay}\nأرسل الإيصال هنا للتفعيل الفوري! 🚀\nإدارة نواقص ملفك: ${portalUrl}`;
+
                 const closer = new CloserAgent();
                 await closer.sendMessage(incomingPhone, `${msgEn}\n\n---\n\n${msgAr}`);
                 if (lead) {
@@ -165,9 +165,10 @@ Our team will review your payment and confirm within 1 hour.`;
             }
 
             // 4c. Wants Link → Send it immediately
-            if (intent === 'USER_WANTS_LINK' && lead && lead.vercel_url) {
-                const msgEn = `Here's your custom website, ${lead.name}! 🌐\n\n👉 ${lead.vercel_url}\n\nTake a look and tell me what you think! If you love it, we can activate your 1-week FREE trial right now. ✨`;
-                const msgAr = `إليك موقعك المخصص، ${lead.name}! 🌐\n\n👉 ${lead.vercel_url}\n\nألقِ نظرة وأخبرني برأيك! إذا أعجبك، يمكننا تفعيل تجربتك المجانية لمدة أسبوع الآن. ✨`;
+            if (intent === 'USER_WANTS_LINK') {
+                const msgEn = `Here's your comprehensive Gap Analysis Report, ${lead?.name || 'Business Owner'}! 📊\n\n👉 https://ksaverified.com/customers \n\nTake a look to see exactly what you're missing on Google Maps and how fixing it can bring you more customers! ✨`;
+                const msgAr = `إليك التقرير الشامل لنواقص ملفك، ${lead?.name || 'صاحب العمل'}! 📊\n\n👉 https://ksaverified.com/customers \n\nألقِ نظرة لترى بالضبط ما ينقصك على خرائط جوجل وكيف يمكن أن يجلب لك إصلاحه المزيد من العملاء! ✨`;
+
                 const closer = new CloserAgent();
                 await closer.sendMessage(incomingPhone, `${msgEn}\n\n---\n\n${msgAr}`);
                 await db.addLog('chatbot', 'link_sent', lead.place_id, { url: lead.vercel_url }, 'success');
@@ -182,15 +183,19 @@ Our team will review your payment and confirm within 1 hour.`;
                     updated_at: new Date().toISOString() 
                 });
                 
-                const activationMsg = `Great choice, ${lead.name}! 💎 Your 1-week FREE trial is now being activated. 
+                const activationMsg = `Great choice, ${lead.name}! 💎 
 
-We are finalizing your custom AI-powered website now. You will receive a link to your preview within the next 15-20 minutes!
+Our team is reviewing your gap analysis and will begin optimizing your Google Maps profile to fix the missing information (phone, hours, website, etc). 
+
+You can check the live progress on your portal: https://ksaverified.com/customers
 
 ---
 
-خيار رائع، ${lead.name}! 💎 تجربة الأسبوع المجاني الخاصة بك قيد التفعيل الآن.
+خيار رائع، ${lead.name}! 💎 
 
-نحن نضع اللمسات الأخيرة على موقعك المخصص المدعوم بالذكاء الاصطناعي الآن. ستصلك رسالة تحتوي على رابط المعاينة خلال 15-20 دقيقة القادمة!`;
+يقوم فريقنا بمراجعة تحليل النواقص الخاص بك وسيبدأ في تحسين ملفك على خرائط جوجل لإصلاح المعلومات المفقودة (الهاتف، ساعات العمل، الموقع الإلكتروني، وغيرها).
+
+يمكنك متابعة التقدم المباشر على بوابتك: https://ksaverified.com/customers`;
 
                 const closer = new CloserAgent();
                 await closer.sendMessage(incomingPhone, activationMsg);
@@ -223,21 +228,24 @@ We are finalizing your custom AI-powered website now. You will receive a link to
 
             // Script Branching Instructions
             let scriptInstructions = "";
-            if (missionStep === 'website_query_sent' || missionStep === 'trial_offered') {
+            if (missionStep === 'website_query_sent' || missionStep === 'trial_offered' || missionStep === 'gap_pitch_sent') {
                 scriptInstructions = `
                 CURRENT MISSION CONTEXT:
                 - If the person answered in Arabic, continue the entire conversation in Arabic.
                 - If the person answered in English, ask if they are comfortable talking in English or prefer Arabic.
-                - If they confirm they've seen the website: Offer a 1-week FREE TRIAL. Explain clearly that if they don't subscribe after the week, the service will be deactivated.
-                - If they haven't seen it: 
-                    ${previewUrl ? `Send them the preview link (${previewUrl}) and say you'll wait for them to check it.` : `Tell them our Quality Assurance team is doing a final audit of their site and you will send the link very soon.`}
+                - Emphasize that fixing Google Maps gaps (missing info, unread reviews) leads to direct customer increase.
+                - If they ask for proof or what gaps they have: tell them to check the comprehensive audit report on our portal.
+                - IF YOU HAVE ANY DOUBTS OR THEY ASK COMPLEX QUESTIONS: Tell them "Let me escalate this to our human administration team, they will review your profile and reply to you on this chat shortly." and then politely wait. Do NOT guess.
                 
                 SPECIFIC OBJECTIONS:
-                - "I can't see it / site blocked": Give them a 1-day unblock exception and message them about it.
-                - "How much?": Mark their status as "Interest Confirmed" and offer the 1-month promotion for 19 SAR.
+                - "I don't care about Google Maps / Internet": Remind them that a huge percentage of their competitors are getting customers because their profile is complete.
+                - "How much?": Mark their status as "Interest Confirmed" and offer the Basic (19 SAR), Pro (49 SAR) and Max (99 SAR) subscriptions. Suggest the plan that best fits their gaps.
                 - "How to pay?": Payment via STC Pay to 966507913514. They must send the receipt here for activation.
-                - "Is it permanent?": Explain it's a prepaid model (like a phone credit). Service is active when paid, blocked when not. No extra charges.
-                - "Can I change something?": We don't do modifications in this phase, but take their requirements and say we'll implement them as soon as possible.
+                `;
+            } else {
+                scriptInstructions = `
+                ESCALATION INSTRUCTION:
+                - IF YOU HAVE ANY DOUBTS OR THEY ASK COMPLEX QUESTIONS: Tell them "Let me escalate this to our human administration team, they will review your profile and reply to you on this chat shortly." and then politely wait. Do NOT guess.
                 `;
             }
 
@@ -248,16 +256,13 @@ You are the KSA Verified AI Sales Assistant, representing KSA Verified—a premi
 Your goal is to answer questions from local business owners (like ${businessName}) who messaged you.
 
 ${scriptInstructions}
-
-NEW PROMOTION: 
-- 1 Week FREE Trial: They can test the site for 7 days without paying. If they express interest, tell them their "Free Week" starts NOW.
-- Promotion Price: Only 19 SAR for the first month (Normal price is 99 SAR).
-- Annual Discount: 990 SAR per year (2 months free).
-
+PRICING TIERS: 
+- Basic Plan (19 SAR/Mo): Fix minor maps gaps (info, reviews, hours)
+- Pro Plan (49 SAR/Mo): Includes Custom Website, Website Editor & Basic Plan
+- Max Plan (99 SAR/Mo): Includes Advanced Analytics, SEO Management & Pro Plan
 Payment Detail: Payment via STC Pay to +966 50 791 3514. 
 Verification: Once paid, they must send a screenshot of the receipt here.
-Dashboard: Manage site at https://ksaverified.com/customers (Login with WhatsApp number).
-${previewUrl ? `Preview Link: Always encourage them to check their preview at ${previewUrl} if they haven't already.` : `PREVIEW LINK STATUS: The website is currently in Quality Assurance/Audit. DO NOT share a link yet. Tell the user it will be ready shortly.`}
+Dashboard: Manage profile at https://ksaverified.com/customers (Login with WhatsApp number).
 
 Be polite, professional, very concise, and speak in the language they used. If they speak Arabic, reply in Arabic.
 
@@ -279,7 +284,7 @@ IMPORTANT CLOSING INSTRUCTIONS:
   - "Reply YES to activate your free trial!"
   - "Reply with your payment screenshot to activate instantly!"
   - "Check your site and tell me what you think!"
-- If they haven't paid yet, ALWAYS mention the 19 SAR first-month offer.
+- Always mention the 3 subscriptions: Basic (19 SAR), Pro (49 SAR), and Max (99 SAR).
 - Match the user's language (Arabic or English) throughout your entire response.
 
 Write the response exactly as it should appear in WhatsApp. No quotes or meta-commentary.

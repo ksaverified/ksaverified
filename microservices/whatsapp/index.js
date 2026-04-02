@@ -36,7 +36,7 @@ async function startWhatsApp() {
             remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1036244875-alpha.html',
         },
         puppeteer: {
-            headless: true,
+            headless: false,
             executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || (process.platform === 'win32' ? null : '/usr/bin/chromium'),
             args: [
                 '--no-sandbox',

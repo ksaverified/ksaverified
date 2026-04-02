@@ -135,7 +135,7 @@ class DatabaseService {
         return this.withRetry(async () => {
             const { data, error } = await this.supabase
                 .from('leads')
-                .select('place_id, name, phone, address, lat, lng, photos, types, website_html, vercel_url, status, retry_count, updated_at')
+                .select('place_id, name, phone, address, lat, lng, photos, types, vercel_url, status, retry_count, updated_at')
                 .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched'])
                 .or('retry_count.lt.3,retry_count.is.null')
                 .order('status', { ascending: true }) // 'interest_confirmed' comes before 'scouted' alphabetically/logically
@@ -148,6 +148,27 @@ class DatabaseService {
                 throw error;
             }
             return data || null;
+        });
+    }
+
+    /**
+     * Fetches JUST the website HTML payload for a single lead to save memory and Disk IO
+     * @param {string} placeId
+     * @returns {Promise<string|null>} The raw HTML string
+     */
+    async getLeadHtml(placeId) {
+        return this.withRetry(async () => {
+            const { data, error } = await this.supabase
+                .from('leads')
+                .select('website_html')
+                .eq('place_id', placeId)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error(`[DB] Error fetching lead HTML ${placeId}:`, error.message);
+                throw error;
+            }
+            return data?.website_html || null;
         });
     }
 
@@ -563,12 +584,12 @@ class DatabaseService {
 
     /** Fallback logic to fetch pitched leads without sent promos */
     async _getPitchedLeadsFallback(limit = 10) {
-        // Fetch a larger chunk of pitched leads (up to 1000)
+        // Fetch a larger chunk of pitched leads (up to 1000) - skip website_html load
         const { data: leads, error } = await this.supabase
             .from('leads')
             .select('place_id, name, phone, status, vercel_url, updated_at')
             .eq('status', 'pitched')
-            .not('website_html', 'is', null)
+            .not('vercel_url', 'is', null) // Alternative way to ensure it has a site created
             .order('updated_at', { ascending: true })
             .limit(1000);
 

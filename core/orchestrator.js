@@ -187,7 +187,10 @@ class Orchestrator {
           }
 
 
-          let currentHtml = activeDbLead.website_html || '';
+          let currentHtml = '';
+          if (['created', 'retouched', 'published', 'pitched'].includes(activeDbLead.status)) {
+              currentHtml = await this.db.getLeadHtml(activeLead.placeId) || '';
+          }
           let vercelUrl = activeDbLead.vercel_url || '';
 
           // Self-Healing: If a lead slipped into advanced pipeline stages without HTML, roll it back
@@ -409,7 +412,7 @@ class Orchestrator {
       .from('leads')
       .select('*')
       .eq('status', 'pitched')
-      .not('website_html', 'is', null)
+      .not('vercel_url', 'is', null)
       .lt('updated_at', twoDaysAgo)
       .limit(10);
 
@@ -444,7 +447,7 @@ class Orchestrator {
       .from('leads')
       .select('*')
       .not('trial_start_date', 'is', null)
-      .not('website_html', 'is', null)
+      .not('vercel_url', 'is', null)
       .or('reminded_2d_before.eq.false,reminded_1d_before.eq.false')
       .limit(20);
 
@@ -530,7 +533,7 @@ class Orchestrator {
         .eq('is_certified', true)
         .eq('status', 'published')
         .not('vercel_url', 'is', null)
-        .not('website_html', 'is', null)
+        .not('vercel_url', 'is', null)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
         .limit(5); // Throttle: max 5 per cycle
 
@@ -569,7 +572,7 @@ class Orchestrator {
         .select('*')
         .eq('status', 'pitched')
         .eq('is_certified', true)
-        .not('website_html', 'is', null)
+        .not('vercel_url', 'is', null)
         .lt('updated_at', fortyEightHoursAgo)
         .gt('updated_at', sevenDaysAgo)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
@@ -607,7 +610,7 @@ class Orchestrator {
         .select('*')
         .eq('status', 'pitched')
         .eq('is_certified', true)
-        .not('website_html', 'is', null)
+        .not('vercel_url', 'is', null)
         .lt('updated_at', sevenDaysAgo)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
         .limit(5);
@@ -641,7 +644,7 @@ class Orchestrator {
         .from('leads')
         .select('*')
         .eq('status', 'interest_confirmed')
-        .not('website_html', 'is', null)
+        .not('vercel_url', 'is', null)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
         .limit(5);
 

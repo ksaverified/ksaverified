@@ -498,22 +498,26 @@ ${auditReport.sections.gaps.gaps.slice(0, 3).map((g, i) => `${i + 1}. ${g.type} 
 
         const message = `عرض خاص بمناسبة الإطلاق لـ ${cleanedName}! 🚀
 
-نحن نطلق عرض KSA Verified المتميز: احصل على أسبوع مجاني لاختبار موقعك الاحترافي، ثم ادفع 19 ريالاً فقط للشهر الأول! (السعر العادي 99 ريال).
+نحن نطلق عرض KSA Verified المتميز:
+✅ الباقة الأساسية: 19 ريالاً/شهرياً (إصلاح النواقص)
+✅ باقة برو: 49 ريالاً/شهرياً (موقع مخصص + 19 ريال)
+✅ باقة ماكس: 99 ريالاً/شهرياً (تحليلات متقدمة وإدارة SEO)
 
-تحقق من موقعك هنا: ${vercelUrl}
-إدارة كل شيء في البوابة الخاصة بك: ${portalUrl}
+تحقق من موقعك ونواقصك هنا: ${portalUrl}
 
-رد بـ "مهتم" لتفعيل هذا العرض والحصول على الخصم!
+رد بـ "مهتم" لتفعيل هذا العرض وتحديد الترقية المناسبة لعملك!
 
 (English Translation)
 Special Launch Offer for ${cleanedName}! 🚀 
 
-We are launching our KSA Verified promotion: Get 1 Week FREE to test your premium site, then pay only 19 SAR for the first month! (Normal price 99 SAR).
+We are launching our KSA Verified promotion: 
+✅ Basic Plan: 19 SAR/mo (Fix Gaps)
+✅ Pro Plan: 49 SAR/mo (Custom Website + Basic)
+✅ Max Plan: 99 SAR/mo (Advanced Analytics & SEO)
 
-Check your site here: ${vercelUrl}
-Manage everything in your portal: ${portalUrl}
+Check your gaps and site here: ${portalUrl}
 
-Reply 'INTERESTED' to activate this offer and claim your discount!`;
+Reply 'INTERESTED' to activate this offer and choose the best plan for you!`;
 
         console.log(`[Closer] Sending 19 SAR Promo to ${cleanedName}...`);
         try {
@@ -580,7 +584,7 @@ Reply 'INTERESTED' to activate this offer and claim your discount!`;
 
         const messageEn = `Hi ${cleanedName}! 💎 Your 1-week FREE trial on KSA Verified expires in *${daysRemaining} day${daysRemaining > 1 ? 's' : ''}*. 
 
-To keep your professional AI website live and attracting customers, you can now activate your permanent plan for only *19 SAR* for the first month! (Normal price 99 SAR).
+To keep your professional AI website and gap optimizations live, you can now activate a permanent plan: Basic (19 SAR/mo), Pro (49 SAR/mo with Website), or Max (99 SAR/mo).
 
 Check your site: ${lead.vercel_url}
 Payment: ${stcPayDetails}
@@ -590,11 +594,9 @@ Please send a screenshot of your payment receipt here to finalize your activatio
 
         const messageAr = `مرحباً ${lead.name}! 💎 تنتهي تجربة الأسبوع المجاني الخاصة بك خلال *${daysRemaining} يوم*.
 
-لإبقاء موقعك المتميز المدعوم بالذكاء الاصطناعي نشطاً ومنشوراً، يمكنك الآن تفعيل اشتراكك مقابل *19 ريال فقط* للشهر الأول! (السعر العادي 99 ريال).
+لإبقاء موقعك المتميز المدعوم بالذكاء الاصطناعي وتحسينات النواقص نشطة، يمكنك الآن تفعيل إحدى الباقات: الأساسية (19 ريال)، برو (49 ريال مع موقع)، أو ماكس (99 ريال).
 
-تحقق من موقعك: ${lead.vercel_url}
-الدفع: ${stcPayDetails}
-البوابة: ${portalUrl}
+بوابتك لإدارة كل شيء: ${portalUrl}
 
 يرجى إرسال لقطة شاشة لإيصال الدفع هنا لإتمام التفعيل! 🚀`;
 
@@ -626,15 +628,15 @@ Please send a screenshot of your payment receipt here to finalize your activatio
         
         const context = `URGENCY CLOSE: The lead confirmed interest in a website but hasn't paid yet. 
         Their site is already live at ${lead.vercel_url}. 
-        We are offering the first month for just 19 SAR (discount from 99 SAR) with the KSA Verified brand. 
+        We are offering flexible plans starting at 19 SAR (Basic/Gaps) up to 49 SAR (Pro with Website) and 99 SAR (Max/SEO).
         They must pay via STC Pay to ${stcPay} and send a screenshot.`;
 
         let messageBody = await this.gemini.generateSalesMessage(lead, context);
 
         if (!messageBody) {
             console.warn(`[Closer] Gemini failed for Urgency Close. Using fallback template for ${cleanedName}.`);
-            const msgEn = `${cleanedName} team, your KSA Verified trial is active! ⏰ Don't miss our launch offer:\n\n✅ First month: Only *19 SAR* (Normal: 99 SAR)\n✅ Your site: ${lead.vercel_url || 'Ready for you!'}\n✅ Payment: STC Pay to ${stcPay}\n\nSend your payment screenshot here to activate instantly! 🚀\nPortal: ${portalUrl}`;
-            const msgAr = `فريق ${cleanedName}، تجربتكم في KSA Verified نشطة! ⏰ لا تفوتوا عرض الإطلاق:\n\n✅ الشهر الأول: *19 ريال فقط* (السعر العادي: 99 ريال)\n✅ موقعكم: ${lead.vercel_url || 'جاهز لكم!'}\n✅ الدفع: STC Pay على ${stcPay}\n\nأرسل صورة إيصال الدفع هنا للتفعيل الفوري! 🚀\nالبوابة: ${portalUrl}`;
+            const msgEn = `${cleanedName} team, your KSA Verified trial is active! ⏰ Don't miss our launch offer:\n\n✅ Basic Plan: *19 SAR*\n✅ Pro Plan (+Website): *49 SAR*\n✅ Max Plan (+SEO): *99 SAR*\n✅ Payment: STC Pay to ${stcPay}\n\nSend your payment screenshot here to activate instantly! 🚀\nPortal: ${portalUrl}`;
+            const msgAr = `فريق ${cleanedName}، تجربتكم في KSA Verified نشطة! ⏰ لا تفوتوا عرض الإطلاق:\n\n✅ الباقة الأساسية: *19 ريال*\n✅ باقة برو (+موقع): *49 ريال*\n✅ باقة ماكس (+SEO): *99 ريال*\n✅ الدفع: STC Pay على ${stcPay}\n\nأرسل صورة إيصال الدفع هنا للتفعيل الفوري! 🚀\nالبوابة: ${portalUrl}`;
             messageBody = `${msgAr}\n\nEnglish Translation:\n${msgEn}`;
         }
 

@@ -8,6 +8,7 @@ import WebsiteEditor from './pages/WebsiteEditor';
 import SEOHub from './pages/SEOHub';
 import Profile from './pages/Profile';
 import Payment from './pages/Payment';
+import GapAudit from './pages/GapAudit';
 
 function App() {
   return (
@@ -21,7 +22,8 @@ function App() {
               <Layout />
             </AuthGuard>
           }>
-            <Route index element={<Navigate to="/my-website" replace />} />
+            <Route index element={<Navigate to="/audit" replace />} />
+            <Route path="audit" element={<GapAudit />} />
             <Route path="my-website" element={<MyWebsite />} />
             <Route path="editor" element={<WebsiteEditor />} />
             <Route path="seo" element={<SEOHub />} />
