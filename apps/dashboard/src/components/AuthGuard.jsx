@@ -23,11 +23,11 @@ const AuthGuard = ({ children, allowedRoles = ['admin', 'sales'] }) => {
     const role = user?.user_metadata?.role || user?.app_metadata?.role;
     
     // Authorization logic:
-    // 1. ADMIN_EMAIL always allowed
+    // 1. ADMIN_EMAIL always allowed (absolute failsafe)
     // 2. roles in allowedRoles are allowed
     // 3. 'admin' role is always allowed (fallback)
     const isAuthorized = 
-        user.email === ADMIN_EMAIL || 
+        (user.email && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) || 
         role === 'admin' || 
         (allowedRoles && allowedRoles.includes(role));
 

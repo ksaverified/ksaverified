@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Smartphone, CheckCircle2, ChevronRight, Zap, XCircle, User } from 'lucide-react';
+import { Smartphone, CheckCircle2, ChevronRight, Zap, XCircle, User, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../components/AuthContext';
 
 const LandingPage = () => {
     const [lang, setLang] = useState('en');
@@ -11,6 +12,9 @@ const LandingPage = () => {
     const [lookupResult, setLookupResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const [manualData, setManualData] = useState({ name: '', category: '', description: '' });
+    
+    const { user } = useAuth();
+    const isAdmin = user?.email?.toLowerCase() === 'cupido1romeo@gmail.com';
 
     const handleLookup = async () => {
         setLoading(true);
@@ -420,6 +424,16 @@ const LandingPage = () => {
                                 <User className="w-4 h-4" />
                                 <span className="hidden xs:inline">{currentT.clientLogin}</span>
                             </a>
+
+                            {isAdmin && (
+                                <button 
+                                    onClick={() => navigate('/admin')}
+                                    className="px-3 sm:px-5 py-2 rounded-twelve bg-brand/20 border border-brand/50 hover:bg-brand/30 transition-all text-sm font-bold flex items-center gap-2 text-brand-light"
+                                >
+                                    <ShieldCheck className="w-4 h-4" />
+                                    <span className="hidden xs:inline">Admin</span>
+                                </button>
+                            )}
                             
                             {/* Language Toggle */}
                             <button 
