@@ -7,12 +7,13 @@ const axios = require('axios');
  */
 class ScoutAgent {
   constructor() {
-    this.apiKey = process.env.GOOGLE_PLACES_API_KEY;
+    this.apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY;
     if (!this.apiKey) {
       throw new Error('GOOGLE_PLACES_API_KEY is not defined in environment variables.');
     }
     this.baseURL = 'https://places.googleapis.com/v1/places:searchText';
     this.detailsURL = 'https://places.googleapis.com/v1/places';
+    this.referer = 'https://ksaverified.com';
   }
 
   /**
@@ -97,7 +98,8 @@ class ScoutAgent {
       const response = await axios.get(`${this.detailsURL}/${placeId}`, {
         headers: {
           'X-Goog-Api-Key': this.apiKey,
-          'X-Goog-FieldMask': fieldMask
+          'X-Goog-FieldMask': fieldMask,
+          'Referer': this.referer
         }
       });
 
@@ -355,7 +357,7 @@ class ScoutAgent {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': this.apiKey,
           'X-Goog-FieldMask': fieldMask,
-          'Referer': 'https://ksaverified.com'
+          'Referer': this.referer
         }
       });
 

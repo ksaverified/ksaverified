@@ -20,7 +20,7 @@ class DatabaseService {
                     // This prevents hangs on 'Unhealthy' Supabase states
                     return fetch(url, { 
                         ...options, 
-                        signal: AbortSignal.timeout(10000) // 10s cutoff
+                        signal: AbortSignal.timeout(30000) // 30s cutoff
                     });
                 }
             }

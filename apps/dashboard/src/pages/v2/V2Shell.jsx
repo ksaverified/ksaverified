@@ -7,8 +7,9 @@ import {
 } from 'lucide-react';
 
 const NAV_ITEMS = [
-    { path: '/admin-v2', label: 'Overview', icon: LayoutDashboard, exact: true },
+    { path: '/admin-v2', label: 'Strategy Hub', icon: LayoutDashboard, exact: true },
     { path: '/admin-v2/pipeline', label: 'Pipeline', icon: Users },
+    { path: '/admin-v2/agents', label: 'Agent Operations', icon: CloudLightning },
     { path: '/admin-v2/websites', label: 'Websites', icon: Globe },
     { path: '/admin-v2/seo', label: 'Global SEO', icon: Search },
     { path: '/admin-v2/whatsapp', label: 'WhatsApp CX', icon: MessageSquare },

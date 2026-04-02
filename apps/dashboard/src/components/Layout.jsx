@@ -14,7 +14,7 @@ const NAV_SECTIONS = [
     {
         label: null,
         items: [
-            { to: '/admin', icon: LayoutDashboard, label: 'Command Center', exact: true },
+            { to: '/admin/comprehensive', icon: LayoutDashboard, label: 'Intelligence Hub', exact: true },
         ]
     },
     {

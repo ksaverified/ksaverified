@@ -6,8 +6,13 @@ import {
     Calendar, Clock, CreditCard, Unlock, Lock,
     CheckCircle, AlertTriangle, User, Hash,
     ExternalLink, Edit2, Save, X, BarChart2,
-    Monitor, Tablet, Smartphone, Search, CloudLightning
+    Monitor, Tablet, Smartphone, Search, CloudLightning,
+    Zap, Rocket, MessageCircle
 } from 'lucide-react';
+import { 
+    Radar, RadarChart, PolarGrid, PolarAngleAxis, 
+    ResponsiveContainer 
+} from 'recharts';
 import V2Shell from './V2Shell';
 
 const STAGES = [
@@ -60,7 +65,7 @@ export default function LeadDetailV2() {
             if (leadData) {
                 setLead(leadData);
                 setEditData(leadData);
-                setSubPrice(leadData.subscription_price || '99');
+                setSubPrice(leadData.revenue?.toString() || '0');
             }
 
             const { data: visitsData } = await supabase.from('visits')
@@ -95,7 +100,8 @@ export default function LeadDetailV2() {
                 contact_email: editData.contact_email,
                 area: editData.area,
                 neighborhood: editData.neighborhood,
-                subscription_price: parseFloat(subPrice) || 99,
+                revenue: parseFloat(subPrice) || 0,
+                subscription_tier: subPrice === '19' ? 'basic' : (subPrice === '49' ? 'pro' : (subPrice === '99' ? 'max' : 'none')),
                 updated_at: new Date().toISOString()
             }).eq('place_id', placeId);
 
@@ -195,6 +201,20 @@ export default function LeadDetailV2() {
     const stage = getStage(lead.status);
     const isCurrentlyUnlocked = lead.is_unlocked && (!lead.unlock_until || new Date(lead.unlock_until) > new Date());
 
+    const radarData = lead.map_gap_analysis ? [
+        { subject: 'Visuals', A: lead.map_gap_analysis.visual_score || 20, fullMark: 100 },
+        { subject: 'SEO', A: lead.map_gap_analysis.seo_score || 30, fullMark: 100 },
+        { subject: 'Trust', A: lead.map_gap_analysis.trust_score || 40, fullMark: 100 },
+        { subject: 'Speed', A: lead.map_gap_analysis.speed_score || 50, fullMark: 100 },
+        { subject: 'Mobile', A: lead.map_gap_analysis.mobile_score || 60, fullMark: 100 },
+    ] : [
+        { subject: 'Visuals', A: 20, fullMark: 100 },
+        { subject: 'SEO', A: 30, fullMark: 100 },
+        { subject: 'Trust', A: 40, fullMark: 100 },
+        { subject: 'Speed', A: 50, fullMark: 100 },
+        { subject: 'Mobile', A: 60, fullMark: 100 },
+    ];
+
     return (
         <V2Shell>
             <div className="p-6 max-w-6xl mx-auto space-y-6 pb-20">
@@ -247,40 +267,59 @@ export default function LeadDetailV2() {
                 <div className="grid grid-cols-12 gap-6">
                     {/* Left Column: Info & Visits */}
                     <div className="col-span-8 space-y-6">
-                        {/* Business Details Card */}
-                        <div className="glass-card rounded-2xl overflow-hidden luminous-card">
-                            <div className="px-6 py-4 border-b border-obsidian-surface-high/20 bg-obsidian-surface-low/30 flex items-center gap-2">
-                                <Hash className="w-4 h-4 text-amber-500/80" />
-                                <h3 className="text-[11px] font-bold text-amber-500 uppercase tracking-[0.2em] drop-shadow-sm">Business Information</h3>
+                        {/* Digital Gap Radar & Business Details */}
+                        <div className="grid grid-cols-2 gap-6">
+                            {/* Radar Chart */}
+                            <div className="glass-card rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden">
+                                <div className="absolute top-4 left-4 flex items-center gap-2">
+                                    <Zap className="w-3.5 h-3.5 text-amber-500" />
+                                    <h3 className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Digital Gap Analysis</h3>
+                                </div>
+                                <div className="w-full h-64 mt-4">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <RadarChart cx="50%" cy="50%" outerRadius="80%" data={radarData}>
+                                            <PolarGrid stroke="#3f3f46" />
+                                            <PolarAngleAxis dataKey="subject" tick={{ fill: '#71717a', fontSize: 10, fontWeight: 'bold' }} />
+                                            <Radar
+                                                name="Business"
+                                                dataKey="A"
+                                                stroke="#f59e0b"
+                                                fill="#f59e0b"
+                                                fillOpacity={0.3}
+                                            />
+                                        </RadarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                                <div className="w-full grid grid-cols-2 gap-2 mt-2">
+                                    <div className="p-2 bg-obsidian-surface-high/20 rounded-lg border border-white/5">
+                                        <p className="text-[8px] text-zinc-500 font-bold uppercase">GAP SCORE</p>
+                                        <p className="text-sm font-black text-amber-500">{(radarData.reduce((acc, d) => acc + d.A, 0) / 5).toFixed(0)}%</p>
+                                    </div>
+                                    <div className="p-2 bg-obsidian-surface-high/20 rounded-lg border border-white/5">
+                                        <p className="text-[8px] text-zinc-500 font-bold uppercase">MARKET FIT</p>
+                                        <p className="text-sm font-black text-emerald-400">HIGH</p>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="p-8 grid grid-cols-2 gap-x-16 gap-y-8">
-                                <div className="space-y-6">
+
+                            {/* Business Information */}
+                            <div className="glass-card rounded-2xl p-6 space-y-6">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Hash className="w-3.5 h-3.5 text-amber-500" />
+                                    <h3 className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Business Vitality</h3>
+                                </div>
+                                <div className="space-y-5">
                                     <DetailItem label="Official Phone" value={lead.phone} icon={Phone} isEditing={isEditing} 
                                         renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-zinc-300 cursor-not-allowed uppercase font-bold tracking-wider" value={lead.phone || ''} readOnly />} />
                                     <DetailItem label="Mobile Number" value={lead.mobile} icon={Smartphone} isEditing={isEditing}
                                         renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.mobile || ''} onChange={e => setEditData({...editData, mobile: e.target.value})} />} />
-                                    <DetailItem label="Area / City" value={lead.area} icon={MapPin} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
-                                            value={editData.area || ''} onChange={e => setEditData({...editData, area: e.target.value})} />} />
-                                    <DetailItem label="Neighborhood" value={lead.neighborhood} icon={Search} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
-                                            value={editData.neighborhood || ''} onChange={e => setEditData({...editData, neighborhood: e.target.value})} />} />
-                                </div>
-                                <div className="space-y-6">
                                     <DetailItem label="Contact Name" value={lead.contact_name} icon={User} isEditing={isEditing}
                                         renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
                                             value={editData.contact_name || ''} onChange={e => setEditData({...editData, contact_name: e.target.value})} />} />
-                                    <DetailItem label="Contact Mobile" value={lead.contact_mobile} icon={Phone} isEditing={isEditing}
+                                    <DetailItem label="City / Area" value={lead.area} icon={MapPin} isEditing={isEditing}
                                         renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
-                                            value={editData.contact_mobile || ''} onChange={e => setEditData({...editData, contact_mobile: e.target.value})} />} />
-                                    <DetailItem label="Contact Email" value={lead.contact_email} icon={Mail} isEditing={isEditing}
-                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
-                                            value={editData.contact_email || ''} onChange={e => setEditData({...editData, contact_email: e.target.value})} />} />
-                                    <div className="pt-2">
-                                        <label className="text-[9px] text-zinc-400 uppercase font-bold tracking-[0.25em] block mb-1.5 opacity-80">Coordinates</label>
-                                        <p className="text-xs text-zinc-200 font-mono bg-obsidian-surface-low/40 px-3 py-1.5 rounded-lg border border-obsidian-surface-high/10">{lead.lat}, {lead.lng}</p>
-                                    </div>
+                                            value={editData.area || ''} onChange={e => setEditData({...editData, area: e.target.value})} />} />
                                 </div>
                             </div>
                         </div>
@@ -370,17 +409,42 @@ export default function LeadDetailV2() {
                                 )}
                             </div>
 
-                            <div className="space-y-5">
+                            <div className="space-y-6">
                                 <div>
-                                    <label className="text-[9px] text-zinc-400 uppercase font-bold tracking-[0.25em] block mb-2.5 opacity-80">Revenue Tier (Monthly)</label>
-                                    <div className="flex items-center gap-2">
-                                        <div className="relative flex-1">
-                                            <input type="number" value={subPrice} onChange={e => setSubPrice(e.target.value)}
-                                                className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/30 rounded-xl px-4 py-3 text-white font-bold focus:outline-none focus:border-amber-500/50 transition-all text-sm" />
-                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600 font-bold text-[10px] uppercase tracking-widest">SAR</span>
-                                        </div>
-                                        <button onClick={handleSave} disabled={saving} className="p-3.5 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-amber-500/80 rounded-xl transition-all shadow-lg border border-obsidian-surface-highest/20">
-                                            <Save className="w-4 h-4" />
+                                    <label className="text-[9px] text-zinc-400 uppercase font-bold tracking-[0.25em] block mb-3 opacity-80">Strategic Subscription Tier</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {[
+                                            { val: '19', label: 'Basic', sub: 'Hub' },
+                                            { val: '49', label: 'Pro', sub: 'SEO' },
+                                            { val: '99', label: 'Max', sub: 'Full' }
+                                        ].map(t => (
+                                            <button 
+                                                key={t.val}
+                                                onClick={() => setSubPrice(t.val)}
+                                                className={`p-3 rounded-xl border flex flex-col items-center transition-all ${
+                                                    subPrice === t.val 
+                                                    ? 'bg-amber-500/10 border-amber-500/50 ring-1 ring-amber-500/20' 
+                                                    : 'bg-obsidian-surface-high/30 border-white/5 hover:border-white/10'
+                                                }`}
+                                            >
+                                                <span className={`text-[10px] font-black uppercase tracking-widest ${subPrice === t.val ? 'text-amber-500' : 'text-zinc-500'}`}>{t.label}</span>
+                                                <span className={`text-sm font-black mt-0.5 ${subPrice === t.val ? 'text-white' : 'text-zinc-400'}`}>{t.val} <span className="text-[8px] opacity-60">SAR</span></span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Per-Lead Agent Triggers */}
+                                <div className="p-5 rounded-2xl bg-obsidian-surface-lowest/50 border border-obsidian-surface-high/10 space-y-4">
+                                    <p className="text-[9px] text-zinc-400 font-bold uppercase tracking-[0.25em] opacity-80">Tactical Deployments</p>
+                                    <div className="flex gap-2">
+                                        <button className="flex-1 py-3 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-white rounded-xl transition-all border border-white/5 flex flex-col items-center group">
+                                            <Rocket className="w-4 h-4 text-purple-400 group-hover:animate-bounce" />
+                                            <span className="text-[8px] font-bold uppercase tracking-widest mt-1.5">Regen Site</span>
+                                        </button>
+                                        <button className="flex-1 py-3 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-white rounded-xl transition-all border border-white/5 flex flex-col items-center group">
+                                            <MessageCircle className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
+                                            <span className="text-[8px] font-bold uppercase tracking-widest mt-1.5">Nudge Bot</span>
                                         </button>
                                     </div>
                                 </div>
