@@ -3,7 +3,7 @@ import { useAuth } from '../../components/AuthContext';
 import { supabase } from '../../lib/supabase';
 import {
     Shield, LayoutDashboard, Users, Globe, MessageSquare,
-    BarChart2, Map, BookOpen, Terminal, Settings, LogOut, ChevronLeft, Bot, Award, Search
+    BarChart2, Map, BookOpen, Terminal, Settings, LogOut, ChevronLeft, Bot, Award, Search, CloudLightning
 } from 'lucide-react';
 
 const NAV_ITEMS = [
