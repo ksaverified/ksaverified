@@ -33,6 +33,8 @@ import GapMapOperator from './pages/v3/GapMapOperator';
 import LeadScorecardList from './pages/v3/LeadScorecardList';
 import AgentFleet from './pages/v3/AgentFleet';
 import EcosystemMetrics from './pages/v3/EcosystemMetrics';
+// Management Dashboard
+import ManagementDashboard from './pages/management/ManagementDashboard';
 
 function App() {
   return (
@@ -45,6 +47,11 @@ function App() {
           <Route path="/showcase" element={<LandingPage />} />
           <Route path="/solutions" element={<LandingPage />} />
           <Route path="/manage" element={<Login />} />
+          <Route path="/management" element={
+            <AuthGuard allowedRoles={['admin']}>
+              <ManagementDashboard />
+            </AuthGuard>
+          } />
 
           {/* Protected Admin Routes (Defaults to V3) */}
           <Route path="/admin" element={<Navigate to="/admin-v3" replace />} />
