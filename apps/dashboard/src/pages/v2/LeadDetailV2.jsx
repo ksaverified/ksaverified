@@ -93,6 +93,7 @@ export default function LeadDetailV2() {
         setSaving(true);
         try {
             const { error } = await supabase.from('leads').update({
+                website: editData.website,
                 mobile: editData.mobile,
                 contact_name: editData.contact_name,
                 contact_mobile: editData.contact_mobile,
@@ -308,6 +309,9 @@ export default function LeadDetailV2() {
                                     <h3 className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Business Vitality</h3>
                                 </div>
                                 <div className="space-y-5">
+                                    <DetailItem label="Website Link" value={lead.website ? <a href={lead.website.startsWith('http') ? lead.website : `https://${lead.website}`} target="_blank" rel="noreferrer" className="text-amber-500 hover:text-amber-400 underline">{lead.website}</a> : 'No Website'} icon={Globe} isEditing={isEditing}
+                                        renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-white focus:border-amber-500/50 outline-none transition-all" 
+                                            value={editData.website || ''} onChange={e => setEditData({...editData, website: e.target.value})} placeholder="https://" />} />
                                     <DetailItem label="Official Phone" value={lead.phone} icon={Phone} isEditing={isEditing} 
                                         renderEdit={() => <input className="w-full bg-obsidian-surface-lowest border border-obsidian-surface-high/40 rounded-xl px-3 py-2 text-sm text-zinc-300 cursor-not-allowed uppercase font-bold tracking-wider" value={lead.phone || ''} readOnly />} />
                                     <DetailItem label="Mobile Number" value={lead.mobile} icon={Smartphone} isEditing={isEditing}
@@ -441,7 +445,10 @@ export default function LeadDetailV2() {
                                             <Rocket className="w-4 h-4 text-purple-400 group-hover:animate-bounce" />
                                             <span className="text-[8px] font-bold uppercase tracking-widest mt-1.5">Regen Site</span>
                                         </button>
-                                        <button className="flex-1 py-3 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-white rounded-xl transition-all border border-white/5 flex flex-col items-center group">
+                                        <button 
+                                            onClick={() => navigate(`/admin-v2/whatsapp?phone=${lead.contact_mobile || lead.mobile || lead.phone}`)}
+                                            className="flex-1 py-3 bg-obsidian-surface-high hover:bg-obsidian-surface-highest text-white rounded-xl transition-all border border-white/5 flex flex-col items-center group cursor-pointer"
+                                        >
                                             <MessageCircle className="w-4 h-4 text-emerald-400 group-hover:scale-110 transition-transform" />
                                             <span className="text-[8px] font-bold uppercase tracking-widest mt-1.5">Nudge Bot</span>
                                         </button>
