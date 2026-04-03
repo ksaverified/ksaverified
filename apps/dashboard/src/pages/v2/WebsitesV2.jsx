@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Globe, ExternalLink, Code, Search, Eye, X, RefreshCcw, Sparkles, ChevronDown, CheckCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import V2Shell from './V2Shell';
 
 const STATUSES = ['all', 'scouted', 'published', 'pitched', 'warmed', 'interest_confirmed', 'completed', 'invalid'];
 
@@ -188,7 +187,7 @@ export default function WebsitesV2() {
     };
 
     return (
-        <V2Shell>
+        <>
             <div className="p-6 space-y-5">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                     <div>
@@ -331,6 +330,6 @@ export default function WebsitesV2() {
                     </div>
                 </div>
             )}
-        </V2Shell>
+        </>
     );
 }

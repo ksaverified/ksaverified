@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Users, Phone, MapPin, Eye, CheckCircle, X, Search, ArrowRight } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 const STAGES = [
     { key: 'scouted', label: 'Scouted', color: '#6366f1', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400' },
@@ -76,7 +75,7 @@ export default function PipelineV2() {
     };
 
     return (
-        <V2Shell>
+        <>
             <div className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -250,6 +249,6 @@ export default function PipelineV2() {
                     </div>
                 )}
             </div>
-        </V2Shell>
+        </>
     );
 }

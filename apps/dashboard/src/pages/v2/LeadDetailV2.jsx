@@ -13,7 +13,6 @@ import {
     Radar, RadarChart, PolarGrid, PolarAngleAxis, 
     ResponsiveContainer 
 } from 'recharts';
-import V2Shell from './V2Shell';
 
 const STAGES = [
     { key: 'scouted', label: 'Scouted', color: '#6366f1', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400' },
@@ -178,13 +177,13 @@ export default function LeadDetailV2() {
     };
 
     if (loading) return (
-        <V2Shell>
+        <>
             <div className="h-full flex items-center justify-center text-zinc-500 animate-pulse">Loading lead details...</div>
-        </V2Shell>
+        </>
     );
 
     if (!lead) return (
-        <V2Shell>
+        <>
             <div className="p-6">
                 <button onClick={() => navigate('/admin-v2/pipeline')} className="flex items-center gap-2 text-zinc-500 hover:text-white transition-colors">
                     <ChevronLeft className="w-4 h-4" /> Back to Pipeline
@@ -195,7 +194,7 @@ export default function LeadDetailV2() {
                     <p className="text-zinc-500">The lead you're looking for doesn't exist or has been removed.</p>
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 
     const stage = getStage(lead.status);
@@ -216,7 +215,7 @@ export default function LeadDetailV2() {
     ];
 
     return (
-        <V2Shell>
+        <>
             <div className="p-6 max-w-6xl mx-auto space-y-6 pb-20">
                 {/* Header */}
                 <div className="flex items-start justify-between">
@@ -514,7 +513,7 @@ export default function LeadDetailV2() {
                     </div>
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 }
 

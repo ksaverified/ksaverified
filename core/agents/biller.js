@@ -7,7 +7,7 @@ class BillerAgent {
         this.subscriptionDays = 30; // 1 month subscription
     }
 
-    async checkSubscriptions() {
+    async checkExpiringSubscriptions() {
         console.log('[Biller] Checking for expiring subscriptions...');
 
         try {

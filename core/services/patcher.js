@@ -6,8 +6,8 @@ const { generateText } = require('./ai');
  */
 class PatcherService {
     constructor() {
-        if (!process.env.GEMINI_API_KEY) {
-            console.warn('[Patcher] GEMINI_API_KEY missing. HTML patching will be limited.');
+        if (!process.env.CEREBRAS_API_KEY) {
+            console.warn('[Patcher] CEREBRAS_API_KEY missing. HTML patching will be limited.');
         }
     }
 
@@ -18,7 +18,7 @@ class PatcherService {
      * @returns {Promise<string>} The updated HTML string
      */
     async patchHtml(currentHtml, config) {
-        if (!process.env.GEMINI_API_KEY) return currentHtml;
+        if (!process.env.CEREBRAS_API_KEY) return currentHtml;
 
         console.log('[Patcher] Patching website HTML with new configuration...');
 
@@ -77,7 +77,7 @@ ${JSON.stringify(config, null, 2)}
      * @returns {Promise<Object>} The extracted configuration object
      */
     async extractConfig(html) {
-        if (!process.env.GEMINI_API_KEY) return null;
+        if (!process.env.CEREBRAS_API_KEY) return null;
 
         console.log('[Patcher] Extracting configuration from HTML...');
 

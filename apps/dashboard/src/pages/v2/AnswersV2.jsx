@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { BookOpen, MessageSquare, CheckCircle, Edit3, Save, X, Loader2 } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 export default function AnswersV2() {
     const [logs, setLogs] = useState([]);
@@ -54,7 +53,7 @@ export default function AnswersV2() {
     }
 
     return (
-        <V2Shell>
+        <>
             <div className="p-8 space-y-8 max-w-5xl mx-auto">
                 <div>
                     <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
@@ -165,6 +164,6 @@ export default function AnswersV2() {
                     </div>
                 )}
             </div>
-        </V2Shell>
+        </>
     );
 }

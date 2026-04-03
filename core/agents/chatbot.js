@@ -8,8 +8,8 @@ const CloserAgent = require('./closer');
  */
 class ChatbotAgent {
     constructor() {
-        if (!process.env.GEMINI_API_KEY) {
-            console.warn('[Chatbot] GEMINI_API_KEY missing. Chatbot AI disabled.');
+        if (!process.env.CEREBRAS_API_KEY) {
+            console.warn('[Chatbot] CEREBRAS_API_KEY missing. Chatbot AI disabled.');
         }
     }
 

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Settings, Save, Loader2, Info, CheckCircle } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 export default function SettingsV2() {
     const [settingsData, setSettingsData] = useState([]);
@@ -40,7 +39,7 @@ export default function SettingsV2() {
     }
 
     return (
-        <V2Shell>
+        <>
             <div className="p-8 space-y-8 max-w-4xl">
                 <div>
                     <h1 className="text-2xl font-black text-white flex items-center gap-3 tracking-tight">
@@ -100,6 +99,6 @@ export default function SettingsV2() {
                     </div>
                 )}
             </div>
-        </V2Shell>
+        </>
     );
 }

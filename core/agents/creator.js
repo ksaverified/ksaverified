@@ -6,9 +6,7 @@ const { generateText } = require('../services/ai');
  */
 class CreatorAgent {
     constructor() {
-        if (!process.env.GEMINI_API_KEY) {
-            throw new Error('GEMINI_API_KEY is not defined in environment variables.');
-        }
+        // AI service handles platform-specific keys
     }
 
     /**
@@ -91,11 +89,11 @@ class CreatorAgent {
             let htmlContent = await generateText(prompt, { 
                 temperature: 0.7, 
                 maxOutputTokens: 16384, 
-                model: 'gemini-2.5-pro' 
+                model: process.env.AI_MODEL_WEBSITE || 'google/gemini-2.0-flash-lite:free' 
             });
 
             if (!htmlContent) {
-                throw new Error('Gemini returned an empty response.');
+                throw new Error('AI Service returned an empty response.');
             }
 
             // Clean up markdown block if the model included it despite the instruction
@@ -105,13 +103,12 @@ class CreatorAgent {
                 htmlContent = htmlContent.replace(/^```\n/, '').replace(/\n```$/, '');
             }
 
-            console.log(`[Creator] Website successfully generated for ${business.name} using Gemini.`);
+            console.log(`[Creator] Website successfully generated for ${business.name}.`);
             return htmlContent.trim();
         } catch (error) {
-
             const errorMsg = error.message;
-            console.error(`[Creator] Error generating website via Gemini: ${errorMsg}`);
-            throw new Error(`Gemini Error: ${errorMsg}`);
+            console.error(`[Creator] Error generating website: ${errorMsg}`);
+            throw new Error(`AI Generation Error: ${errorMsg}`);
         }
     }
 }

@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, RefreshCw } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 export default function AdminAssistantV2() {
     const [messages, setMessages] = useState([
@@ -50,7 +49,7 @@ export default function AdminAssistantV2() {
     };
 
     return (
-        <V2Shell>
+        <>
             <div className="flex flex-col h-[calc(100vh-theme(spacing.16))] max-w-5xl mx-auto p-6 md:p-10 relative">
                 
                 {/* Header */}
@@ -132,6 +131,6 @@ export default function AdminAssistantV2() {
                     </div>
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 }

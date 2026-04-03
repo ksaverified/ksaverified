@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useSearchParams } from 'react-router-dom';
 import { MessageCircle, Search, User, Hash, Globe2, Send, Loader2, Sparkles } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 function TranslationTooltip({ text }) {
     const [open, setOpen] = useState(false);
@@ -121,7 +120,7 @@ export default function WhatsAppV2() {
     const fmt = (d) => new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     return (
-        <V2Shell>
+        <>
             <div className="flex h-screen overflow-hidden">
                 {/* Thread list */}
                 <div className="w-80 flex-shrink-0 border-r border-white/5 bg-obsidian-surface-low/30 backdrop-blur-md flex flex-col relative z-20">
@@ -277,6 +276,6 @@ export default function WhatsAppV2() {
                     )}
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 }

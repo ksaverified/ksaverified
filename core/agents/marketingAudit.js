@@ -1,5 +1,4 @@
 const axios = require('axios');
-const gemini = require('../services/gemini');
 
 /**
  * Marketing Audit Agent

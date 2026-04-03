@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Terminal, Copy, Check, RefreshCw, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import V2Shell from './V2Shell';
 
 const AGENTS = ['orchestrator', 'scout', 'creator', 'retoucher', 'publisher', 'closer', 'chatbot', 'biller', 'auditor'];
 
@@ -76,7 +75,7 @@ export default function LogsV2() {
     };
 
     return (
-        <V2Shell>
+        <>
             <div className="p-8 space-y-8 max-w-7xl mx-auto h-full min-h-screen">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -199,6 +198,6 @@ export default function LogsV2() {
                     </div>
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 }

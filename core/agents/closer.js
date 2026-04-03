@@ -1,5 +1,5 @@
 const axios = require('axios');
-const gemini = require('../services/gemini');
+const { generateText } = require('../services/ai');
 
 /**
  * Closer Agent
@@ -19,7 +19,6 @@ class CloserAgent {
         });
 
         console.log(`[Closer] Using Local WhatsApp service at ${this.baseURL}`);
-        this.gemini = gemini;
         this.db = null; // Will be set by Orchestrator
     }
 
@@ -631,7 +630,32 @@ Please send a screenshot of your payment receipt here to finalize your activatio
         We are offering flexible plans starting at 19 SAR (Basic/Gaps) up to 49 SAR (Pro with Website) and 99 SAR (Max/SEO).
         They must pay via STC Pay to ${stcPay} and send a screenshot.`;
 
-        let messageBody = await this.gemini.generateSalesMessage(lead, context);
+        const prompt = `
+You are "KSA Verified Sales Optimizer", a top-tier digital marketing expert in Saudi Arabia.
+Your goal is to close the first paying customer for a new SaaS that builds premium AI websites for local businesses.
+
+CUSTOMER INFO:
+Name: ${lead.name}
+Phone: ${lead.phone}
+Website Preview: ${lead.vercel_url || 'Already built for them'}
+Status: ${lead.status}
+
+CONTEXT:
+${context}
+
+RULES:
+1. Be extremely polite, professional, and slightly enthusiastic.
+2. Use a mix of English and Arabic (Bilingual) as is common in KSA business.
+3. Highlight the specific value: A mobile-ready, professional website is essential for growing their business in Saudi Arabia.
+4. Urgency: Mention the special "First Month for 19 SAR" offer which is about to expire.
+5. Action: Ask them to reply "YES" or send a screenshot of their STC Pay transfer to +966 50 791 3514.
+6. Keep the message concise for WhatsApp (max 150 words total).
+7. Do not use placeholders like [Your Name]. Sign off as "KSA Verified Team".
+
+Write the response directly.
+        `;
+
+        let messageBody = await generateText(prompt, { temperature: 0.7 });
 
         if (!messageBody) {
             console.warn(`[Closer] Gemini failed for Urgency Close. Using fallback template for ${cleanedName}.`);

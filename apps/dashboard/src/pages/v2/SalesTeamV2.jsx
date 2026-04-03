@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import V2Shell from './V2Shell';
 import { 
     Users, Wallet, History, Search, 
     Filter, ArrowUpRight, CheckCircle2, 
@@ -92,7 +91,7 @@ const SalesTeamV2 = () => {
     };
 
     return (
-        <V2Shell>
+        <>
             {/* Header */}
             <header className="sticky top-0 z-50 border-b border-white/5 bg-obsidian-bg/80 backdrop-blur-2xl flex-shrink-0">
                 <div className="px-6 py-4 flex items-center justify-between">
@@ -331,7 +330,7 @@ const SalesTeamV2 = () => {
                     )}
                 </AnimatePresence>
             </main>
-        </V2Shell>
+        </>
     );
 };
 

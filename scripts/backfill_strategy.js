@@ -1,5 +1,6 @@
-const { createClient } = require('@supabase/supabase-client');
-require('dotenv').config({ path: 'apps/dashboard/.env' });
+const { createClient } = require('@supabase/supabase-js');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../apps/dashboard/.env') });
 
 const supabase = createClient(
     process.env.VITE_SUPABASE_URL,

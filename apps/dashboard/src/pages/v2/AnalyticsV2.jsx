@@ -1,7 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { BarChart2, Activity, CheckCircle, XCircle, RefreshCw, Zap, Database, AlertTriangle, TrendingUp } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 const AGENT_ORDER = ['orchestrator', 'scout', 'creator', 'publisher', 'closer', 'chatbot', 'biller'];
 const AGENT_ICONS = { orchestrator: '🧠', scout: '🔍', creator: '🎨', publisher: '🚀', closer: '🤝', chatbot: '💬', biller: '💳' };
@@ -42,7 +41,7 @@ export default function AnalyticsV2() {
     ];
 
     return (
-        <V2Shell>
+        <>
             <div className="p-6 space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -148,6 +147,6 @@ export default function AnalyticsV2() {
                     </div>
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 }

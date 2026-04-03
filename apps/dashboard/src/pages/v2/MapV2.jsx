@@ -6,7 +6,6 @@ import {
     ExternalLink, Filter, Eye, MousePointer2, Map, Loader2,
     Tag, CalendarClock, Play, Pause, RotateCcw, ChevronRight,
 } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
@@ -214,7 +213,7 @@ export default function MapV2() {
 
     if (!GOOGLE_MAPS_API_KEY) {
         return (
-            <V2Shell>
+            <>
                 <div className="p-6 flex items-center justify-center h-96">
                     <div className="text-center text-zinc-500">
                         <Map className="w-10 h-10 mx-auto mb-3 opacity-40" />
@@ -222,12 +221,12 @@ export default function MapV2() {
                         <p className="text-sm mt-1">Add VITE_GOOGLE_PLACES_API_KEY to .env</p>
                     </div>
                 </div>
-            </V2Shell>
+            </>
         );
     }
 
     return (
-        <V2Shell>
+        <>
             <div className="p-8 h-screen flex flex-col gap-4 overflow-hidden">
 
                 {/* ── Header ── */}
@@ -500,6 +499,6 @@ export default function MapV2() {
                     )}
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 }

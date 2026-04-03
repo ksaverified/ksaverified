@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../../components/AuthContext';
 import { supabase } from '../../lib/supabase';
 import {
@@ -22,7 +22,7 @@ const NAV_ITEMS = [
     { path: '/admin-v2/settings', label: 'Settings', icon: Settings },
 ];
 
-export default function V2Shell({ children }) {
+export default function V2Shell() {
     const navigate = useNavigate();
     const location = useLocation();
     const { user } = useAuth();
@@ -94,7 +94,7 @@ export default function V2Shell({ children }) {
 
             {/* ── MAIN CONTENT ────────────────────────────────────────── */}
             <main className="flex-1 min-w-0 overflow-y-auto">
-                {children}
+                <Outlet />
             </main>
         </div>
     );

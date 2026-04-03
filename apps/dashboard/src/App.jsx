@@ -25,6 +25,14 @@ import AnalyticsV2 from './pages/v2/AnalyticsV2';
 import MapV2 from './pages/v2/MapV2';
 import LogsV2 from './pages/v2/LogsV2';
 import SettingsV2 from './pages/v2/SettingsV2';
+import LeadDetailV2 from './pages/v2/LeadDetailV2';
+
+// V3 Strategy Pages (Map & Gap)
+import V3Shell from './pages/v3/V3Shell';
+import GapMapOperator from './pages/v3/GapMapOperator';
+import LeadScorecardList from './pages/v3/LeadScorecardList';
+import AgentFleet from './pages/v3/AgentFleet';
+import EcosystemMetrics from './pages/v3/EcosystemMetrics';
 
 function App() {
   return (
@@ -38,9 +46,20 @@ function App() {
           <Route path="/solutions" element={<LandingPage />} />
           <Route path="/manage" element={<Login />} />
 
-          {/* Protected Admin Routes (Now Defaults to MapGap V3) */}
-          {/* NEW: Unified Strategy Hub (V2) */}
-          <Route path="/admin" element={<Navigate to="/admin-v2" replace />} />
+          {/* Protected Admin Routes (Defaults to V3) */}
+          <Route path="/admin" element={<Navigate to="/admin-v3" replace />} />
+          
+          {/* V3 Map Strategy & Scores */}
+          <Route path="/admin-v3" element={
+            <AuthGuard allowedRoles={['admin']}>
+              <V3Shell />
+            </AuthGuard>
+          }>
+            <Route index element={<GapMapOperator />} />
+            <Route path="scores" element={<LeadScorecardList />} />
+            <Route path="fleet" element={<AgentFleet />} />
+            <Route path="ecosystem" element={<EcosystemMetrics />} />
+          </Route>
           
           <Route path="/admin-v2" element={
             <AuthGuard allowedRoles={['admin']}>
@@ -49,6 +68,7 @@ function App() {
           }>
             <Route index element={<UnifiedStrategyHub />} />
             <Route path="pipeline" element={<PipelineV2 />} />
+            <Route path="pipeline/:placeId" element={<LeadDetailV2 />} />
             <Route path="agents" element={<AgentManager />} />
             <Route path="websites" element={<WebsitesV2 />} />
             <Route path="whatsapp" element={<WhatsAppV2 />} />

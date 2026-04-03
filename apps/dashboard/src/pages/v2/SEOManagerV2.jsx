@@ -5,7 +5,6 @@ import {
     ExternalLink, Edit3, CheckCircle, AlertCircle, 
     BarChart, Activity, RefreshCw, Eye, CloudLightning
 } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 export default function SEOManagerV2() {
     const navigate = useNavigate();
@@ -88,7 +87,7 @@ export default function SEOManagerV2() {
         });
 
     return (
-        <V2Shell>
+        <>
             <div className="p-6 space-y-6">
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -286,6 +285,6 @@ export default function SEOManagerV2() {
                     </div>
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 }

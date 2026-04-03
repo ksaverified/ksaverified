@@ -93,6 +93,12 @@ class DatabaseService {
             if (lead.website) upsertPayload.website = lead.website;
             if (lead.openingHours) upsertPayload.opening_hours = lead.openingHours;
 
+            if (!lead.name) {
+                const errMsg = `Cannot upsert lead ${lead.placeId}: Missing business name.`;
+                console.warn(`[DB] ${errMsg}`);
+                return null; // Skip instead of throwing to prevent pipeline crash
+            }
+
             const { data, error } = await this.supabase
                 .from('leads')
                 .upsert(upsertPayload, { onConflict: 'place_id' })
@@ -136,8 +142,8 @@ class DatabaseService {
             const { data, error } = await this.supabase
                 .from('leads')
                 .select('place_id, name, phone, address, lat, lng, photos, types, vercel_url, status, retry_count, updated_at')
-                .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched'])
-                .or('retry_count.lt.3,retry_count.is.null')
+                .in('status', ['interest_confirmed', 'strategic_seed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched'])
+                .or('retry_count.lt.3,retry_count.is.null,status.eq.strategic_seed')
                 .order('status', { ascending: true }) // 'interest_confirmed' comes before 'scouted' alphabetically/logically
                 .order('updated_at', { ascending: true })
                 .limit(1)

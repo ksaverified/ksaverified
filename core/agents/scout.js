@@ -8,11 +8,10 @@ const axios = require('axios');
 class ScoutAgent {
   constructor() {
     this.apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY;
-    if (!this.apiKey) {
-      throw new Error('GOOGLE_PLACES_API_KEY is not defined in environment variables.');
-    }
     this.baseURL = 'https://places.googleapis.com/v1/places:searchText';
     this.detailsURL = 'https://places.googleapis.com/v1/places';
+    this.legacyURL = 'https://maps.googleapis.com/maps/api/place/textsearch/json';
+    this.legacyDetailsURL = 'https://maps.googleapis.com/maps/api/place/details/json';
     this.referer = 'https://ksaverified.com';
   }
 
@@ -350,16 +349,44 @@ class ScoutAgent {
     try {
       const fieldMask = 'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.websiteUri,places.internationalPhoneNumber,places.reviews,places.photos,places.regularOpeningHours,places.rating,places.userRatingCount';
       
-      const response = await axios.post(this.baseURL, {
-        textQuery: query
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': this.apiKey,
-          'X-Goog-FieldMask': fieldMask,
-          'Referer': this.referer
+      let response;
+      try {
+        response = await axios.post(this.baseURL, {
+          textQuery: query
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': this.apiKey,
+            'X-Goog-FieldMask': fieldMask,
+            'Referer': this.referer
+          }
+        });
+      } catch (err) {
+        if (err.response && (err.response.status === 403 || err.response.status === 404)) {
+          console.warn(`[Scout] Google APIs blocked or restricted (403). Trying SEED & YELP...`);
+          
+          // 1. Try Seed Mode (Internal Strategic Prospects)
+          const seedLeads = await this.getSeedLeads();
+          if (seedLeads && seedLeads.length > 0) {
+            console.log(`[Scout] Found ${seedLeads.length} strategic prospects in SEED MODE.`);
+            return seedLeads;
+          }
+
+          // 2. Try Yelp (If Key exists)
+          if (process.env.YELP_API_KEY) {
+            const yelpLeads = await this.findLeadsYelp(query);
+            if (yelpLeads && yelpLeads.length > 0) return yelpLeads;
+          }
+
+          // 3. Fallback to Bing
+          const bingLeads = await this.findLeadsBing(query);
+          if (bingLeads && bingLeads.length > 0) return bingLeads;
+          
+          throw err;
+        } else {
+          throw err;
         }
-      });
+      }
 
       const places = response.data.places || [];
       console.log(`[Scout] Found ${places.length} potential leads. Processing with Map Gap analysis...`);
@@ -449,7 +476,11 @@ class ScoutAgent {
 
       return validLeads;
     } catch (error) {
-      console.error(`[Scout] Error during lead generation: ${error.message}`);
+      if (error.response) {
+        console.error(`[Scout] Error during lead generation [403]:`, error.response.data);
+      } else {
+        console.error(`[Scout] Error during lead generation: ${error.message}`);
+      }
       throw error;
     }
   }
@@ -538,6 +569,209 @@ KSA Verified Team`,
 مع أطيب التحيات،
 فريق KSA Verified`
     };
+  }
+
+  /**
+   * Get Legacy Place Details to match v1 structure
+   */
+  async getPlaceDetailsLegacy(placeId) {
+    try {
+      const response = await axios.get(this.legacyDetailsURL, {
+        params: {
+          place_id: placeId,
+          fields: 'place_id,name,formatted_address,geometry,website,international_phone_number,reviews,photos,opening_hours,rating,user_ratings_total,type',
+          key: this.apiKey
+        }
+      });
+
+      if (response.data.status === 'OK') {
+        const p = response.data.result;
+        // Map to v1 structure expected by scouts existing logic
+        return {
+          id: p.place_id,
+          displayName: { text: p.name },
+          formattedAddress: p.formatted_address,
+          location: {
+            latitude: p.geometry?.location?.lat,
+            longitude: p.geometry?.location?.lng
+          },
+          websiteUri: p.website,
+          internationalPhoneNumber: p.international_phone_number,
+          reviews: p.reviews?.map(r => ({
+            text: { text: r.text },
+            rating: r.rating,
+            publishTime: r.time * 1000
+          })),
+          photos: p.photos?.map(ph => ({
+            name: `places/${p.place_id}/photos/${ph.photo_reference}`
+          })),
+          regularOpeningHours: p.opening_hours ? {
+            weekdayDescriptions: p.opening_hours.weekday_text
+          } : null,
+          rating: p.rating,
+          userRatingCount: p.user_ratings_total,
+          types: p.types || []
+        };
+      }
+      return null;
+    } catch (err) {
+      console.error(`[Scout] Legacy Details Error for ${placeId}:`, err.message);
+      return null;
+    }
+  }
+
+  /**
+   * Search for businesses using Bing (Zero-API Fallback)
+   */
+  async findLeadsBing(query) {
+    try {
+      console.log(`[Scout-Bing] Searching for leads via Bing: "${query}"...`);
+      const searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query + ' Riyadh')}`;
+      const response = await axios.get(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        timeout: 8000
+      });
+
+      const html = response.data;
+      const discoveredLeads = [];
+      
+      // Much more robust parsing using broader regex
+      // Titles are usually inside h2 > a
+      const resultBlocks = html.split('<ol id="b_results"').pop().split('<li class="b_algo"');
+      
+      for (let i = 1; i < resultBlocks.length; i++) {
+        const block = resultBlocks[i];
+        // Match <h2><a ...>Business Name</a></h2>
+        const titleMatch = block.match(/<h2.*?><a.*?>(.*?)<\/a>/i);
+        // Match <cite>www.website.com</cite> or similar
+        const citeMatch = block.match(/<cite>(.*?)<\/cite>/i);
+        
+        if (titleMatch && titleMatch[1]) {
+          const rawName = titleMatch[1].replace(/<.*?>/g, '').trim();
+          let website = citeMatch ? citeMatch[1].replace(/<.*?>/g, '').trim() : null;
+          
+          if (rawName && discoveredLeads.length < 10) {
+            // Clean up the URL if it is in cite format (e.g., "www.riyadhflorist.com › shop")
+            if (website) website = website.split(' ')[0].split('›')[0].trim();
+            if (website && !website.startsWith('http')) website = `https://${website}`;
+
+            const lead = {
+              placeId: `bing-${Buffer.from(rawName).toString('base64').substring(0, 12)}`,
+              name: rawName,
+              displayName: { text: rawName },
+              formattedAddress: 'Riyadh, Saudi Arabia',
+              websiteUri: website,
+              phone: null,
+              types: [query.split(' ')[0]],
+              rating: 0,
+              userRatingCount: 0,
+              discovery_source: 'bing_fallback'
+            };
+
+            // Avoid common social media aggregator noise
+            const isNoisy = website && /instagram|facebook|twitter|linkedin|tiktok|yelp|tripadvisor|foursquare/i.test(website);
+            if (!isNoisy && !discoveredLeads.some(l => l.displayName.text === rawName)) {
+              discoveredLeads.push(lead);
+            }
+          }
+        }
+      }
+
+      console.log(`[Scout-Bing] Found ${discoveredLeads.length} valid business candidates via Bing.`);
+      
+      // Map these raw candidates into processed leads using the existing analyze/map logic
+      const processedLeads = await Promise.all(discoveredLeads.map(async (lead) => {
+        const { gaps, scores } = await this.analyzeMapGaps(lead);
+        return {
+          ...lead,
+          mapGapAnalysis: { gaps, scores, priorityLevel: 'warm' },
+          status: 'scouted',
+          status_details: 'Discovered via Bing'
+        };
+      }));
+
+      return processedLeads;
+    } catch (err) {
+      console.error(`[Scout-Bing] Fallback failed:`, err.message);
+      return [];
+    }
+  }
+
+  /**
+   * Get Strategic Seed Leads from database
+   */
+  async getSeedLeads() {
+    try {
+      const { data, error } = await axios.get(`${process.env.SUPABASE_URL}/rest/v1/leads`, {
+        params: {
+          place_id: 'like.seed_%',
+          select: '*'
+        },
+        headers: {
+          'apikey': process.env.SUPABASE_SERVICE_ROLE_KEY,
+          'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`
+        }
+      });
+
+      if (error) throw error;
+      return (data || []).map(l => ({
+        placeId: l.place_id,
+        name: l.name,
+        displayName: { text: l.name },
+        formattedAddress: l.address,
+        websiteUri: l.website,
+        phone: l.phone,
+        types: l.types || [],
+        mapGapAnalysis: l.map_gap_analysis,
+        status: l.status,
+        from_seed: true
+      }));
+    } catch (err) {
+      console.error(`[Scout-Seed] Failed to fetch seeds:`, err.message);
+      return [];
+    }
+  }
+
+  /**
+   * Search for businesses using Yelp Fusion
+   */
+  async findLeadsYelp(query) {
+    const key = process.env.YELP_API_KEY;
+    if (!key) return [];
+
+    try {
+      console.log(`[Scout-Yelp] Searching for leads via Yelp: "${query}"...`);
+      const response = await axios.get('https://api.yelp.com/v3/businesses/search', {
+        params: {
+          term: query,
+          location: 'Riyadh',
+          limit: 10
+        },
+        headers: {
+          'Authorization': `Bearer ${key}`
+        }
+      });
+
+      const businesses = response.data.businesses || [];
+      return businesses.map(b => ({
+        placeId: `yelp-${b.id}`,
+        name: b.name,
+        displayName: { text: b.name },
+        formattedAddress: b.location?.display_address?.join(', '),
+        phone: b.display_phone || b.phone,
+        websiteUri: b.url,
+        types: b.categories?.map(c => c.title) || [],
+        rating: b.rating,
+        userRatingCount: b.review_count,
+        status: 'scouted',
+        status_details: 'Discovered via Yelp'
+      }));
+    } catch (err) {
+      console.error(`[Scout-Yelp] Failed to fetch Yelp leads:`, err.message);
+      return [];
+    }
   }
 }
 

@@ -100,7 +100,7 @@ class Orchestrator {
 
     try {
       // Step 0: Check Subscriptions
-      await this.biller.checkSubscriptions();
+      await this.biller.checkExpiringSubscriptions();
 
       // Step 0.1: Google Compliance Notifications (48-hour rule)
       await this.runNotificationCycle();
@@ -149,7 +149,7 @@ class Orchestrator {
           const { data: priorityLead } = await this.db.supabase
             .from('leads')
             .select('*')
-            .in('status', ['interest_confirmed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched', 'published'])
+            .in('status', ['interest_confirmed', 'strategic_seed', 'scouted', 'warming_sent', 'warmed', 'created', 'retouched', 'published'])
             .limit(1)
             .single();
             
@@ -201,25 +201,41 @@ class Orchestrator {
               activeDbLead.status = 'scouted';
           }
 
-          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed') {
+          if (activeDbLead.status === 'interest_confirmed' || activeDbLead.status === 'strategic_seed' || activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed') {
             await this.db.addLog('creator', 'generation_started', activeLead.place_id, { name: activeLead.name }, 'info');
             currentHtml = await this.creator.createWebsite(activeLead, this.db);
             
             if (!currentHtml || currentHtml.length < 500) {
-                 throw new Error("Generated HTML is empty or dangerously short");
+                 const errorMsg = `AI Generation Error: HTML response is empty or too short (${currentHtml?.length || 0} chars).`;
+                 console.error(`[Orchestrator] 🛑 ${errorMsg} Aborting for ${activeLead.name}.`);
+                 throw new Error(errorMsg);
             }
             
             await this.db.updateLeadStatus(activeLead.place_id, 'created', { website_html: currentHtml });
             activeDbLead.status = 'created';
           }
 
-          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created') {
+          if (activeDbLead.status === 'interest_confirmed' || activeDbLead.status === 'strategic_seed' || activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created') {
             await this.db.addLog('retoucher', 'audit_started', activeLead.place_id, { name: activeLead.name }, 'info');
-            currentHtml = await this.retoucher.retouchWebsite(currentHtml, activeLead);
+            const retouchedHtml = await this.retoucher.retouchWebsite(currentHtml, activeLead);
+            
+            if (!retouchedHtml || retouchedHtml.length < 500) {
+                 const errorMsg = `Retouching Error: HTML response is empty or too short (${retouchedHtml?.length || 0} chars).`;
+                 console.error(`[Orchestrator] 🛑 ${errorMsg} Aborting for ${activeLead.name}.`);
+                 throw new Error(errorMsg);
+            }
+            
+            currentHtml = retouchedHtml;
             await this.db.updateLeadStatus(activeLead.place_id, 'retouched', { website_html: currentHtml });
           }
           
-          if (activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
+          if (activeDbLead.status === 'interest_confirmed' || activeDbLead.status === 'strategic_seed' || activeDbLead.status === 'scouted' || activeDbLead.status === 'warmed' || activeDbLead.status === 'created' || activeDbLead.status === 'retouched') {
+            // CRITICAL: Double check we have HTML content before marking as published
+            if (!currentHtml || currentHtml.length < 500) {
+               console.error(`[Orchestrator] 🛑 CRITICAL: HTML content for ${activeLead.name} is missing or too short (${currentHtml?.length || 0} chars). Aborting publication.`);
+               throw new Error("Publication aborted: HTML content is missing or truncated. Resetting lead state.");
+            }
+
             await this.db.addLog('publisher', 'deployment_started', activeLead.placeId, {}, 'info');
             vercelUrl = await this.publisher.handlePublish(activeLead.placeId, activeLead.slug);
             await this.db.updateLeadStatus(activeLead.placeId, 'published', { vercel_url: vercelUrl, indexing_status: 'pending' });

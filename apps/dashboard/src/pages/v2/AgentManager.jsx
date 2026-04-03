@@ -5,7 +5,6 @@ import {
     Play, Pause, RefreshCw, AlertCircle, CheckCircle2,
     Database, Activity, Zap
 } from 'lucide-react';
-import V2Shell from './V2Shell';
 
 const AGENTS = [
     { id: 'scout', name: 'Scout AI', desc: 'Google Maps Niche Sourcing', icon: Search, color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
@@ -69,7 +68,7 @@ export default function AgentManager() {
     }
 
     return (
-        <V2Shell>
+        <>
             <div className="p-8 space-y-8 animate-in fade-in duration-700">
                 {/* Header */}
                 <div className="flex items-center justify-between">
@@ -197,7 +196,7 @@ export default function AgentManager() {
                     </div>
                 </div>
             </div>
-        </V2Shell>
+        </>
     );
 }
 
