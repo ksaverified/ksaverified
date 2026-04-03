@@ -1,13 +1,64 @@
 FROM node:20-slim
 
+# Install dependencies for Puppeteer (used by some agents)
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libc6 \
+    libcairo2 \
+    libcups2 \
+    libdbus-1-3 \
+    libexpat1 \
+    libfontconfig1 \
+    libgbm1 \
+    libgcc1 \
+    libgconf-2-4 \
+    libgdk-pixbuf2.0-0 \
+    libglib2.0-0 \
+    libgtk-3-0 \
+    libnspr4 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libstdc++6 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    lsb-release \
+    wget \
+    xdg-utils \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files first for better caching
 COPY package*.json ./
-RUN npm install
+RUN npm install --production
 
-# Copy application source code
-COPY . .
+# Copy core and orchestrator code
+COPY core/ ./core/
+COPY api/ ./api/
+COPY core/orchestrator.js ./
 
-# Run the single-cycle script for Cloud Run Jobs
-CMD ["node", "core/run_cloud_job.js"]
+# Set environment variables (should be overridden in Cloud Run)
+ENV NODE_ENV=production
+
+# The orchestrator runs in a loop, not as a typical HTTP server, 
+# but Cloud Run services usually expect an HTTP port.
+# We'll expose 8080 just in case we add a health check endpoint later.
+EXPOSE 8080
+
+CMD ["node", "orchestrator.js"]

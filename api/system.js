@@ -1,5 +1,5 @@
 const DatabaseService = require('../core/services/db');
-const Orchestrator = require('../core/orchestrator');
+const { generateText } = require('../core/services/ai');
 
 module.exports = async function handler(req, res) {
     const { action } = req.query;
@@ -38,6 +38,10 @@ async function handleNotificationWorker(db, req, res) {
         if (error) throw error;
 
         for (const log of logs) {
+            if (!log.leads || !log.leads.phone) {
+                console.warn(`[Worker] Skipping log ${log.id} - Missing lead info.`);
+                continue;
+            }
             console.log(`[Worker] Notifying ${log.leads.phone} about ${log.change_type}`);
             
             // In production, use your WhatsApp service to notify:
@@ -60,18 +64,12 @@ async function handleTranslate(req, res) {
     const { text, targetLang } = req.body;
     if (!text || !targetLang) return res.status(400).json({ error: 'Missing text or targetLang' });
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: 'GEMINI_API_KEY not configured' });
-
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `Translate the following text to ${targetLang}. Return ONLY the translated text. Do not add quotes, explanations, or conversational filler.
     Text: "${text}"`;
 
-    const result = await model.generateContent(prompt);
-    const translatedText = result.response.text().trim();
+    const translatedText = await generateText(prompt, { temperature: 0.1 });
+    if (!translatedText) return res.status(500).json({ error: 'Translation failed' });
+    
     return res.status(200).json({ translatedText });
 }
 
