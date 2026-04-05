@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useSystemStatus } from '../../hooks/useSystemStatus';
-import UnifiedNavHub from '../../components/management/UnifiedNavHub';
-import LeadsMap from '../../components/management/LeadsMap';
+import { supabase } from '../lib/supabase';
+import { useSystemStatus } from '../hooks/useSystemStatus';
+import UnifiedNavHub from '../components/management/UnifiedNavHub';
+import LeadsMap from '../components/management/LeadsMap';
 import { 
     Activity, 
     Cpu, 
