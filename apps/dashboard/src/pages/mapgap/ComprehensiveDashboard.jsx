@@ -482,8 +482,8 @@ export default function ComprehensiveDashboard() {
                                                 <p className="text-sm text-zinc-600 text-center py-4">No leads with this gap</p>
                                             )}
                                             {leadsWithGap.length > 3 && (
-                                                <button onClick={() => setSelectedGapFilter(key)} className="w-full py-2 text-xs font-bold text-amber-500 hover:text-amber-400">
-                                                    View all {leadsWithGap.length} leads →
+                                                <button onClick={() => navigate(`/boss/analysis?gap=${key}`)} className="w-full py-2 text-xs font-bold text-amber-500 hover:text-amber-400 flex items-center justify-center gap-1">
+                                                    View all {leadsWithGap.length} leads <ArrowRight className="w-3 h-3" />
                                                 </button>
                                             )}
                                         </div>

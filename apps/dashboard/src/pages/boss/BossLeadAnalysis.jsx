@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import {
     Target, AlertTriangle, ExternalLink, Globe, Star, Image, Clock, MessageSquare, MapPin, Phone, Zap, TrendingUp
@@ -33,8 +33,11 @@ const PIPELINE_STAGES = [
 
 export default function BossLeadAnalysis() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const gapFilter = searchParams.get('gap');
 
     const fetchData = useCallback(async () => {
         try {
@@ -68,6 +71,10 @@ export default function BossLeadAnalysis() {
         fetchData();
     }, [fetchData]);
 
+    const filteredLeads = gapFilter 
+        ? leads.filter(l => (l.map_gap_analysis?.gaps || []).some(g => g.type === gapFilter))
+        : leads;
+
     return (
         <div className="min-h-screen bg-obsidian-bg text-white font-['Inter',sans-serif] p-6 animate-in fade-in duration-700">
             <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl relative flex flex-col min-h-[85vh]">
@@ -98,10 +105,10 @@ export default function BossLeadAnalysis() {
                         <tbody className="divide-y divide-zinc-800/30">
                             {loading ? (
                                 <tr><td colSpan={6} className="px-4 py-12 text-center text-zinc-500 font-mono text-sm">Loading 500 signals...</td></tr>
-                            ) : leads.length === 0 ? (
+                            ) : filteredLeads.length === 0 ? (
                                 <tr><td colSpan={6} className="px-4 py-12 text-center text-zinc-500 font-mono text-sm">No leads match filters</td></tr>
                             ) : (
-                                leads.map(lead => {
+                                filteredLeads.map(lead => {
                                     const priority = lead.priority || lead.map_gap_analysis?.priorityLevel || 'warm';
                                     const score = lead.conversion_score || lead.map_gap_analysis?.scores?.conversionScore || 0;
                                     const gaps = lead.map_gap_analysis?.gaps || [];

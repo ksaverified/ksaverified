@@ -158,7 +158,7 @@ export default function BossDashboard() {
                 </div>
 
                 {/* Memory & DB Status */}
-                <div className="p-6 rounded-3xl bg-zinc-900/40 border border-zinc-800/50 backdrop-blur-xl group hover:border-purple-500/30 transition-colors">
+                <div className="p-6 rounded-3xl bg-zinc-900/40 border border-zinc-800/50 backdrop-blur-xl group hover:border-purple-500/30 transition-colors flex flex-col">
                     <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
                             <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400">
@@ -169,17 +169,17 @@ export default function BossDashboard() {
                         <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 h-full">
+                    <div className="grid grid-cols-2 gap-4 flex-1">
                         <div className="p-4 rounded-2xl bg-black/20 border border-white/5 flex flex-col justify-between">
                             <span className="text-[10px] text-zinc-500 uppercase font-black">Knowledge Base</span>
-                            <div>
+                            <div className="mt-2">
                                 <p className="text-2xl font-black text-white">{status?.memory?.totalNotes || '0'}</p>
                                 <p className="text-[10px] text-purple-400 font-bold">Nodes Verified</p>
                             </div>
                         </div>
                         <div className="p-4 rounded-2xl bg-black/20 border border-white/5 flex flex-col justify-between">
                             <span className="text-[10px] text-zinc-500 uppercase font-black">Lead Signal</span>
-                            <div>
+                            <div className="mt-2">
                                 <p className="text-2xl font-black text-white">{leads.length || '0'}</p>
                                 <p className="text-[10px] text-emerald-400 font-bold">Qualified Signals</p>
                             </div>

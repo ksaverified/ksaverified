@@ -136,15 +136,14 @@ const Layout = () => {
                     ))}
                 </nav>
 
-                {/* Bottom actions */}
                 <div className="px-3 pb-4 pt-2 border-t border-zinc-800/80 space-y-3">
                     <button
                         onClick={handleTrigger}
                         disabled={triggering}
-                        className={`w-full py-2.5 px-4 ${triggering ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-blue-500'} text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20`}
+                        className={`w-full py-2.5 px-4 ${triggering ? 'bg-primary/40 cursor-not-allowed' : 'bg-primary hover:bg-blue-500'} text-white text-[13px] font-bold uppercase tracking-wide rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20`}
                     >
                         <Zap className={`h-4 w-4 fill-current ${triggering ? 'animate-pulse' : ''}`} />
-                        {triggering ? 'Running...' : 'Trigger Pipeline'}
+                        {triggering ? 'Status Changing...' : 'Start / Stop Platform'}
                     </button>
 
                     <div className="flex items-center gap-2.5 px-2 py-2 rounded-xl bg-zinc-900/50 border border-zinc-800">
