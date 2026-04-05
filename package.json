@@ -8,7 +8,7 @@
     "dev": "node --watch core/orchestrator.js",
     "build": "cd apps/dashboard && npm install && npm run build && cd ../client-dashboard && npm install && npm run build",
     "build:check": "npm run build",
-    "vercel-build": "export VITE_SUPABASE_URL=\"$SUPABASE_URL\" && export VITE_SUPABASE_ANON_KEY=\"$SUPABASE_ANON_KEY\" && npm run build && rm -rf public && mkdir public && cp -rv apps/dashboard/dist/* public/ && mkdir -p public/customers && cp -rv apps/client-dashboard/dist/* public/customers/",
+    "vercel-build": "export VITE_SUPABASE_URL=\"$SUPABASE_URL\" && export VITE_SUPABASE_ANON_KEY=\"$SUPABASE_ANON_KEY\" && export VITE_GOOGLE_MAPS_API_KEY=\"$GOOGLE_MAPS_API_KEY\" && npm run build && rm -rf public && mkdir public && cp -rv apps/dashboard/dist/* public/ && mkdir -p public/customers && cp -rv apps/client-dashboard/dist/* public/customers/",
     "local": "node core/orchestrator.js",
     "launch": "node scripts/launch.js"
   },
