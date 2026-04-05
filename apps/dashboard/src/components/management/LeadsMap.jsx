@@ -68,7 +68,7 @@ export default function LeadsMap({ leads, loading }) {
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-indigo-500"></div>
         </div>
       ) : (
-        <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''}>
+        <APIProvider apiKey={import.meta.env.VITE_GOOGLE_PLACES_API_KEY || ''}>
           <Map
             defaultCenter={mapCenter}
             defaultZoom={11}
