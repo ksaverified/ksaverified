@@ -70,6 +70,12 @@ async function handleRequestPassword(req, res) {
         
         const message = `Hello ${lead.name}!\n\nYour secure KSA Verified Customer Portal login code is: *${registrationData.pin}*\n\nPlease enter this code to sign in.\n\n---\nمرحباً ${lead.name}!\n\nرمز تسجيل الدخول الآمن الخاص بك لبوابة عملاء KSA Verified هو: *${registrationData.pin}*\n\nيرجى إدخال هذا الرمز لتسجيل الدخول.`;
         
+        // Mock for test client
+        if (formattedPhone === '966599999999') {
+            console.log(`[Portal] Test client detected. Skipping WhatsApp send. PIN is: ${registrationData.pin}`);
+            return res.status(200).json({ success: true, message: 'Login code set (Test Mode).' });
+        }
+
         try {
             const waRes = await axios.post(`${waUrl}/send`, { to: formattedPhone, message: message });
             console.log(`[Portal] WhatsApp Service response:`, waRes.data);

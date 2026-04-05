@@ -117,35 +117,39 @@ class CloserAgent {
         if (!formattedPhone) return 'skipped_invalid';
 
         // 0. Pre-flight check: Verify the website is working AND validated before pitching
+        // IMPORTANT: The is_validated check MUST be in its own try-catch separate from the
+        // DB lookup error handler. Otherwise a validation failure gets swallowed as a warning.
         let leadRecord = null;
         if (db) {
             try {
                 leadRecord = await db.getLeadByPhone(formattedPhone);
-                if (leadRecord && leadRecord.is_validated !== true) {
-                    console.error(`[Closer] HARD BLOCK: Lead ${businessName} (${formattedPhone}) is NOT validated. Pitch aborted.`);
-                    throw new Error(`Website quality assurance check failed. Lead is not marked as validated in database. Please review the site manually or run AuditorAgent.`);
-                }
-            } catch (err) {
-                console.warn(`[Closer] Database lookup for ${formattedPhone} failed: ${err.message}. Proceeding with caution.`);
+            } catch (dbErr) {
+                // Only catch genuine DB/network errors here
+                console.warn(`[Closer] DB lookup for ${formattedPhone} failed (network/DB error): ${dbErr.message}. Cannot confirm validation — aborting pitch.`);
+                throw new Error(`Pitch aborted: Could not confirm validation status due to DB error: ${dbErr.message}`);
+            }
+
+            // Validation check is OUTSIDE the DB try-catch so it can't be silently swallowed
+            if (leadRecord && leadRecord.is_validated !== true) {
+                console.error(`[Closer] 🛑 HARD BLOCK: Lead "${businessName}" is NOT validated (is_validated=${leadRecord.is_validated}). Pitch ABORTED.`);
+                throw new Error(`Pitch aborted: Site for "${businessName}" failed quality audit. Mark is_validated=true after manual review.`);
             }
         }
 
         if (vercelUrl) {
-            console.log(`[Closer] Performing pre-flight check on URL: ${vercelUrl}`);
+            console.log(`[Closer] Performing pre-flight HTTP check on URL: ${vercelUrl}`);
             try {
                 const response = await axios.get(vercelUrl, {
                     timeout: 20000,
                     maxRedirects: 5,
-                    validateStatus: (status) => status >= 200 && status < 300
+                    validateStatus: (status) => status >= 200 && status < 300 // Only 2xx = UP
                 });
-                console.log(`[Closer] Pre-flight check passed (status: ${response.status}). Site is up.`);
+                console.log(`[Closer] ✅ Pre-flight passed (status: ${response.status}). Site is live.`);
             } catch (err) {
-                const isConnectionError = err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === 'ECONNRESET';
-                if (isConnectionError) {
-                    console.error(`[Closer] CRITICAL: Pre-flight connection failure for ${vercelUrl}. Error: ${err.message}`);
-                    throw new Error(`Website at ${vercelUrl} is not working or unreachable. Pitch aborted to prevent sending broken links.`);
-                }
-                console.warn(`[Closer] Pre-flight check warning (non-fatal): ${err.message}. Proceeding with pitch.`);
+                // HTTP 404, 500, connection errors all throw here — all mean site is broken
+                const statusCode = err.response?.status;
+                console.error(`[Closer] 🛑 Pre-flight FAILED for ${vercelUrl}. Status: ${statusCode || err.code || err.message}`);
+                throw new Error(`Pitch aborted: Pre-flight check failed for ${vercelUrl} (status: ${statusCode || err.message}). Site is returning an error.`);
             }
         }
 

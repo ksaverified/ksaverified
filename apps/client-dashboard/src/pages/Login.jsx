@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../components/AuthContext';
 import { useLanguage } from '../components/LanguageContext';
 import { Navigate } from 'react-router-dom';
-import { Lock, Phone, MessageCircle, Languages, ArrowLeft, RotateCcw } from 'lucide-react';
+import { Lock, Phone, MessageCircle, Languages, ArrowLeft, RotateCcw, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Login() {

@@ -266,11 +266,13 @@ class Orchestrator {
           }
 
           if (activeDbLead.status !== 'pitched') {
-            // RELAXED BLOCK: In Promotion Mode, if it's already published, we can nudge/pitch even if validation flag is missing.
-            // But we should try to auto-validate it if it hasn't been done.
-            if (!activeDbLead.is_validated && !promotionMode) {
-              console.log(`[Orchestrator] 🛑 Skipping pitch for ${activeLead.name}. Status: Published but FAILED QUALITY AUDIT.`);
-              await this.db.addLog('orchestrator', 'pitch_aborted', activeLead.placeId, { reason: 'Failed quality audit' }, 'warning');
+            // HARD BLOCK: Never pitch a lead that has not passed the quality audit.
+            // Promotion mode is NOT an exception — a broken link in promotion mode is still a broken link.
+            if (!activeDbLead.is_validated) {
+              console.log(`[Orchestrator] 🛑 Skipping pitch for ${activeLead.name}. Site has NOT passed quality audit (is_validated=false). Reset to scouted or fix manually.`);
+              await this.db.addLog('orchestrator', 'pitch_aborted', activeLead.placeId, { reason: 'Failed quality audit — is_validated is false' }, 'warning');
+              // Mark with a high retry count so it falls out of the pending queue and doesn't loop
+              await this.db.incrementRetryCount(activeLead.placeId, 'Pitch aborted: site not validated');
               activeDbLead = await this.db.getPendingLead();
               continue;
             }
@@ -549,8 +551,8 @@ class Orchestrator {
         .from('leads')
         .select('*')
         .eq('is_certified', true)
+        .eq('is_validated', true)   // ← GUARD: never pitch unvalidated (potentially 404) sites
         .eq('status', 'published')
-        .not('vercel_url', 'is', null)
         .not('vercel_url', 'is', null)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
         .limit(5); // Throttle: max 5 per cycle
@@ -590,6 +592,7 @@ class Orchestrator {
         .select('*')
         .eq('status', 'pitched')
         .eq('is_certified', true)
+        .eq('is_validated', true)   // ← GUARD: don't nudge leads with broken sites
         .not('vercel_url', 'is', null)
         .lt('updated_at', fortyEightHoursAgo)
         .gt('updated_at', sevenDaysAgo)
@@ -628,6 +631,7 @@ class Orchestrator {
         .select('*')
         .eq('status', 'pitched')
         .eq('is_certified', true)
+        .eq('is_validated', true)   // ← GUARD: don't send promo for broken sites
         .not('vercel_url', 'is', null)
         .lt('updated_at', sevenDaysAgo)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
@@ -662,6 +666,7 @@ class Orchestrator {
         .from('leads')
         .select('*')
         .eq('status', 'interest_confirmed')
+        .eq('is_validated', true)   // ← GUARD: don't urgency-close leads with broken sites
         .not('vercel_url', 'is', null)
         .or(`last_retargeted_at.is.null,last_retargeted_at.lt.${antiSpamCutoff}`)
         .limit(5);

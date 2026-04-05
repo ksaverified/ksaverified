@@ -113,8 +113,10 @@ class AuditorAgent {
       
       findings.score = Math.max(0, 100 - penalty);
       
-      // Auto-validation threshold: 100/100
-      if (findings.score === 100) {
+      // Auto-validation threshold: 70/100
+      // Sites must pass the majority of checks, but minor cosmetic issues (1 duplicate image,
+      // missing H1) should not block pitching. True failures (broken images, 404) will score < 70.
+      if (findings.score >= 70) {
         findings.isValidated = true;
       }
 
