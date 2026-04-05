@@ -1,10 +1,6 @@
 const axios = require('axios');
-
-/**
- * Centralized AI Service
- * Priority: Cerebras → OpenRouter Free Tier → Vercel Gateway
- */
-
+// Priority: Local Ollama → Cerebras → OpenRouter Free Tier → Vercel Gateway
+const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434/api/generate';
 const CEREBRAS_API_KEY = process.env.CEREBRAS_API_KEY;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const VERCEL_AI_KEY = process.env.VERCEL_AI_KEY;
@@ -19,7 +15,7 @@ const OPENROUTER_FREE_MODELS = [
 
 /**
  * Generate text using the best available AI provider.
- * Priority: Cerebras → OpenRouter Free → Vercel Gateway
+ * Priority: Local Ollama → Cerebras → OpenRouter Free → Vercel Gateway
  * @param {string} prompt
  * @param {object} options - { temperature, maxOutputTokens, model, maxRetries }
  * @returns {Promise<string|null>}
@@ -27,6 +23,39 @@ const OPENROUTER_FREE_MODELS = [
 async function generateText(prompt, options = {}) {
     const maxRetries = options.maxRetries ?? 2;
     let lastError = null;
+
+    // ── PRIORITY 0: Local Ollama (Zero Cost, GPU Accelerated) ─────────────
+    try {
+        // [Task-Based Selection] Pick 3b for code/complex tasks, 1.5b for speed/simple status tasks
+        let model = options.model;
+        if (!model) {
+            const isCodeTask = prompt.toLowerCase().includes('generate code') || 
+                              prompt.toLowerCase().includes('function') || 
+                              prompt.includes('```');
+            model = isCodeTask ? 'qwen2.5-coder:3b' : 'qwen2.5-coder:1.5b';
+        }
+
+        const response = await axios.post(OLLAMA_URL, {
+            model: model,
+            prompt: prompt,
+            stream: false,
+            options: {
+                temperature: options.temperature ?? 0.7,
+                num_predict: options.maxOutputTokens ?? 4096
+            }
+        }, { timeout: 120000 }); // Longer timeout for local generation
+
+        const text = response.data?.response;
+        if (text && text.trim().length > 0) {
+            console.log(`[AI] Generated via Local Ollama (${model}).`);
+            return text.trim();
+        }
+    } catch (err) {
+        // Silently fail to next provider if Ollama isn't running or model missing
+        if (err.code !== 'ECONNREFUSED') {
+            console.warn(`[AI] Local Ollama failed: ${err.message}. Falling back...`);
+        }
+    }
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         if (attempt > 1) {

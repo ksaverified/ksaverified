@@ -136,7 +136,7 @@ class CloserAgent {
                 const response = await axios.get(vercelUrl, {
                     timeout: 20000,
                     maxRedirects: 5,
-                    validateStatus: (status) => status < 500 // Accept 2xx, 3xx, 4xx — only reject 5xx
+                    validateStatus: (status) => status >= 200 && status < 300
                 });
                 console.log(`[Closer] Pre-flight check passed (status: ${response.status}). Site is up.`);
             } catch (err) {

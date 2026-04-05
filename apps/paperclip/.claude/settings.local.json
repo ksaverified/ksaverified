@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dxdiag /t C:\\\\temp\\\\dxdiag.txt)",
+      "Bash(findstr /C:\"Card name\" /C:\"Display Memory\" /C:\"Current Display Mode\" C:\\\\temp\\\\dxdiag.txt)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3001/api/status)",
+      "Bash(node:*)"
+    ]
+  }
+}

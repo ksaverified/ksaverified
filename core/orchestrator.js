@@ -11,6 +11,8 @@ const AuditorAgent = require('./agents/auditor');
 const CertifierAgent = require('./agents/certifier');
 const MarketingAuditAgent = require('./agents/marketingAudit');
 const systemApi = require('../api/system');
+const express = require('express');
+const app = express();
 
 class Orchestrator {
   constructor() {
@@ -694,6 +696,27 @@ class Orchestrator {
     const intervalMinutes = parseInt(process.env.RUN_INTERVAL_MINUTES || '60', 10);
     const intervalMs = intervalMinutes * 60 * 1000;
     console.log(`[Orchestrator] Initializing KSA Verified Pipeline...`);
+    
+    // Start local IPC server for PaperClip Dashboard
+    const IPC_PORT = 5001; 
+    app.get('/trigger', async (req, res) => {
+        console.log('[Orchestrator] Trigger received from Dashboard.');
+        this.runPipeline().catch(err => console.error('[Orchestrator Trigger Error]', err));
+        res.json({ success: true, message: 'Pipeline triggered' });
+    });
+    
+    app.get('/status', (req, res) => {
+        res.json({ isRunning: this.isRunning });
+    });
+
+    try {
+        app.listen(IPC_PORT, () => {
+            console.log(`[Orchestrator] IPC Server listening on port ${IPC_PORT}`);
+        });
+    } catch (e) {
+        console.warn('[Orchestrator] IPC Server already running or port blocked.');
+    }
+
     this.runPipeline();
     setInterval(() => this.runPipeline(), intervalMs);
   }

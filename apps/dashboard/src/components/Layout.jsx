@@ -14,7 +14,8 @@ const NAV_SECTIONS = [
     {
         label: null,
         items: [
-            { to: '/admin/comprehensive', icon: LayoutDashboard, label: 'Intelligence Hub', exact: true },
+            { to: '/boss', icon: Zap, label: 'Boss Command', exact: true },
+            { to: '/admin-v3/comprehensive', icon: LayoutDashboard, label: 'Pipeline Context', exact: true },
         ]
     },
     {
@@ -103,13 +104,15 @@ const Layout = () => {
             <aside className="w-60 bg-surface border-r border-zinc-800/80 flex flex-col shrink-0">
                 {/* Logo */}
                 <div className="px-5 py-5 border-b border-zinc-800/80">
-                    <Link to="/admin" className="flex items-center gap-3 transition-opacity hover:opacity-80">
-                        <img src="/logo.png" alt="KSA Verified" className="h-7 w-7 object-contain" />
+                    <Link to="/boss" className="flex items-center gap-3 transition-opacity hover:opacity-80">
+                        <div className="h-7 w-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
+                            <Zap className="h-4 w-4 text-emerald-400 fill-current" />
+                        </div>
                         <div>
-                            <h1 className="text-base font-bold bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent leading-tight">
-                                KSA Verified
+                            <h1 className="text-base font-bold text-white leading-tight">
+                                KSAV Boss
                             </h1>
-                            <p className="text-[9px] text-zinc-500 uppercase tracking-[0.2em] font-semibold">Ops Console</p>
+                            <p className="text-[9px] text-zinc-500 uppercase tracking-[0.2em] font-semibold">Vision Console</p>
                         </div>
                     </Link>
                 </div>

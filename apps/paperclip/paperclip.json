@@ -1,0 +1,58 @@
+{
+  "version": "1.0.0",
+  "company": {
+    "id": "ksa-verified",
+    "name": "KSA Verified",
+    "market": "Saudi Arabia",
+    "currency": "SAR",
+    "timezone": "Asia/Riyadh",
+    "language": ["en", "ar"]
+  },
+  "api": {
+    "baseUrl": "http://localhost:3000",
+    "timeout": 30000,
+    "retryAttempts": 3
+  },
+  "agent": {
+    "id": "ceo-001",
+    "role": "CEO",
+    "home": "./life",
+    "memoryPath": "./memory",
+    "wakeInterval": 300000,
+    "budgetLimit": 10000,
+    "budgetAlertThreshold": 0.8
+  },
+  "business": {
+    "year1Focus": [
+      "Google Maps data extraction",
+      "Automated site generation",
+      "Digital catalogs"
+    ],
+    "avoid": [
+      "High-cost e-commerce features",
+      "Complex customizations"
+    ],
+    "staffingCosts": {
+      "aiAgentBasic": 50,
+      "aiAgentPremium": 200,
+      "humanVA": 3000,
+      "humanDeveloper": 8000
+    }
+  },
+  "projects": {
+    "google-maps-extraction": {
+      "priority": 1,
+      "targetLeads": 10000,
+      "cities": ["Riyadh", "Jeddah", "Dammam", "Mecca", "Medina"]
+    },
+    "site-generator": {
+      "priority": 2,
+      "template": "simple-catalog"
+    }
+  },
+  "memory": {
+    "decayDays": 30,
+    "synthesisDay": "Sunday",
+    "factAccessWindow": 7
+  }
+}

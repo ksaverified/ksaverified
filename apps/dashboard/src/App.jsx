@@ -35,6 +35,8 @@ import AgentFleet from './pages/v3/AgentFleet';
 import EcosystemMetrics from './pages/v3/EcosystemMetrics';
 // Management Dashboard
 import ManagementDashboard from './pages/management/ManagementDashboard';
+// Boss Console (Unified Hub)
+import BossDashboard from './pages/BossDashboard';
 
 function App() {
   return (
@@ -47,14 +49,17 @@ function App() {
           <Route path="/showcase" element={<LandingPage />} />
           <Route path="/solutions" element={<LandingPage />} />
           <Route path="/manage" element={<Login />} />
-          <Route path="/management" element={
+          <Route element={
             <AuthGuard allowedRoles={['admin']}>
-              <ManagementDashboard />
+              <Layout />
             </AuthGuard>
-          } />
+          }>
+            <Route path="/management" element={<ManagementDashboard />} />
+            <Route path="/boss" element={<BossDashboard />} />
+          </Route>
 
-          {/* Protected Admin Routes (Defaults to V3) */}
-          <Route path="/admin" element={<Navigate to="/admin-v3" replace />} />
+          {/* Protected Admin Routes (Defaults to Boss Hub) */}
+          <Route path="/admin" element={<Navigate to="/boss" replace />} />
           
           {/* V3 Map Strategy & Scores */}
           <Route path="/admin-v3" element={
@@ -63,6 +68,7 @@ function App() {
             </AuthGuard>
           }>
             <Route index element={<GapMapOperator />} />
+            <Route path="comprehensive" element={<ComprehensiveDashboard />} />
             <Route path="scores" element={<LeadScorecardList />} />
             <Route path="fleet" element={<AgentFleet />} />
             <Route path="ecosystem" element={<EcosystemMetrics />} />

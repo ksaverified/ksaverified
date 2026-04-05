@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KSA Verified - Dashboard</title>
+  <style>
+    :root {
+      --primary: #1a7f37;
+      --secondary: #0d5c2a;
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --accent: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .header h1 { font-size: 24px; }
+    .header .subtitle { color: var(--text-muted); font-size: 14px; }
+    .header-right { display: flex; align-items: center; gap: 15px; }
+    .status-badge {
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-online { background: var(--accent); color: #000; }
+    .status-offline { background: var(--card-bg); color: var(--text-muted); }
+
+    .section-title {
+      font-size: 18px;
+      margin: 30px 0 15px 0;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title .arabic { font-size: 14px; color: var(--text-muted); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .card-title { font-size: 16px; font-weight: 600; }
+    .card-icon { font-size: 24px; }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .stat-row:last-child { border-bottom: none; }
+    .stat-label { color: var(--text-muted); }
+    .stat-value { font-weight: 600; }
+    .progress-bar {
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      height: 8px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: var(--secondary); }
+    .btn-secondary {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.1); }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+    .list-item {
+      padding: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      transition: background 0.2s;
+    }
+    .list-item:hover { background: rgba(255,255,255,0.08); }
+    .list-item-title { font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .list-item-meta { font-size: 12px; color: var(--text-muted); }
+    .list-item-actions { display: flex; gap: 8px; margin-top: 8px; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .dot-green { background: var(--accent); }
+    .dot-yellow { background: var(--warning); }
+    .dot-red { background: var(--danger); }
+    .dot-blue { background: var(--info); }
+    .dot-gray { background: var(--text-muted); }
+
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .timestamp { font-size: 12px; color: var(--text-muted); margin-top: 20px; }
+
+    .leads-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .leads-table th, .leads-table td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .leads-table th { color: var(--text-muted); font-weight: 500; }
+    .leads-table tr:hover { background: rgba(255,255,255,0.05); }
+
+    .badge {
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-new { background: var(--info); color: white; }
+    .badge-contacted { background: var(--warning); color: #000; }
+    .badge-interested { background: var(--accent); color: #000; }
+    .badge-customer { background: var(--primary); color: white; }
+    .badge-not_interested { background: var(--danger); color: white; }
+    .badge-invalid { background: var(--text-muted); color: #000; }
+
+    .big-stat {
+      text-align: center;
+      padding: 20px;
+    }
+    .big-stat-value { font-size: 36px; font-weight: 700; color: var(--accent); }
+    .big-stat-label { font-size: 13px; color: var(--text-muted); margin-top: 5px; }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    .filter-bar select, .filter-bar input {
+      background: var(--card-bg);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .wide-card { grid-column: span 2; }
+    @media (max-width: 900px) { .wide-card { grid-column: span 1; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>KSA Verified Dashboard</h1>
+      <span class="subtitle">لوحة التحكم KSA Verified</span>
+    </div>
+    <div class="header-right">
+      <span class="status-badge status-offline" id="connection-status">Connecting...</span>
+    </div>
+  </div>
+
+  <!-- Leads Overview Section -->
+  <h2 class="section-title">
+    📊 Leads Overview
+    <span class="arabic">نظرة عامة على العملاء المحتملين</span>
+  </h2>
+
+  <div class="grid">
+    <div class="card big-stat">
+      <div class="big-stat-value" id="total-leads">0</div>
+      <div class="big-stat-label">Total Leads | إجمالي العملاء</div>
+    </div>
+    <div class="card big-stat">
+      <div class="big-stat-value" id="new-leads" style="color: var(--info)">0</div>
+      <div class="big-stat-label">New | جديد</div>
+    </div>
+    <div class="card big-stat">
+      <div class="big-stat-value" id="contacted-leads" style="color: var(--warning)">0</div>
+      <div class="big-stat-label">Contacted | تم التواصل</div>
+    </div>
+    <div class="card big-stat">
+      <div class="big-stat-value" id="customer-leads" style="color: var(--primary)">0</div>
+      <div class="big-stat-label">Customers | عملاء</div>
+    </div>
+  </div>
+
+  <!-- Extraction Progress -->
+  <h2 class="section-title">
+    🎯 Extraction Progress
+    <span class="arabic">تقدم الاستخراج</span>
+  </h2>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Goal Progress (10,000 leads)</span>
+        <span class="card-icon">📈</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="goal-progress" style="width: 0%"></div>
+      </div>
+      <div class="stat-row" style="margin-top: 10px;">
+        <span class="stat-label" id="leads-count">0 / 10,000</span>
+        <span class="stat-value" id="goal-percent">0%</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">By City</span>
+        <span class="card-icon">🏙️</span>
+      </div>
+      <div id="by-city"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">By Category</span>
+        <span class="card-icon">📁</span>
+      </div>
+      <div id="by-category"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Conversion Rate</span>
+        <span class="card-icon">🔄</span>
+      </div>
+      <div class="big-stat">
+        <div class="big-stat-value" id="conversion-rate">0%</div>
+        <div class="big-stat-label">Leads → Customers</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Leads Table -->
+  <h2 class="section-title">
+    📋 Recent Leads
+    <span class="arabic">العملاء المحتملين الحديثين</span>
+  </h2>
+
+  <div class="card" style="margin-bottom: 30px;">
+    <div class="filter-bar">
+      <select id="filter-city" onchange="renderLeads()">
+        <option value="">All Cities</option>
+        <option value="Riyadh">Riyadh</option>
+        <option value="Jeddah">Jeddah</option>
+        <option value="Dammam">Dammam</option>
+        <option value="Mecca">Mecca</option>
+        <option value="Medina">Medina</option>
+      </select>
+      <select id="filter-status" onchange="renderLeads()">
+        <option value="">All Statuses</option>
+        <option value="new">New</option>
+        <option value="contacted">Contacted</option>
+        <option value="interested">Interested</option>
+        <option value="customer">Customer</option>
+        <option value="not_interested">Not Interested</option>
+      </select>
+      <input type="text" id="filter-search" placeholder="Search business..." oninput="renderLeads()">
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table class="leads-table">
+        <thead>
+          <tr>
+            <th>Business Name</th>
+            <th>Category</th>
+            <th>City</th>
+            <th>Rating</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="leads-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- System Status Section -->
+  <h2 class="section-title">
+    💻 System Status
+    <span class="arabic">حالة النظام</span>
+  </h2>
+
+  <div class="grid">
+    <!-- GPU Status -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">GPU Status</span>
+        <span class="card-icon">🎮</span>
+      </div>
+      <div id="gpu-content">
+        <div class="stat-row"><span class="stat-label">Loading...</span></div>
+      </div>
+    </div>
+
+    <!-- Ollama AI -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Ollama AI Models</span>
+        <span class="card-icon">🤖</span>
+      </div>
+      <div id="ollama-content">
+        <div class="stat-row"><span class="stat-label">Loading...</span></div>
+      </div>
+    </div>
+
+    <!-- Memory System -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Memory System</span>
+        <span class="card-icon">🧠</span>
+      </div>
+      <div id="memory-content">
+        <div class="stat-row"><span class="stat-label">Loading...</span></div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Quick Actions</span>
+        <span class="card-icon">⚡</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn-sm" onclick="runExtraction()">Extract Leads</button>
+        <button class="btn btn-sm btn-secondary" onclick="runCommand('nvidia-smi')">GPU Info</button>
+        <button class="btn btn-sm btn-secondary" onclick="runCommand('node scripts/para-memory-files.js daily-note')">Daily Note</button>
+        <button class="btn btn-sm btn-secondary" onclick="window.location.reload()">Refresh</button>
+      </div>
+      <div id="command-output" style="margin-top: 10px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 6px; font-family: monospace; font-size: 11px; max-height: 100px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <div class="timestamp" id="last-update">Last update: --</div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    let allLeads = [];
+    let filteredLeads = [];
+
+    socket.on('connect', () => {
+      document.getElementById('connection-status').className = 'status-badge status-online';
+      document.getElementById('connection-status').textContent = 'Connected';
+    });
+
+    socket.on('disconnect', () => {
+      document.getElementById('connection-status').className = 'status-badge status-offline';
+      document.getElementById('connection-status').textContent = 'Disconnected';
+    });
+
+    socket.on('status', (data) => {
+      updateGpu(data.gpu);
+      updateOllama(data.ollama);
+      updateMemory(data.memory);
+      updateLeads(data.leads);
+      document.getElementById('last-update').textContent = 'Last update: ' + new Date().toLocaleTimeString();
+    });
+
+    function updateGpu(gpu) {
+      const el = document.getElementById('gpu-content');
+      if (!gpu.available) {
+        el.innerHTML = '<div class="stat-row"><span class="stat-label">GPU not detected</span></div>';
+        return;
+      }
+      el.innerHTML = `
+        <div class="stat-row"><span class="stat-label">GPU</span><span class="stat-value">${gpu.name}</span></div>
+        <div class="stat-row"><span class="stat-label">Driver</span><span class="stat-value">${gpu.driver}</span></div>
+        <div class="stat-row"><span class="stat-label">Memory</span><span class="stat-value">${gpu.usedMemory} / ${gpu.totalMemory}</span></div>
+        <div class="stat-row"><span class="stat-label">Utilization</span><span class="stat-value">${gpu.utilization}</span></div>
+        <div class="stat-row"><span class="stat-label">Temp</span><span class="stat-value">${gpu.temperature}</span></div>
+      `;
+    }
+
+    function updateOllama(ollama) {
+      const el = document.getElementById('ollama-content');
+      if (!ollama.running || ollama.models.length === 0) {
+        el.innerHTML = '<div class="stat-row"><span class="stat-label">No models installed</span></div>';
+        return;
+      }
+      el.innerHTML = ollama.models.map(m => `
+        <div class="list-item">
+          <div class="list-item-title"><span class="status-dot dot-green"></span>${m.name}</div>
+          <div class="list-item-meta">Size: ${m.size} | Modified: ${m.modified} GB</div>
+        </div>
+      `).join('');
+    }
+
+    function updateMemory(memory) {
+      const el = document.getElementById('memory-content');
+      if (memory.error) {
+        el.innerHTML = `<div class="stat-row"><span class="stat-label">Error: ${memory.error}</span></div>`;
+        return;
+      }
+      el.innerHTML = `
+        <div class="stat-row"><span class="stat-label">Total Notes</span><span class="stat-value">${memory.totalNotes}</span></div>
+        <div class="stat-row"><span class="stat-label">Today's Note</span><span class="stat-value">${memory.hasTodayNote ? '✅' : '❌'}</span></div>
+        <div class="stat-row"><span class="stat-label">Latest</span><span class="stat-value">${memory.latestNote}</span></div>
+      `;
+    }
+
+    function updateLeads(leadsData) {
+      if (leadsData.error) return;
+
+      allLeads = leadsData.leads || [];
+      filteredLeads = [...allLeads];
+
+      const stats = leadsData.conversionStats || {};
+      const meta = leadsData.metadata || {};
+      const byCity = leadsData.stats?.byCity || {};
+      const byCategory = leadsData.stats?.byCategory || {};
+
+      // Update big stats
+      document.getElementById('total-leads').textContent = stats.total || 0;
+      document.getElementById('new-leads').textContent = stats.new || 0;
+      document.getElementById('contacted-leads').textContent = stats.contacted || 0;
+      document.getElementById('customer-leads').textContent = stats.customer || 0;
+
+      // Goal progress
+      const goal = meta.goal || 10000;
+      const percent = ((stats.total || 0) / goal * 100).toFixed(1);
+      document.getElementById('goal-progress').style.width = Math.min(percent, 100) + '%';
+      document.getElementById('leads-count').textContent = `${stats.total || 0} / ${goal}`;
+      document.getElementById('goal-percent').textContent = percent + '%';
+
+      // Conversion rate
+      document.getElementById('conversion-rate').textContent = (stats.conversionRate || 0) + '%';
+
+      // By city
+      const cityEl = document.getElementById('by-city');
+      cityEl.innerHTML = Object.entries(byCity).map(([city, count]) => `
+        <div class="stat-row">
+          <span class="stat-label">${city}</span>
+          <span class="stat-value">${count}</span>
+        </div>
+      `).join('') || '<div class="stat-row"><span class="stat-label">No data</span></div>';
+
+      // By category
+      const catEl = document.getElementById('by-category');
+      catEl.innerHTML = Object.entries(byCategory).slice(0, 5).map(([cat, count]) => `
+        <div class="stat-row">
+          <span class="stat-label">${cat}</span>
+          <span class="stat-value">${count}</span>
+        </div>
+      `).join('') || '<div class="stat-row"><span class="stat-label">No data</span></div>';
+
+      // Update filter options
+      updateFilterOptions();
+
+      // Render table
+      renderLeads();
+    }
+
+    function updateFilterOptions() {
+      const cities = [...new Set(allLeads.map(l => l.location?.city).filter(Boolean))];
+      const citySelect = document.getElementById('filter-city');
+      citySelect.innerHTML = '<option value="">All Cities</option>' +
+        cities.map(c => `<option value="${c}">${c}</option>`).join('');
+    }
+
+    function renderLeads() {
+      const cityFilter = document.getElementById('filter-city').value;
+      const statusFilter = document.getElementById('filter-status').value;
+      const searchFilter = document.getElementById('filter-search').value.toLowerCase();
+
+      filteredLeads = allLeads.filter(lead => {
+        if (cityFilter && lead.location?.city !== cityFilter) return false;
+        if (statusFilter && lead.status !== statusFilter) return false;
+        if (searchFilter && !lead.business?.name.toLowerCase().includes(searchFilter)) return false;
+        return true;
+      }).slice(0, 50); // Show max 50
+
+      const tbody = document.getElementById('leads-table-body');
+      if (filteredLeads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-muted)">No leads found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filteredLeads.map(lead => {
+        const statusClass = `badge-${lead.status}`;
+        const statusLabel = lead.status.replace('_', ' ').toUpperCase();
+        return `
+          <tr>
+            <td>
+              <div style="font-weight:500">${lead.business?.name || 'Unknown'}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${lead.business?.nameAr || ''}</div>
+            </td>
+            <td>
+              <div>${lead.business?.category || ''}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${lead.business?.categoryAr || ''}</div>
+            </td>
+            <td>${lead.location?.city || ''}</td>
+            <td>⭐ ${lead.business?.rating || 0} (${lead.business?.reviewCount || 0})</td>
+            <td>${lead.contact?.phone || '-'}</td>
+            <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="updateLeadStatus('${lead.id}', 'contacted')">Contact</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function runExtraction() {
+      const outputEl = document.getElementById('command-output');
+      outputEl.textContent = 'Starting extraction...';
+      await runCommand('node scripts/google-maps-scraper.js --bulk');
+    }
+
+    async function runCommand(cmd) {
+      const outputEl = document.getElementById('command-output');
+      outputEl.textContent = 'Running: ' + cmd + '...';
+      try {
+        const res = await fetch('/api/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ command: cmd })
+        });
+        const data = await res.json();
+        outputEl.textContent = data.output || data.error || 'Done';
+        // Refresh leads after extraction
+        if (cmd.includes('google-maps')) {
+          setTimeout(() => fetch('/api/leads').then(r => r.json()).then(d => socket.emit('status', { leads: d })), 500);
+        }
+      } catch (e) {
+        outputEl.textContent = 'Error: ' + e.message;
+      }
+    }
+
+    function updateLeadStatus(leadId, newStatus) {
+      // In production, this would call an API to update the lead
+      alert(`Would update lead ${leadId} to ${newStatus}`);
+    }
+  </script>
+</body>
+</html>

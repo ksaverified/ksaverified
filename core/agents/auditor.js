@@ -35,8 +35,21 @@ class AuditorAgent {
       // Set viewport for a common desktop size
       await page.setViewport({ width: 1440, height: 900 });
       
+      let response;
       if (isUrl) {
-        await page.goto(source, { waitUntil: 'networkidle0', timeout: 30000 });
+        response = await page.goto(source, { waitUntil: 'networkidle0', timeout: 30000 });
+        if (response && !response.ok()) {
+          console.error(`[Auditor] Page load failure (status: ${response.status()}) for ${source}`);
+          return {
+            score: 0,
+            isValidated: false,
+            error: `Page returned status ${response.status()}`,
+            brokenImages: [],
+            layoutIssues: [],
+            accessibilityWarnings: [],
+            screenshots: {}
+          };
+        }
       } else {
         await page.setContent(source, { waitUntil: 'networkidle0' });
       }

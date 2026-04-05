@@ -30,10 +30,10 @@ async function startWhatsApp() {
             dataPath: path.join(__dirname, '.wwebjs_auth')
         }),
         authTimeoutMs: 180000,
-        // Let whatsapp-web.js handle the version automatically for maximum stability
+        // Use a more stable remote version to avoid "Execution context was destroyed"
         webVersionCache: {
             type: 'remote',
-            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.3000.1036244875-alpha.html',
+            remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
         },
         puppeteer: {
             headless: false,
