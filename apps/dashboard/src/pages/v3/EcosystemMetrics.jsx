@@ -2,7 +2,7 @@ import { Globe, Users, Activity } from 'lucide-react';
 
 export default function EcosystemMetrics() {
     return (
-        <div className="p-8 h-full overflow-y-auto">
+        <div className="p-8 h-full">
             <div className="max-w-[1200px] mx-auto text-center mt-20">
                 <Activity className="w-16 h-16 text-indigo-500 mx-auto mb-6 opacity-80" />
                 <h1 className="text-4xl font-black uppercase tracking-tighter mb-4">Ecosystem Modules</h1>

@@ -10,6 +10,12 @@ const { exec } = require('child_process');
 const DatabaseService = require('../../../core/services/db.js');
 const db = new DatabaseService();
 
+// API Handlers from root directory
+const portalHandler = require('../../../api/portal');
+const seoHandler = require('../../../api/seo');
+const leadsHandler = require('../../../api/leads');
+
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
@@ -70,6 +76,11 @@ app.post('/api/command', (req, res) => {
     res.json({ output: stdout || 'Command executed successfully' });
   });
 });
+
+// Portal & Leads API (Universal handlers)
+app.all('/api/portal', (req, res) => portalHandler(req, res));
+app.all('/api/seo', (req, res) => seoHandler(req, res));
+app.all('/api/leads/v2', (req, res) => leadsHandler(req, res)); // Avoid conflict with existing /api/leads
 
 // Orchestrator IPC Endpoints
 app.get('/api/orchestrator/status', async (req, res) => {

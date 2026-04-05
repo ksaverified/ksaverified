@@ -21,7 +21,7 @@ export default function AgentFleet() {
     ];
 
     return (
-        <div className="p-8 h-full overflow-y-auto">
+        <div className="p-8 h-full">
             <div className="max-w-[1200px] mx-auto space-y-10">
                 
                 <section>

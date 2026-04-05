@@ -38,7 +38,7 @@ export default function LeadScorecardList() {
     }
 
     return (
-        <div className="p-8 pb-32 h-full overflow-y-auto">
+        <div className="p-8 pb-32 h-full">
             <div className="max-w-[1600px] mx-auto">
                 <div className="mb-8">
                     <h1 className="text-3xl font-black tracking-tighter uppercase mb-2">Lead Scorecards</h1>

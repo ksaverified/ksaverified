@@ -82,7 +82,7 @@ export default function V3Shell() {
             </aside>
 
             {/* ── MAIN CONTENT ────────────────────────────────────────── */}
-            <main className="flex-1 min-w-0 h-screen overflow-hidden bg-obsidian-surface-highest">
+            <main className="flex-1 min-w-0 h-screen overflow-y-auto bg-obsidian-surface-highest">
                 <Outlet />
             </main>
         </div>
