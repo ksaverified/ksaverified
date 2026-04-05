@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { Globe, Star, MapPin, AlertTriangle, CheckCircle, Zap } from 'lucide-react';
 
 export default function LeadScorecardList() {
+    const navigate = useNavigate();
     const [leads, setLeads] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -88,10 +90,17 @@ export default function LeadScorecardList() {
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 relative z-10">
-                                    <button className="py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest transition-all text-center flex items-center justify-center gap-1.5 shadow-lg">
+                                    <button 
+                                        onClick={() => {
+                                            alert(`Initiating automations for ${lead.name}`);
+                                            navigate('/boss/pipeline/' + lead.place_id);
+                                        }}
+                                        className="py-2.5 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[11px] font-black uppercase tracking-widest transition-all text-center flex items-center justify-center gap-1.5 shadow-lg">
                                         <Zap className="w-3.5 h-3.5" /> Automate
                                     </button>
-                                    <button className="py-2.5 rounded-xl bg-obsidian-surface-highest border border-white/10 hover:bg-white/5 text-zinc-300 text-[11px] font-black uppercase tracking-widest transition-all text-center">
+                                    <button 
+                                        onClick={() => navigate('/boss/pipeline/' + lead.place_id)}
+                                        className="py-2.5 rounded-xl bg-obsidian-surface-highest border border-white/10 hover:bg-white/5 text-zinc-300 text-[11px] font-black uppercase tracking-widest transition-all text-center">
                                         View Details
                                     </button>
                                 </div>

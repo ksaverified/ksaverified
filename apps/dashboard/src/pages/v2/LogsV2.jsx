@@ -186,8 +186,8 @@ export default function LogsV2() {
                                             )}
                                         </div>
                                         {log.details && Object.keys(log.details).length > 0 && (
-                                            <div className="text-[10px] text-zinc-600 font-bold bg-obsidian-surface-high/30 border-l border-white/5 py-2 px-3 rounded-lg overflow-x-auto custom-scrollbar-mini">
-                                                <span className="text-amber-500/30 mr-2 font-black tracking-widest">DETAILS</span>
+                                            <div className="text-[10px] text-amber-400/90 font-mono tracking-wide bg-amber-500/10 border-l border-amber-500/50 py-2 px-3 rounded-lg overflow-x-auto custom-scrollbar-mini">
+                                                <span className="text-amber-500/50 mr-2 font-black tracking-widest uppercase">DETAILS</span>
                                                 {JSON.stringify(log.details)}
                                             </div>
                                         )}

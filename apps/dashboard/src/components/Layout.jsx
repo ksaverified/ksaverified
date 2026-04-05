@@ -15,41 +15,31 @@ const NAV_SECTIONS = [
         label: null,
         items: [
             { to: '/boss', icon: Zap, label: 'Boss Command', exact: true },
-            { to: '/admin-v3/comprehensive', icon: LayoutDashboard, label: 'Pipeline Context', exact: true },
         ]
     },
     {
-        label: 'Awareness',
-        color: 'text-blue-400',
-        items: [
-            { to: '/admin/pipeline', icon: Radio, label: 'Lead Pipeline' },
-            { to: '/admin/map', icon: MapIcon, label: 'Scout Map' },
-            { to: '/admin/websites', icon: Globe, label: 'Live Sites' },
-            { to: '/admin/seo', icon: Search, label: 'Global SEO Manager' },
-        ]
-    },
-    {
-        label: 'Conversion',
+        label: 'Intelligence',
         color: 'text-emerald-400',
         items: [
-            { to: '/admin/whatsapp', icon: MessageCircle, label: 'WhatsApp Inbox' },
-            { to: '/admin/interest-confirmed', icon: UserCheck, label: 'Hot Leads' },
-            { to: '/admin/answers', icon: MessageSquare, label: 'AI Reply Review' },
+            { to: '/boss/intelligence', icon: Radio, label: 'Gap Intelligence Hub' },
+            { to: '/boss/analysis', icon: Search, label: 'Lead Analysis' },
+            { to: '/boss/scorecards', icon: Activity, label: 'Lead Scorecards' },
+            { to: '/boss/map', icon: MapIcon, label: 'Global Signal Scoping' },
+            { to: '/boss/pipeline', icon: UserCheck, label: 'Lead Pipeline' },
         ]
     },
     {
-        label: 'Retention',
-        color: 'text-purple-400',
+        label: 'Assets',
+        color: 'text-blue-400',
         items: [
-            { to: '/admin/analytics', icon: BarChart3, label: 'Performance' },
+            { to: '/boss/websites', icon: Globe, label: 'Web Assets' },
         ]
     },
     {
         label: 'System',
-        color: 'text-zinc-500',
+        color: 'text-purple-400',
         items: [
-            { to: '/admin/logs', icon: Activity, label: 'Live Logs' },
-            { to: '/admin/settings', icon: Settings, label: 'Settings' },
+            { to: '/boss/logs', icon: Activity, label: 'Neural Diagnostics' },
         ]
     },
 ];

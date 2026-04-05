@@ -37,6 +37,8 @@ import EcosystemMetrics from './pages/v3/EcosystemMetrics';
 import ManagementDashboard from './pages/management/ManagementDashboard';
 // Boss Console (Unified Hub)
 import BossDashboard from './pages/BossDashboard';
+import GlobalSignalMap from './pages/boss/GlobalSignalMap';
+import BossLeadAnalysis from './pages/boss/BossLeadAnalysis';
 
 function App() {
   return (
@@ -49,13 +51,29 @@ function App() {
           <Route path="/showcase" element={<LandingPage />} />
           <Route path="/solutions" element={<LandingPage />} />
           <Route path="/manage" element={<Login />} />
-          <Route element={
+          <Route path="/management" element={
             <AuthGuard allowedRoles={['admin']}>
               <Layout />
             </AuthGuard>
           }>
-            <Route path="/management" element={<ManagementDashboard />} />
-            <Route path="/boss" element={<BossDashboard />} />
+            <Route index element={<ManagementDashboard />} />
+          </Route>
+
+          {/* Unified Boss Console Layout */}
+          <Route path="/boss" element={
+            <AuthGuard allowedRoles={['admin']}>
+              <Layout />
+            </AuthGuard>
+          }>
+            <Route index element={<BossDashboard />} />
+            <Route path="map" element={<GlobalSignalMap />} />
+            <Route path="pipeline" element={<PipelineV2 />} />
+            <Route path="pipeline/:placeId" element={<LeadDetailV2 />} />
+            <Route path="intelligence" element={<ComprehensiveDashboard />} />
+            <Route path="analysis" element={<BossLeadAnalysis />} />
+            <Route path="scorecards" element={<LeadScorecardList />} />
+            <Route path="websites" element={<WebsitesV2 />} />
+            <Route path="logs" element={<LogsV2 />} />
           </Route>
 
           {/* Protected Admin Routes (Defaults to Boss Hub) */}

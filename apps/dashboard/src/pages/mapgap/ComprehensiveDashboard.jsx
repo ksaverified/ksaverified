@@ -430,8 +430,7 @@ export default function ComprehensiveDashboard() {
                             })}
                         </div>
 
-                        {/* Leads Table */}
-                        <LeadsTable leads={filteredLeads} loading={loading} navigate={navigate} />
+                        {/* LeadsTable has been extracted to /boss/analysis */}
                     </>
                 )}
 
@@ -493,8 +492,7 @@ export default function ComprehensiveDashboard() {
                             })}
                         </div>
 
-                        {/* Leads Table */}
-                        <LeadsTable leads={filteredLeads} loading={loading} navigate={navigate} />
+                        {/* LeadsTable has been extracted to /boss/analysis */}
                     </>
                 )}
 
@@ -671,117 +669,6 @@ function KPICard({ label, value, suffix = '', icon: Icon, color, trend }) {
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${color}20` }}>
                     <Icon className="w-4 h-4" style={{ color }} />
                 </div>
-            </div>
-        </div>
-    );
-}
-
-function LeadsTable({ leads, loading, navigate }) {
-    return (
-        <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-2xl overflow-hidden">
-            <div className="px-5 py-4 border-b border-zinc-800/50 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
-                    <Target className="w-4 h-4 text-amber-500" />
-                    Lead Analysis ({leads.length} leads)
-                </h3>
-            </div>
-            <div className="overflow-x-auto">
-                <table className="w-full">
-                    <thead>
-                        <tr className="border-b border-zinc-800/50">
-                            <th className="px-4 py-3 text-left text-xs font-bold text-amber-500/80 uppercase tracking-wider">Business</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-amber-500/80 uppercase tracking-wider">Priority</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-amber-500/80 uppercase tracking-wider">Score</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-amber-500/80 uppercase tracking-wider">Gaps Identified</th>
-                            <th className="px-4 py-3 text-left text-xs font-bold text-amber-500/80 uppercase tracking-wider">Pipeline</th>
-                            <th className="px-4 py-3 text-right text-xs font-bold text-amber-500/80 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800/30">
-                        {loading ? (
-                            <tr><td colSpan={6} className="px-4 py-12 text-center text-zinc-500">Loading...</td></tr>
-                        ) : leads.length === 0 ? (
-                            <tr><td colSpan={6} className="px-4 py-12 text-center text-zinc-500">No leads match filters</td></tr>
-                        ) : (
-                            leads.slice(0, 20).map(lead => {
-                                const priority = lead.priority || lead.map_gap_analysis?.priorityLevel || 'warm';
-                                const score = lead.conversion_score || lead.map_gap_analysis?.scores?.conversionScore || 0;
-                                const gaps = lead.map_gap_analysis?.gaps || [];
-                                const config = PRIORITY_CONFIG[priority] || PRIORITY_CONFIG.warm;
-                                const PriorityIcon = config.icon;
-                                const pipelineStage = PIPELINE_STAGES.find(s => s.key === lead.status) || { label: lead.status, color: '#52525b' };
-                                
-                                return (
-                                    <tr key={lead.place_id} className="hover:bg-zinc-800/30 transition-colors">
-                                        <td className="px-4 py-3">
-                                            <div>
-                                                <p className="text-sm font-semibold text-zinc-100">{lead.name}</p>
-                                                <p className="text-xs text-zinc-500 mt-0.5">{lead.phone || 'No phone'}</p>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold border ${config.bg} ${config.border} ${config.text}`}>
-                                                <PriorityIcon className="w-3 h-3" />
-                                                {config.label}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-16 h-1.5 bg-zinc-700 rounded-full overflow-hidden">
-                                                    <div className="h-full rounded-full" style={{ 
-                                                        width: `${score}%`, 
-                                                        backgroundColor: score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444' 
-                                                    }} />
-                                                </div>
-                                                <span className="text-xs font-mono text-zinc-300">{score}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <div className="flex flex-wrap gap-1">
-                                                {gaps.slice(0, 3).map((gap, i) => {
-                                                    const GapIcon = GAP_TYPES[gap.type]?.icon || AlertTriangle;
-                                                    const gapColor = GAP_TYPES[gap.type]?.color || '#6366f1';
-                                                    return (
-                                                        <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium" 
-                                                            style={{ backgroundColor: `${gapColor}20`, color: gapColor }}>
-                                                            <GapIcon className="w-3 h-3" />
-                                                            {GAP_TYPES[gap.type]?.label || gap.type}
-                                                        </span>
-                                                    );
-                                                })}
-                                                {gaps.length > 3 && (
-                                                    <span className="px-2 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] rounded">
-                                                        +{gaps.length - 3}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold" 
-                                                style={{ backgroundColor: `${pipelineStage.color}20`, color: pipelineStage.color }}>
-                                                {pipelineStage.label}
-                                            </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                            <div className="flex items-center justify-end gap-2">
-                                                {lead.vercel_url && (
-                                                    <a href={lead.vercel_url} target="_blank" rel="noreferrer" 
-                                                        className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors">
-                                                        <ExternalLink className="w-3.5 h-3.5 text-zinc-400" />
-                                                    </a>
-                                                )}
-                                                <button onClick={() => navigate(`/admin/pipeline/${lead.place_id}`)} 
-                                                    className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-semibold transition-colors">
-                                                    Details
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })
-                        )}
-                    </tbody>
-                </table>
             </div>
         </div>
     );
